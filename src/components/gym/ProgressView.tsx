@@ -70,13 +70,13 @@ export function ProgressView() {
             Progressive Overload
           </h2>
           <p className="text-sm text-muted-foreground">
-            Lihat progres beban & volume dari waktu ke waktu.
+            Track weight & volume progress over time.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Select value={activeId} onValueChange={setExerciseId}>
             <SelectTrigger className="w-full sm:w-[220px]">
-              <SelectValue placeholder="Pilih latihan" />
+              <SelectValue placeholder="Select exercise" />
             </SelectTrigger>
             <SelectContent>
               {exercises.map((e) => (
@@ -146,7 +146,7 @@ export function ProgressView() {
 
         {data.length === 0 ? (
           <div className="h-[260px] sm:h-[320px] grid place-items-center text-sm text-muted-foreground text-center px-4">
-            Belum ada data untuk latihan ini. Catat workout dulu!
+            No data for this exercise yet. Log a workout first!
           </div>
         ) : (
           <div className="h-[260px] sm:h-[320px]">

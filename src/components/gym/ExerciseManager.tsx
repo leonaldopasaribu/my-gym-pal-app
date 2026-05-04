@@ -33,13 +33,13 @@ export function ExerciseManager() {
   const [notes, setNotes] = useState('');
 
   const handleAdd = () => {
-    if (!name.trim()) return toast.error('Nama latihan wajib diisi');
+    if (!name.trim()) return toast.error('Exercise name is required');
     addExercise({
       name: name.trim(),
       muscleGroup: group,
       notes: notes.trim() || undefined,
     });
-    toast.success(`"${name}" ditambahkan`);
+    toast.success(`"${name}" added`);
     setName('');
     setNotes('');
     setOpen(false);
@@ -51,40 +51,40 @@ export function ExerciseManager() {
       .filter((w) => w.exerciseId === id)
       .forEach((w) => removeWorkout(w.id));
     removeExercise(id);
-    toast.success(`"${name}" dihapus`);
+    toast.success(`"${name}" deleted`);
   };
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl font-bold">Library Latihan</h2>
+          <h2 className="font-display text-2xl font-bold">Exercise Library</h2>
           <p className="text-sm text-muted-foreground">
-            Bikin daftar gerakan custom kamu sendiri.
+            Build your own custom list of movements.
           </p>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2 font-semibold w-full sm:w-auto">
-              <Plus className="h-4 w-4" /> Latihan Baru
+              <Plus className="h-4 w-4" /> New Exercise
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg rounded-xl">
             <DialogHeader>
-              <DialogTitle className="font-display">Tambah Latihan</DialogTitle>
+              <DialogTitle className="font-display">Add Exercise</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
-                <Label htmlFor="ex-name">Nama latihan</Label>
+                <Label htmlFor="ex-name">Exercise name</Label>
                 <Input
                   id="ex-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="cth. Incline Dumbbell Press"
+                  placeholder="e.g. Incline Dumbbell Press"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Otot utama</Label>
+                <Label>Primary muscle</Label>
                 <Select
                   value={group}
                   onValueChange={(v) => setGroup(v as MuscleGroup)}
@@ -102,18 +102,18 @@ export function ExerciseManager() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ex-notes">Catatan (opsional)</Label>
+                <Label htmlFor="ex-notes">Notes (optional)</Label>
                 <Input
                   id="ex-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Form cue, grip, dll"
+                  placeholder="Form cues, grip, etc."
                 />
               </div>
             </div>
             <DialogFooter>
               <Button onClick={handleAdd} className="font-semibold">
-                Simpan
+                Save
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -124,11 +124,11 @@ export function ExerciseManager() {
         <Card className="p-10 text-center surface">
           <Dumbbell className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">
-            Belum ada latihan. Tambahkan yang pertama!
+            No exercises yet. Add your first one!
           </p>
         </Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
           {exercises.map((ex) => {
             const count = workouts.filter((w) => w.exerciseId === ex.id).length;
             return (

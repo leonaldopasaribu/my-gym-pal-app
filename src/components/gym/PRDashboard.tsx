@@ -57,7 +57,7 @@ export function PRDashboard() {
       <div>
         <h2 className="font-display text-2xl font-bold">Personal Records</h2>
         <p className="text-sm text-muted-foreground">
-          Semua angka terbaik kamu, di satu tempat.
+          All your best numbers, in one place.
         </p>
       </div>
 
@@ -78,11 +78,11 @@ export function PRDashboard() {
         <Card className="p-10 text-center surface">
           <Trophy className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">
-            Catat workout untuk mulai bikin rekor 💥
+            Log a workout to start setting records 💥
           </p>
         </Card>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {prs.map(({ ex, maxWeight, maxReps, max1RM, bestSet }, idx) => (
             <Card
               key={ex.id}

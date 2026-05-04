@@ -121,12 +121,13 @@ export function WorkoutLogger() {
 
   return (
     <div className="grid gap-5 md:grid-cols-2">
-      <Card className="p-4 sm:p-5 surface border-border/60">
+      <div>
         <h2 className="font-display text-2xl font-bold">Log Workout</h2>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-muted-foreground">
           Track sets, reps & weight (kg).
         </p>
-
+      </div>
+      <Card className="p-4 sm:p-5 surface border-border/60">
         <div className="space-y-5">
           {/* Quick-pick exercise chips */}
           <div className="space-y-2">
