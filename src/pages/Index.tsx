@@ -14,7 +14,7 @@ import {
   Brain,
 } from 'lucide-react';
 import { useState } from 'react';
-import { AICoach } from '@/components/gym/AiCoach';
+import { AICoach } from '@/components/gym/AICoach';
 
 const Index = () => {
   const [tab, setTab] = useState('home');
