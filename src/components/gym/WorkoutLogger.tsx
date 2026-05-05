@@ -1,10 +1,36 @@
+import { v4 as uuidv4 } from 'uuid';
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Trash2, X, CalendarDays, Minus, Copy, Zap } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  X,
+  CalendarDays,
+  Minus,
+  Copy,
+  Zap,
+  Calendar as CalendarIcon,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  DrawerFooter,
+  DrawerClose,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useExercises,
   useWorkouts,
@@ -14,7 +40,6 @@ import {
 import type { WorkoutSet } from '@/lib/gym-types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { v4 as uuidv4 } from 'uuid';
 
 function todayISO() {
   const d = new Date();
@@ -22,7 +47,24 @@ function todayISO() {
   return d.toISOString().slice(0, 10);
 }
 
+function isoToDate(iso: string) {
+  const d = new Date(iso + 'T00:00:00');
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+function dateToISO(d: Date) {
+  const x = new Date(d);
+  x.setMinutes(x.getMinutes() - x.getTimezoneOffset());
+  return x.toISOString().slice(0, 10);
+}
+function shiftDays(n: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  return dateToISO(d);
+}
+
 export function WorkoutLogger() {
+  const isMobile = useIsMobile();
+  const [dateOpen, setDateOpen] = useState(false);
   const { exercises } = useExercises();
   const { workouts, addWorkout, removeWorkout } = useWorkouts();
 
@@ -50,11 +92,7 @@ export function WorkoutLogger() {
     const last = sets[sets.length - 1];
     setSets([
       ...sets,
-      {
-        id: uuidv4(),
-        reps: last?.reps ?? 8,
-        weight: last?.weight ?? 20,
-      },
+      { id: uuidv4(), reps: last?.reps ?? 8, weight: last?.weight ?? 20 },
     ]);
   };
 
@@ -121,13 +159,12 @@ export function WorkoutLogger() {
 
   return (
     <div className="grid gap-5 md:grid-cols-2">
-      <div>
+      <Card className="p-4 sm:p-5 surface border-border/60">
         <h2 className="font-display text-2xl font-bold">Log Workout</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground mb-4">
           Track sets, reps & weight (kg).
         </p>
-      </div>
-      <Card className="p-4 sm:p-5 surface border-border/60">
+
         <div className="space-y-5">
           {/* Quick-pick exercise chips */}
           <div className="space-y-2">
@@ -193,17 +230,14 @@ export function WorkoutLogger() {
 
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Date</Label>
-            <div className="flex flex-wrap items-center gap-2">
-              <Input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="max-w-[200px]"
-              />
-              <span className="text-sm text-muted-foreground capitalize">
-                {formatDateID(date)}
-              </span>
-            </div>
+            <DatePicker
+              value={date}
+              onChange={setDate}
+              isMobile={isMobile}
+              open={dateOpen}
+              setOpen={setDateOpen}
+              formatDateID={formatDateID}
+            />
           </div>
 
           {/* Sets with steppers */}
@@ -431,5 +465,108 @@ function Stepper({
         </Button>
       </div>
     </div>
+  );
+}
+
+function DatePicker({
+  value,
+  onChange,
+  isMobile,
+  open,
+  setOpen,
+  formatDateID,
+}: {
+  value: string;
+  onChange: (iso: string) => void;
+  isMobile: boolean;
+  open: boolean;
+  setOpen: (o: boolean) => void;
+  formatDateID: (iso: string) => string;
+}) {
+  const presets = [
+    { label: 'Today', iso: shiftDays(0) },
+    { label: 'Yesterday', iso: shiftDays(-1) },
+    { label: '2 days ago', iso: shiftDays(-2) },
+    { label: '3 days ago', iso: shiftDays(-3) },
+  ];
+
+  const trigger = (
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full h-12 justify-start gap-2 font-normal text-left border-border/60 hover:border-primary/50"
+    >
+      <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
+      <span className="capitalize truncate">{formatDateID(value)}</span>
+    </Button>
+  );
+
+  const calendar = (
+    <Calendar
+      mode="single"
+      selected={isoToDate(value)}
+      onSelect={(d) => {
+        if (d) {
+          onChange(dateToISO(d));
+          setOpen(false);
+        }
+      }}
+      disabled={(d) => d > new Date()}
+      initialFocus
+      className={cn('p-3 pointer-events-auto')}
+    />
+  );
+
+  const presetChips = (
+    <div className="flex flex-wrap gap-2 px-3 pb-3">
+      {presets.map((p) => (
+        <button
+          key={p.label}
+          type="button"
+          onClick={() => {
+            onChange(p.iso);
+            setOpen(false);
+          }}
+          className={cn(
+            'px-3 py-1.5 rounded-full text-xs font-medium border transition-all active:scale-95',
+            value === p.iso
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-secondary/40 border-border/60 hover:border-primary/50'
+          )}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader className="text-left">
+            <DrawerTitle>Pick a date</DrawerTitle>
+          </DrawerHeader>
+          {presetChips}
+          <div className="flex justify-center">{calendar}</div>
+          <DrawerFooter>
+            <DrawerClose asChild>
+              <Button variant="outline">Close</Button>
+            </DrawerClose>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="start">
+        {presetChips}
+        {calendar}
+      </PopoverContent>
+    </Popover>
   );
 }
