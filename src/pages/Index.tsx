@@ -131,17 +131,27 @@ const Index = () => {
               label="PRs"
             />
           </TabsList>
-
           {/* Mobile floating coach bubble */}
           {tab !== 'coach' && (
-            <button
-              type="button"
-              onClick={() => setTab('coach')}
-              className="md:hidden fixed bottom-20 right-4 z-50 h-14 w-14 rounded-full border border-primary/30 bg-primary text-primary-foreground transition-all grid place-items-center shadow-2xl shadow-primary/30 hover:bg-primary/90 active:scale-95"
-              aria-label="Open AI Coach"
-            >
-              <Brain className="h-6 w-6" />
-            </button>
+            <div className="md:hidden fixed bottom-20 right-4 z-50">
+              {/* Outer Glow/Pulse Effect */}
+              <div className="absolute inset-0 rounded-full bg-primary/40 animate-ping opacity-20" />
+
+              <button
+                type="button"
+                onClick={() => setTab('coach')}
+                className="relative h-14 w-14 rounded-full bg-gradient-to-br from-primary via-primary to-primary/80 text-primary-foreground shadow-[0_0_20px_rgba(var(--primary),0.4)] transition-all grid place-items-center hover:scale-110 active:scale-90 group"
+                aria-label="Open AI Coach"
+              >
+                <div className="absolute inset-0 rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors" />
+                <Brain className="h-7 w-7 animate-pulse-slow" />
+
+                {/* Optional: Small 'New' or 'AI' Badge */}
+                <span className="absolute -top-1 -right-1 bg-destructive text-[8px] font-bold px-1.5 py-0.5 rounded-full border-2 border-background">
+                  AI
+                </span>
+              </button>
+            </div>
           )}
         </Tabs>
 
