@@ -108,6 +108,9 @@ async function migrateLocalData(userId: string) {
 }
 
 async function ensureSeed(userId: string) {
+  const seedKey = `ironlog.seeded.${userId}`;
+  if (typeof window !== 'undefined' && localStorage.getItem(seedKey)) return;
+
   const { count } = await supabase
     .from('exercises')
     .select('*', { count: 'exact', head: true })
@@ -121,6 +124,7 @@ async function ensureSeed(userId: string) {
       }))
     );
   }
+  if (typeof window !== 'undefined') localStorage.setItem(seedKey, '1');
 }
 
 export function useExercises() {
