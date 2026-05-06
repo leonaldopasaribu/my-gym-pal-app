@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Trash2, Dumbbell } from 'lucide-react';
+import { Plus, Trash2, Dumbbell, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,28 +21,62 @@ import {
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useExercises, useWorkouts } from '@/lib/gym-store';
-import { MUSCLE_GROUPS, type MuscleGroup } from '@/lib/gym-types';
+import { MUSCLE_GROUPS, type Exercise, type MuscleGroup } from '@/lib/gym-types';
 import { toast } from 'sonner';
 
 export function ExerciseManager() {
-  const { exercises, addExercise, removeExercise } = useExercises();
+  const { exercises, addExercise, removeExercise, updateExercise } = useExercises();
   const { workouts, removeWorkout } = useWorkouts();
   const [open, setOpen] = useState(false);
+  const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
   const [name, setName] = useState('');
   const [group, setGroup] = useState<MuscleGroup>('Chest');
   const [notes, setNotes] = useState('');
 
-  const handleAdd = () => {
+  const resetForm = () => {
+    setEditingExercise(null);
+    setName('');
+    setGroup('Chest');
+    setNotes('');
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) resetForm();
+  };
+
+  const handleNew = () => {
+    resetForm();
+    setOpen(true);
+  };
+
+  const handleEdit = (exercise: Exercise) => {
+    setEditingExercise(exercise);
+    setName(exercise.name);
+    setGroup(exercise.muscleGroup);
+    setNotes(exercise.notes ?? '');
+    setOpen(true);
+  };
+
+  const handleSave = async () => {
     if (!name.trim()) return toast.error('Exercise name is required');
-    addExercise({
+
+    const payload = {
       name: name.trim(),
       muscleGroup: group,
       notes: notes.trim() || undefined,
-    });
-    toast.success(`"${name}" added`);
-    setName('');
-    setNotes('');
+    };
+
+    if (editingExercise) {
+      await updateExercise(editingExercise.id, payload);
+      toast.success(`"${payload.name}" updated`);
+    } else {
+      await addExercise(payload);
+      toast.success(`"${payload.name}" added`);
+    }
+
     setOpen(false);
+    resetForm();
   };
 
   const handleDelete = (id: string, name: string) => {
@@ -63,15 +97,17 @@ export function ExerciseManager() {
             Build your own custom list of movements.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button className="gap-2 font-semibold w-full sm:w-auto">
+            <Button className="gap-2 font-semibold w-full sm:w-auto" onClick={handleNew}>
               <Plus className="h-4 w-4" /> New Exercise
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg rounded-xl">
             <DialogHeader>
-              <DialogTitle className="font-display">Add Exercise</DialogTitle>
+              <DialogTitle className="font-display">
+                {editingExercise ? 'Edit Exercise' : 'Add Exercise'}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="space-y-2">
@@ -112,8 +148,8 @@ export function ExerciseManager() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleAdd} className="font-semibold">
-                Save
+              <Button onClick={handleSave} className="font-semibold">
+                {editingExercise ? 'Update' : 'Save'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -153,14 +189,26 @@ export function ExerciseManager() {
                       </p>
                     )}
                   </div>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive"
-                    onClick={() => handleDelete(ex.id, ex.name)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  <div className="flex shrink-0 items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      onClick={() => handleEdit(ex)}
+                      aria-label={`Edit ${ex.name}`}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDelete(ex.id, ex.name)}
+                      aria-label={`Delete ${ex.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
                   <span className="font-mono">

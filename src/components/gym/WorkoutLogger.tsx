@@ -171,34 +171,11 @@ function ExercisePicker({
           </DrawerTitle>
         </DrawerHeader>
 
-        {/* Search */}
-        <div className="px-4 pb-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            <Input
-              autoFocus={false}
-              placeholder="Cari exercise atau muscle group…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 bg-secondary/40 border-border/60"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-        </div>
-
         {/* List */}
         <div className="overflow-y-auto px-4 pb-4 space-y-4 flex-1">
           {filtered.length === 0 ? (
             <div className="text-center py-10 text-sm text-muted-foreground">
-              Tidak ada exercise ditemukan.
+              No exercises found.
             </div>
           ) : (
             Array.from(grouped.entries()).map(([group, exList]) => (
@@ -237,7 +214,7 @@ function ExercisePicker({
         <DrawerFooter className="pt-2">
           <DrawerClose asChild>
             <Button variant="outline" className="w-full">
-              Batal
+              Cancel
             </Button>
           </DrawerClose>
         </DrawerFooter>
