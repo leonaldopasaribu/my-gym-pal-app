@@ -225,8 +225,20 @@ export function useWorkouts() {
     await supabase.from('workouts').delete().eq('id', id);
     await refresh();
   };
+  const updateWorkout = async (
+    id: string,
+    patch: Partial<Omit<WorkoutEntry, 'id' | 'createdAt'>>
+  ) => {
+    const dbPatch: any = {};
+    if (patch.exerciseId !== undefined) dbPatch.exercise_id = patch.exerciseId;
+    if (patch.date !== undefined) dbPatch.date = patch.date;
+    if (patch.sets !== undefined) dbPatch.sets = patch.sets as any;
+    if (patch.note !== undefined) dbPatch.note = patch.note ?? null;
+    await supabase.from('workouts').update(dbPatch).eq('id', id);
+    await refresh();
+  };
 
-  return { workouts: items, addWorkout, removeWorkout };
+  return { workouts: items, addWorkout, removeWorkout, updateWorkout };
 }
 
 // Helpers

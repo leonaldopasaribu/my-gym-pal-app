@@ -1,14 +1,18 @@
 import { v4 as uuidv4 } from 'uuid';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Plus,
   Trash2,
   X,
   CalendarDays,
+  Pencil,
   Minus,
   Copy,
   Zap,
   Calendar as CalendarIcon,
+  ChevronRight,
+  Search,
+  Dumbbell,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,24 +66,207 @@ function shiftDays(n: number) {
   return dateToISO(d);
 }
 
+// ─── Exercise Picker Bottom Sheet ────────────────────────────────────────────
+
+function ExercisePicker({
+  exerciseId,
+  setExerciseId,
+  exercises,
+  orderedExerciseIds,
+  exMap,
+}: {
+  exerciseId: string;
+  setExerciseId: (id: string) => void;
+  exercises: ReturnType<typeof useExercises>['exercises'];
+  orderedExerciseIds: string[];
+  exMap: Record<string, (typeof exercises)[number]>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const selectedEx = exerciseId ? exMap[exerciseId] : null;
+
+  // Filter & group exercises
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return orderedExerciseIds
+      .map((id) => exMap[id])
+      .filter(Boolean)
+      .filter(
+        (ex) =>
+          !q ||
+          ex.name.toLowerCase().includes(q) ||
+          ex.muscleGroup.toLowerCase().includes(q)
+      );
+  }, [search, orderedExerciseIds, exMap]);
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof filtered>();
+    // "Recent" group first (exercises that have been used — i.e. appear in orderedExerciseIds before all)
+    // We already rely on orderedExerciseIds ordering, so just group by muscleGroup
+    for (const ex of filtered) {
+      if (!map.has(ex.muscleGroup)) map.set(ex.muscleGroup, []);
+      map.get(ex.muscleGroup)!.push(ex);
+    }
+    return map;
+  }, [filtered]);
+
+  const handleSelect = (id: string) => {
+    setExerciseId(id);
+    setOpen(false);
+    setSearch('');
+  };
+
+  if (exercises.length === 0) {
+    return (
+      <div className="text-sm text-muted-foreground p-3 rounded-md bg-secondary/40 border border-border/60">
+        Create an exercise first in the Library tab.
+      </div>
+    );
+  }
+
+  return (
+    <Drawer
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) setSearch('');
+      }}
+    >
+      <DrawerTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            'w-full flex items-center justify-between gap-3 px-4 h-12 rounded-xl border transition-all',
+            'active:scale-[0.98]',
+            selectedEx
+              ? 'bg-primary/10 border-primary/40 text-foreground hover:border-primary/60'
+              : 'bg-secondary/40 border-border/60 text-muted-foreground hover:border-primary/40'
+          )}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            <Dumbbell
+              className={cn(
+                'h-4 w-4 shrink-0',
+                selectedEx ? 'text-primary' : 'text-muted-foreground'
+              )}
+            />
+            <span className="text-sm font-medium truncate">
+              {selectedEx ? selectedEx.name : 'Select exercise…'}
+            </span>
+            {selectedEx && (
+              <Badge variant="outline" className="text-[10px] shrink-0">
+                {selectedEx.muscleGroup}
+              </Badge>
+            )}
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </button>
+      </DrawerTrigger>
+
+      <DrawerContent className="max-h-[82dvh]">
+        <DrawerHeader className="pb-2">
+          <DrawerTitle className="text-lg font-display font-bold">
+            Select Exercise
+          </DrawerTitle>
+        </DrawerHeader>
+
+        {/* Search */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              autoFocus={false}
+              placeholder="Cari exercise atau muscle group…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-10 bg-secondary/40 border-border/60"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* List */}
+        <div className="overflow-y-auto px-4 pb-4 space-y-4 flex-1">
+          {filtered.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              Tidak ada exercise ditemukan.
+            </div>
+          ) : (
+            Array.from(grouped.entries()).map(([group, exList]) => (
+              <div key={group}>
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono mb-1.5 px-1">
+                  {group}
+                </div>
+                <div className="space-y-1.5">
+                  {exList.map((ex) => {
+                    const isActive = exerciseId === ex.id;
+                    return (
+                      <button
+                        key={ex.id}
+                        type="button"
+                        onClick={() => handleSelect(ex.id)}
+                        className={cn(
+                          'w-full flex items-center justify-between px-4 py-3 rounded-xl border text-left transition-all active:scale-[0.98]',
+                          isActive
+                            ? 'bg-primary/15 border-primary/50 text-foreground'
+                            : 'bg-secondary/40 border-border/60 hover:border-primary/40 hover:bg-primary/5'
+                        )}
+                      >
+                        <span className="text-sm font-medium">{ex.name}</span>
+                        {isActive && (
+                          <div className="h-2 w-2 rounded-full bg-primary shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <DrawerFooter className="pt-2">
+          <DrawerClose asChild>
+            <Button variant="outline" className="w-full">
+              Batal
+            </Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+// ─── Main WorkoutLogger ───────────────────────────────────────────────────────
+
 export function WorkoutLogger() {
   const isMobile = useIsMobile();
+  const formRef = useRef<HTMLDivElement>(null);
   const [dateOpen, setDateOpen] = useState(false);
   const { exercises } = useExercises();
-  const { workouts, addWorkout, removeWorkout } = useWorkouts();
+  const { workouts, addWorkout, removeWorkout, updateWorkout } = useWorkouts();
 
   const [exerciseId, setExerciseId] = useState<string>('');
   const [date, setDate] = useState(todayISO());
   const [sets, setSets] = useState<WorkoutSet[]>([
     { id: uuidv4(), reps: 8, weight: 20 },
   ]);
+  const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
 
   const exMap = useMemo(
     () => Object.fromEntries(exercises.map((e) => [e.id, e])),
     [exercises]
   );
 
-  // Last session for the picked exercise — show as quick reference
   const lastSession = useMemo(() => {
     if (!exerciseId) return null;
     return workouts.find((w) => w.exerciseId === exerciseId) ?? null;
@@ -107,27 +294,60 @@ export function WorkoutLogger() {
     toast.success('Sets copied from last session');
   };
 
-  const save = () => {
+  const resetForm = () => {
+    setSets([{ id: uuidv4(), reps: 8, weight: 20 }]);
+    setEditingWorkoutId(null);
+  };
+
+  const startEditWorkout = (workoutId: string) => {
+    const workout = workouts.find((w) => w.id === workoutId);
+    if (!workout) return;
+    setEditingWorkoutId(workout.id);
+    setExerciseId(workout.exerciseId);
+    setDate(workout.date);
+    setSets(workout.sets.map((s) => ({ ...s })));
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
+
+  const cancelEdit = () => {
+    resetForm();
+    setDate(todayISO());
+  };
+
+  const save = async () => {
     if (!exerciseId) return toast.error('Pick an exercise first');
     if (sets.some((s) => s.reps <= 0)) return toast.error('Reps must be > 0');
     const duplicate = workouts.some(
-      (w) => w.exerciseId === exerciseId && w.date === date
+      (w) =>
+        w.exerciseId === exerciseId &&
+        w.date === date &&
+        w.id !== editingWorkoutId
     );
     if (duplicate) {
       const exName = exMap[exerciseId]?.name ?? 'This exercise';
       return toast.error(`${exName} already logged on ${date}`, {
-        description:
-          'Delete the old entry first if you want to change it, or pick a different date.',
+        description: 'Edit the existing entry or pick a different date.',
       });
     }
-    addWorkout({ exerciseId, date, sets, note: undefined });
-    toast.success('Workout saved 💪');
-    setSets([{ id: uuidv4(), reps: 8, weight: 20 }]);
+    if (editingWorkoutId) {
+      await updateWorkout(editingWorkoutId, {
+        exerciseId,
+        date,
+        sets,
+        note: undefined,
+      });
+      toast.success('Workout updated ✅');
+    } else {
+      await addWorkout({ exerciseId, date, sets, note: undefined });
+      toast.success('Workout saved 💪');
+    }
+    resetForm();
   };
 
   const recent = workouts.slice(0, 8);
 
-  // All exercises, with most recently used first
   const orderedExerciseIds = useMemo(() => {
     const seen = new Set<string>();
     const ordered: string[] = [];
@@ -159,54 +379,37 @@ export function WorkoutLogger() {
 
   return (
     <div className="grid gap-5 md:grid-cols-2">
-      <Card className="p-4 sm:p-5 surface border-border/60">
+      <Card ref={formRef} className="p-4 sm:p-5 surface border-border/60">
         <h2 className="font-display text-2xl font-bold">Log Workout</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Track sets, reps & weight (kg).
+          {editingWorkoutId
+            ? 'Edit the selected recent session.'
+            : 'Track sets, reps & weight (kg).'}
         </p>
 
         <div className="space-y-5">
-          {/* Quick-pick exercise chips */}
+          {/* Exercise Picker — now a bottom sheet */}
           <div className="space-y-2">
             <Label>Exercise</Label>
-            {exercises.length === 0 ? (
-              <div className="text-sm text-muted-foreground p-3 rounded-md bg-secondary/40 border border-border/60">
-                Create an exercise first in the Library tab.
-              </div>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {orderedExerciseIds.map((id) => {
-                  const ex = exMap[id];
-                  if (!ex) return null;
-                  const active = exerciseId === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setExerciseId(id)}
-                      className={cn(
-                        'px-3 py-2 rounded-full text-sm font-medium border transition-all',
-                        'active:scale-95',
-                        active
-                          ? 'bg-primary text-primary-foreground border-primary glow-primary'
-                          : 'bg-secondary/40 border-border/60 text-foreground/90 hover:border-primary/50'
-                      )}
-                    >
-                      {ex.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <ExercisePicker
+              exerciseId={exerciseId}
+              setExerciseId={setExerciseId}
+              exercises={exercises}
+              orderedExerciseIds={orderedExerciseIds}
+              exMap={exMap}
+            />
           </div>
 
           {/* Last session hint */}
           {lastSession && (
-            <div className="flex items-start gap-2 p-3 rounded-lg bg-primary/10 border border-primary/30">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/30">
               <Zap className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="text-xs uppercase tracking-wider text-primary font-mono">
-                  Last session · {formatDateID(lastSession.date)}
+                  Last session
+                </div>
+                <div className="mt-0.5 text-xs uppercase tracking-wider text-primary font-mono">
+                  {formatDateID(lastSession.date)}
                 </div>
                 <div className="text-sm mt-0.5 truncate">
                   {lastSession.sets.map((s, i) => (
@@ -229,7 +432,9 @@ export function WorkoutLogger() {
           )}
 
           <div className="space-y-2">
-            <Label className="text-xs text-muted-foreground">Date</Label>
+            <Label className="text-sm text-muted-foreground text-white">
+              Date
+            </Label>
             <DatePicker
               value={date}
               onChange={setDate}
@@ -302,8 +507,19 @@ export function WorkoutLogger() {
             size="lg"
             className="w-full font-semibold glow-primary text-base"
           >
-            Save Workout
+            {editingWorkoutId ? 'Update Workout' : 'Save Workout'}
           </Button>
+          {editingWorkoutId && (
+            <Button
+              type="button"
+              onClick={cancelEdit}
+              size="lg"
+              variant="outline"
+              className="w-full font-semibold text-base"
+            >
+              Cancel
+            </Button>
+          )}
         </div>
       </Card>
 
@@ -347,14 +563,29 @@ export function WorkoutLogger() {
                         {formatDateID(w.date)}
                       </div>
                     </div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => removeWorkout(w.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                    <div className="flex shrink-0 gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-foreground hover:text-primary"
+                        onClick={() => startEditWorkout(w.id)}
+                        aria-label="Edit workout"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                        onClick={async () => {
+                          await removeWorkout(w.id);
+                          if (editingWorkoutId === w.id) cancelEdit();
+                        }}
+                        aria-label="Delete workout"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {w.sets.map((s, i) => (
@@ -390,6 +621,8 @@ export function WorkoutLogger() {
   );
 }
 
+// ─── Stepper ─────────────────────────────────────────────────────────────────
+
 function Stepper({
   label,
   value,
@@ -408,11 +641,8 @@ function Stepper({
   const dec = () => onChange(Math.max(min, +(value - step).toFixed(2)));
   const inc = () => onChange(+(value + step).toFixed(2));
 
-  // Local string state lets users clear the field & type freely without
-  // the controlled number value forcing leading zeros (e.g. "0" + "80" = "080").
   const [text, setText] = useState<string>(String(value));
   useEffect(() => {
-    // Sync when external value changes (stepper buttons, prefill, etc.)
     if (Number(text) !== value) setText(String(value));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
@@ -468,6 +698,8 @@ function Stepper({
   );
 }
 
+// ─── DatePicker ───────────────────────────────────────────────────────────────
+
 function DatePicker({
   value,
   onChange,
@@ -494,7 +726,7 @@ function DatePicker({
     <Button
       type="button"
       variant="outline"
-      className="w-full h-12 justify-start gap-2 font-normal text-left border-border/60 hover:border-primary/50"
+      className="w-full h-12 justify-start gap-2 font-normal text-left bg-secondary/40 border-border/60 text-muted-foreground hover:border-primary/40"
     >
       <CalendarIcon className="h-4 w-4 text-primary shrink-0" />
       <span className="capitalize truncate">{formatDateID(value)}</span>
