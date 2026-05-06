@@ -356,14 +356,15 @@ export function WorkoutLogger() {
 
   return (
     <div className="grid gap-5 md:grid-cols-2">
-      <Card ref={formRef} className="p-4 sm:p-5 surface border-border/60">
+      <div>
         <h2 className="font-display text-2xl font-bold">Log Workout</h2>
-        <p className="text-sm text-muted-foreground mb-4">
+        <p className="text-sm text-muted-foreground">
           {editingWorkoutId
             ? 'Edit the selected recent session.'
             : 'Track sets, reps & weight (kg).'}
         </p>
-
+      </div>
+      <Card ref={formRef} className="p-4 sm:p-5 surface border-border/60">
         <div className="space-y-5">
           {/* Exercise Picker — now a bottom sheet */}
           <div className="space-y-2">
@@ -379,32 +380,58 @@ export function WorkoutLogger() {
 
           {/* Last session hint */}
           {lastSession && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 border border-primary/30">
-              <Zap className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs uppercase tracking-wider text-primary font-mono">
-                  Last session
-                </div>
-                <div className="mt-0.5 text-xs uppercase tracking-wider text-primary font-mono">
-                  {formatDateID(lastSession.date)}
-                </div>
-                <div className="text-sm mt-0.5 truncate">
-                  {lastSession.sets.map((s, i) => (
-                    <span key={s.id} className="font-mono">
-                      {i > 0 && ' · '}
-                      {s.reps}×{s.weight}kg
-                    </span>
-                  ))}
+            <div className="p-4 rounded-xl bg-secondary/40 border border-border/60 animate-fade-up">
+              {/* Header: Label & Date */}
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="h-3.5 w-3.5 text-primary fill-primary/20" />
+                <div className="min-w-0">
+                  <span className="font-display font-bold text-sm  tracking-tight block leading-none">
+                    Last Session
+                  </span>
+                  <span className="text-[10px] text-muted-foreground font-mono leading-none">
+                    {formatDateID(lastSession.date)}
+                  </span>
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={prefillFromLast}
-                className="h-7 gap-1 text-primary hover:text-primary shrink-0"
-              >
-                <Copy className="h-3.5 w-3.5" /> Use
-              </Button>
+
+              {/* Sets Display */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {lastSession.sets.map((s, i) => (
+                  <span
+                    key={s.id}
+                    className="text-[11px] font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
+                  >
+                    {i + 1}: {s.reps}×{s.weight}kg
+                  </span>
+                ))}
+              </div>
+
+              {/* Footer: Stats & Action Button */}
+              <div className="pt-3 border-t border-border/40 space-y-3">
+                <div className="flex gap-4 text-[10px] text-muted-foreground font-mono">
+                  <span>
+                    TOP{' '}
+                    <span className="text-primary font-bold">
+                      {entryTopWeight(lastSession)}kg
+                    </span>
+                  </span>
+                  <span>
+                    VOL{' '}
+                    <span className="text-primary font-bold">
+                      {entryVolume(lastSession).toLocaleString()}kg
+                    </span>
+                  </span>
+                </div>
+
+                <Button
+                  size="sm"
+                  onClick={prefillFromLast}
+                  className="w-full h-9 gap-2 text-xs font-bold  bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border-none transition-all active:scale-[0.98]"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  Copy Last Session
+                </Button>
+              </div>
             </div>
           )}
 
