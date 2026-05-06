@@ -286,7 +286,7 @@ export function WorkoutLogger() {
                     <Stepper
                       label="Kg"
                       value={s.weight}
-                      step={2.5}
+                      step={1}
                       min={0}
                       decimal
                       onChange={(v) => updateSet(s.id, { weight: v })}
