@@ -130,10 +130,12 @@ async function ensureSeed(userId: string) {
 export function useExercises() {
   const { user } = useAuth();
   const [items, setItems] = useState<Exercise[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     if (!user) {
       setItems([]);
+      setIsLoading(false);
       return;
     }
     const { data, error } = await supabase
@@ -149,11 +151,16 @@ export function useExercises() {
     (async () => {
       if (!user) {
         setItems([]);
+        setIsLoading(false);
         return;
       }
+      setIsLoading(true);
       await migrateLocalData(user.id);
       await ensureSeed(user.id);
-      if (!cancelled) await refresh();
+      if (!cancelled) {
+        await refresh();
+        setIsLoading(false);
+      }
     })();
     return () => {
       cancelled = true;
@@ -184,16 +191,18 @@ export function useExercises() {
     await refresh();
   };
 
-  return { exercises: items, addExercise, removeExercise, updateExercise };
+  return { exercises: items, addExercise, removeExercise, updateExercise, isLoading };
 }
 
 export function useWorkouts() {
   const { user } = useAuth();
   const [items, setItems] = useState<WorkoutEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     if (!user) {
       setItems([]);
+      setIsLoading(false);
       return;
     }
     const { data, error } = await supabase
@@ -202,11 +211,14 @@ export function useWorkouts() {
       .eq('user_id', user.id)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
-    if (!error && data)
+    if (!error && data) {
       setItems((data as unknown as DbWorkout[]).map(fromDbWo));
+      setIsLoading(false);
+    }
   }, [user]);
 
   useEffect(() => {
+    setIsLoading(true);
     refresh();
   }, [refresh]);
 
@@ -238,7 +250,7 @@ export function useWorkouts() {
     await refresh();
   };
 
-  return { workouts: items, addWorkout, removeWorkout, updateWorkout };
+  return { workouts: items, addWorkout, removeWorkout, updateWorkout, isLoading };
 }
 
 // Helpers

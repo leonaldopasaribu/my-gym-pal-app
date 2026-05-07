@@ -21,11 +21,17 @@ import {
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useExercises, useWorkouts } from '@/lib/gym-store';
-import { MUSCLE_GROUPS, type Exercise, type MuscleGroup } from '@/lib/gym-types';
+import {
+  MUSCLE_GROUPS,
+  type Exercise,
+  type MuscleGroup,
+} from '@/lib/gym-types';
 import { toast } from 'sonner';
+import { Skeleton } from '../ui/skeleton';
 
 export function ExerciseManager() {
-  const { exercises, addExercise, removeExercise, updateExercise } = useExercises();
+  const { exercises, addExercise, removeExercise, updateExercise, isLoading } =
+    useExercises();
   const { workouts, removeWorkout } = useWorkouts();
   const [open, setOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
@@ -99,7 +105,10 @@ export function ExerciseManager() {
         </div>
         <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button className="gap-2 font-semibold w-full sm:w-auto" onClick={handleNew}>
+            <Button
+              className="gap-2 font-semibold w-full sm:w-auto"
+              onClick={handleNew}
+            >
               <Plus className="h-4 w-4" /> New Exercise
             </Button>
           </DialogTrigger>
@@ -156,7 +165,20 @@ export function ExerciseManager() {
         </Dialog>
       </div>
 
-      {exercises.length === 0 ? (
+      {isLoading ? (
+        <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="p-4 surface border-border/60 space-y-3">
+              <Skeleton className="h-5 w-3/4" />
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-3 w-full" />
+              <div className="pt-3 border-t border-border/60">
+                <Skeleton className="h-3 w-16" />
+              </div>
+            </Card>
+          ))}
+        </div>
+      ) : exercises.length === 0 ? (
         <Card className="p-10 text-center surface">
           <Dumbbell className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">

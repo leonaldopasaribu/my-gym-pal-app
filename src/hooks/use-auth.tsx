@@ -11,7 +11,7 @@ import type { Session, User } from '@supabase/supabase-js';
 interface AuthContextValue {
   session: Session | null;
   user: User | null;
-  loading: boolean;
+  isLoading: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -19,7 +19,8 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Set listener FIRST
@@ -27,13 +28,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
-      setLoading(false);
+      setIsLoading(false);
     });
 
     // THEN get existing session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s);
-      setLoading(false);
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -45,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, loading, signOut }}
+      value={{ session, user: session?.user ?? null, isLoading, signOut }}
     >
       {children}
     </AuthContext.Provider>

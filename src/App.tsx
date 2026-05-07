@@ -7,17 +7,14 @@ import { AuthProvider, useAuth } from '@/hooks/use-auth.tsx';
 import Index from './pages/Index.tsx';
 import Auth from './pages/Auth.tsx';
 import NotFound from './pages/NotFound.tsx';
+import { Loading } from './components/ui/loading.tsx';
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { session, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-screen grid place-items-center text-sm text-muted-foreground">
-        Loading...
-      </div>
-    );
+  const { session, isLoading } = useAuth();
+  if (isLoading) {
+    return <Loading fullPage label="Loading your gym..." size="lg" />;
   }
   if (!session) return <Navigate to="/auth" replace />;
   return <>{children}</>;

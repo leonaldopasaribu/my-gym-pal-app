@@ -44,6 +44,7 @@ import {
 import type { WorkoutSet } from '@/lib/gym-types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '../ui/skeleton';
 
 function todayISO() {
   const d = new Date();
@@ -229,8 +230,14 @@ export function WorkoutLogger() {
   const isMobile = useIsMobile();
   const formRef = useRef<HTMLDivElement>(null);
   const [dateOpen, setDateOpen] = useState(false);
-  const { exercises } = useExercises();
-  const { workouts, addWorkout, removeWorkout, updateWorkout } = useWorkouts();
+  const { exercises, isLoading: isLoadingExercises } = useExercises();
+  const {
+    workouts,
+    addWorkout,
+    removeWorkout,
+    updateWorkout,
+    isLoading: isLoadingWorkouts,
+  } = useWorkouts();
 
   const [exerciseId, setExerciseId] = useState<string>('');
   const [date, setDate] = useState(todayISO());
@@ -536,7 +543,24 @@ export function WorkoutLogger() {
           Your latest sessions.
         </p>
 
-        {recent.length === 0 ? (
+        {isLoadingWorkouts ? (
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="p-3 rounded-lg bg-secondary/40 border border-border/60 space-y-2"
+              >
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-1/3" />
+                <div className="flex gap-1.5">
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-5 w-16" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : recent.length === 0 ? (
           <div className="text-center py-10 text-sm text-muted-foreground">
             No workouts logged yet.
           </div>

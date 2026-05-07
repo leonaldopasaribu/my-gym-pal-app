@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { useWorkouts } from '@/lib/gym-store';
 import { Flame, Activity } from 'lucide-react';
+import { Skeleton } from '../ui/skeleton';
 
 function toISODate(d: Date) {
   const x = new Date(d);
@@ -10,7 +11,7 @@ function toISODate(d: Date) {
 }
 
 export function HomeView() {
-  const { workouts } = useWorkouts();
+  const { workouts, isLoading } = useWorkouts();
 
   const { streak, sessions30, days } = useMemo(() => {
     const dateSet = new Set(workouts.map((w) => w.date));
@@ -46,6 +47,27 @@ export function HomeView() {
   }, [workouts]);
 
   const maxCount = Math.max(1, ...days.map((d) => d.count));
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Card className="surface border-border/60 p-6 sm:p-8 space-y-4">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-16 w-48" />
+          <Skeleton className="h-4 w-3/4" />
+        </Card>
+        <Card className="surface border-border/60 p-5 sm:p-6 space-y-4">
+          <Skeleton className="h-3 w-40" />
+          <Skeleton className="h-12 w-32" />
+          <div className="grid grid-cols-10 gap-1.5">
+            {Array.from({ length: 30 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-square rounded-[5px]" />
+            ))}
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

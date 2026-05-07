@@ -3,10 +3,12 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Zap } from 'lucide-react';
 import { useExercises, useWorkouts, epley1RM } from '@/lib/gym-store';
+import { Skeleton } from '../ui/skeleton';
 
 export function PRDashboard() {
-  const { exercises } = useExercises();
-  const { workouts } = useWorkouts();
+  const { exercises, isLoading: isLoadingExercises } = useExercises();
+  const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
+  const isLoading = isLoadingExercises || isLoadingWorkouts;
 
   const stats = useMemo(() => {
     const totalSessions = workouts.length;
@@ -74,7 +76,22 @@ export function PRDashboard() {
         />
       </div>
 
-      {prs.length === 0 ? (
+      {isLoading ? (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i} className="p-5 surface border-border/60 space-y-3">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-4 w-20" />
+              <div className="grid grid-cols-3 gap-3 pt-2">
+                <Skeleton className="h-14" />
+                <Skeleton className="h-14" />
+                <Skeleton className="h-14" />
+              </div>
+              <Skeleton className="h-3 w-3/4" />
+            </Card>
+          ))}
+        </div>
+      ) : prs.length === 0 ? (
         <Card className="p-10 text-center surface">
           <Trophy className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-muted-foreground">

@@ -27,6 +27,7 @@ import {
   Area,
   AreaChart,
 } from 'recharts';
+import { Skeleton } from '../ui/skeleton';
 
 type Metric = 'top' | 'volume' | 'e1rm';
 
@@ -37,10 +38,11 @@ const METRIC_LABEL: Record<Metric, string> = {
 };
 
 export function ProgressView() {
-  const { exercises } = useExercises();
-  const { workouts } = useWorkouts();
+  const { exercises, isLoading: isLoadingExercises } = useExercises();
+  const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
   const [exerciseId, setExerciseId] = useState<string>(exercises[0]?.id ?? '');
   const [metric, setMetric] = useState<Metric>('top');
+  const isLoading = isLoadingExercises || isLoadingWorkouts;
 
   // Sync selection when exercises load
   const activeId = exerciseId || exercises[0]?.id || '';
@@ -61,6 +63,33 @@ export function ProgressView() {
   const prev = data[data.length - 2];
   const delta =
     last && prev ? (last[metric] as number) - (prev[metric] as number) : 0;
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div className="space-y-2">
+            <Skeleton className="h-7 w-56" />
+            <Skeleton className="h-4 w-72" />
+          </div>
+          <div className="flex gap-2">
+            <Skeleton className="h-10 w-full sm:w-[220px]" />
+            <Skeleton className="h-10 w-44" />
+          </div>
+        </div>
+        <Card className="p-4 sm:p-5 surface border-border/60 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-9 w-28" />
+            </div>
+            <Skeleton className="h-8 w-16" />
+          </div>
+          <Skeleton className="h-[260px] sm:h-[320px] w-full" />
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
