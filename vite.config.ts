@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
       includeAssets: ['apple-touch-icon.png', 'favicon.ico', 'robots.txt'],
       manifest: {
         name: 'My Gym Pal',
-        short_name: 'GymPal',
+        short_name: 'My Gym Pal',
         description:
           'Track sets, reps, weight & progressive overload. Crush PRs.',
         theme_color: '#0f172a',
