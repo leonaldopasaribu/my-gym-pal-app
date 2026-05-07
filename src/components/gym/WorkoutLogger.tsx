@@ -87,7 +87,6 @@ function ExercisePicker({
 
   const selectedEx = exerciseId ? exMap[exerciseId] : null;
 
-  // Filter & group exercises
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return orderedExerciseIds
@@ -103,8 +102,6 @@ function ExercisePicker({
 
   const grouped = useMemo(() => {
     const map = new Map<string, typeof filtered>();
-    // "Recent" group first (exercises that have been used — i.e. appear in orderedExerciseIds before all)
-    // We already rely on orderedExerciseIds ordering, so just group by muscleGroup
     for (const ex of filtered) {
       if (!map.has(ex.muscleGroup)) map.set(ex.muscleGroup, []);
       map.get(ex.muscleGroup)!.push(ex);
@@ -172,6 +169,20 @@ function ExercisePicker({
           </DrawerTitle>
         </DrawerHeader>
 
+        {/* Search input */}
+        <div className="px-4 pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Search exercises…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-10 bg-secondary/40 border-border/60"
+              autoFocus={false}
+            />
+          </div>
+        </div>
+
         {/* List */}
         <div className="overflow-y-auto px-4 pb-4 space-y-4 flex-1">
           {filtered.length === 0 ? (
@@ -227,6 +238,7 @@ function ExercisePicker({
 // ─── Main WorkoutLogger ───────────────────────────────────────────────────────
 
 export function WorkoutLogger() {
+  // Treat iPad (up to 1024px) as mobile so Drawer is used instead of Popover
   const isMobile = useIsMobile();
   const formRef = useRef<HTMLDivElement>(null);
   const [dateOpen, setDateOpen] = useState(false);
@@ -330,7 +342,8 @@ export function WorkoutLogger() {
     resetForm();
   };
 
-  const recent = workouts.slice(0, 8);
+  // Show more recent entries on larger screens
+  const recent = workouts.slice(0, 10);
 
   const orderedExerciseIds = useMemo(() => {
     const seen = new Set<string>();
@@ -362,7 +375,8 @@ export function WorkoutLogger() {
   };
 
   return (
-    <div className="grid gap-5 md:grid-cols-2">
+    // ── Heading lives OUTSIDE the grid so it spans full width ──
+    <div className="space-y-5">
       <div>
         <h2 className="font-display text-2xl font-bold">Log Workout</h2>
         <p className="text-sm text-muted-foreground">
@@ -371,280 +385,295 @@ export function WorkoutLogger() {
             : 'Track sets, reps & weight (kg).'}
         </p>
       </div>
-      <Card ref={formRef} className="p-4 sm:p-5 surface border-border/60">
-        <div className="space-y-5">
-          {/* Exercise Picker — now a bottom sheet */}
-          <div className="space-y-2">
-            <Label>Exercise</Label>
-            <ExercisePicker
-              exerciseId={exerciseId}
-              setExerciseId={setExerciseId}
-              exercises={exercises}
-              orderedExerciseIds={orderedExerciseIds}
-              exMap={exMap}
-            />
-          </div>
 
-          {/* Last session hint */}
-          {lastSession && (
-            <div className="p-4 rounded-xl bg-secondary/40 border border-border/60 animate-fade-up">
-              {/* Header: Label & Date */}
-              <div className="flex items-center gap-2 mb-3">
-                <Zap className="h-3.5 w-3.5 text-primary fill-primary/20" />
-                <div className="min-w-0">
-                  <span className="font-display font-bold text-sm  tracking-tight block leading-none">
-                    Last Session
-                  </span>
-                  <span className="text-[10px] text-muted-foreground font-mono leading-none">
-                    {formatDateID(lastSession.date)}
-                  </span>
-                </div>
-              </div>
-
-              {/* Sets Display */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {lastSession.sets.map((s, i) => (
-                  <span
-                    key={s.id}
-                    className="text-[11px] font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
-                  >
-                    {i + 1}: {s.reps}×{s.weight}kg
-                  </span>
-                ))}
-              </div>
-
-              {/* Footer: Stats & Action Button */}
-              <div className="pt-3 border-t border-border/40 space-y-3">
-                <div className="flex gap-4 text-[10px] text-muted-foreground font-mono">
-                  <span>
-                    TOP{' '}
-                    <span className="text-primary font-bold">
-                      {entryTopWeight(lastSession)}kg
-                    </span>
-                  </span>
-                  <span>
-                    VOL{' '}
-                    <span className="text-primary font-bold">
-                      {entryVolume(lastSession).toLocaleString()}kg
-                    </span>
-                  </span>
-                </div>
-
-                <Button
-                  size="sm"
-                  onClick={prefillFromLast}
-                  className="w-full h-9 gap-2 text-xs font-bold  bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border-none transition-all active:scale-[0.98]"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                  Copy Last Session
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label className="text-sm text-muted-foreground text-white">
-              Date
-            </Label>
-            <DatePicker
-              value={date}
-              onChange={setDate}
-              isMobile={isMobile}
-              open={dateOpen}
-              setOpen={setDateOpen}
-              formatDateID={formatDateID}
-            />
-          </div>
-
-          {/* Sets with steppers */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Sets</Label>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={addSet}
-                className="h-8 gap-1 text-primary hover:text-primary"
-              >
-                <Plus className="h-4 w-4" /> Add Set
-              </Button>
-            </div>
-
+      {/*
+        Mobile  (<768px)  → single column (stacked)
+        iPad    (768-1023px) → single column (stacked, more room per card)
+        Desktop (≥1024px) → two columns side-by-side
+      */}
+      <div className="grid gap-5 md:grid-cols-2">
+        {/* ── Log Form ── */}
+        <Card ref={formRef} className="p-4 sm:p-6 surface border-border/60">
+          <div className="space-y-5">
+            {/* Exercise Picker */}
             <div className="space-y-2">
-              {sets.map((s, idx) => (
-                <div
-                  key={s.id}
-                  className="p-3 rounded-lg bg-secondary/40 border border-border/60"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-                      Set {idx + 1}
-                    </span>
-                    {sets.length > 1 && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={() => removeSet(s.id)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Stepper
-                      label="Reps"
-                      value={s.reps}
-                      step={1}
-                      min={0}
-                      onChange={(v) => updateSet(s.id, { reps: v })}
-                    />
-                    <Stepper
-                      label="Kg"
-                      value={s.weight}
-                      step={1}
-                      min={0}
-                      decimal
-                      onChange={(v) => updateSet(s.id, { weight: v })}
-                    />
-                  </div>
-                </div>
-              ))}
+              <Label>Exercise</Label>
+              <ExercisePicker
+                exerciseId={exerciseId}
+                setExerciseId={setExerciseId}
+                exercises={exercises}
+                orderedExerciseIds={orderedExerciseIds}
+                exMap={exMap}
+              />
             </div>
-          </div>
 
-          <Button
-            onClick={save}
-            size="lg"
-            className="w-full font-semibold glow-primary text-base"
-          >
-            {editingWorkoutId ? 'Update Workout' : 'Save Workout'}
-          </Button>
-          {editingWorkoutId && (
-            <Button
-              type="button"
-              onClick={cancelEdit}
-              size="lg"
-              variant="outline"
-              className="w-full font-semibold text-base"
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
-      </Card>
-
-      <Card className="p-4 sm:p-5 surface border-border/60">
-        <div className="flex items-center gap-2 mb-1">
-          <CalendarDays className="h-4 w-4 text-primary" />
-          <h2 className="font-display text-2xl font-bold">Recent</h2>
-        </div>
-        <p className="text-sm text-muted-foreground mb-4">
-          Your latest sessions.
-        </p>
-
-        {isLoadingWorkouts ? (
-          <div className="space-y-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="p-3 rounded-lg bg-secondary/40 border border-border/60 space-y-2"
-              >
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-3 w-1/3" />
-                <div className="flex gap-1.5">
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-16" />
-                  <Skeleton className="h-5 w-16" />
+            {/* Last session hint */}
+            {lastSession && (
+              <div className="p-4 rounded-xl bg-secondary/40 border border-border/60 animate-fade-up">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="h-3.5 w-3.5 text-primary fill-primary/20" />
+                  <div className="min-w-0">
+                    <span className="font-display font-bold text-sm tracking-tight block leading-none">
+                      Last Session
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-mono leading-none">
+                      {formatDateID(lastSession.date)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : recent.length === 0 ? (
-          <div className="text-center py-10 text-sm text-muted-foreground">
-            No workouts logged yet.
-          </div>
-        ) : (
-          <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
-            {recent.map((w) => {
-              const ex = exMap[w.exerciseId];
-              const top = entryTopWeight(w);
-              const vol = entryVolume(w);
-              return (
-                <div
-                  key={w.id}
-                  className="p-3 rounded-lg bg-secondary/40 border border-border/60 animate-fade-up"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-display font-bold truncate">
-                          {ex?.name ?? '—'}
-                        </span>
-                        {ex && (
-                          <Badge variant="outline" className="text-[10px]">
-                            {ex.muscleGroup}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-0.5 capitalize">
-                        {formatDateID(w.date)}
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-muted-foreground hover:text-primary"
-                        onClick={() => startEditWorkout(w.id)}
-                        aria-label="Edit workout"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                        onClick={async () => {
-                          await removeWorkout(w.id);
-                          if (editingWorkoutId === w.id) cancelEdit();
-                        }}
-                        aria-label="Delete workout"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {w.sets.map((s, i) => (
-                      <span
-                        key={s.id}
-                        className="text-xs font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
-                      >
-                        {i + 1}: {s.reps}×{s.weight}kg
-                      </span>
-                    ))}
-                  </div>
-                  <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground font-mono">
+
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {lastSession.sets.map((s, i) => (
+                    <span
+                      key={s.id}
+                      className="text-[11px] font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
+                    >
+                      {i + 1}: {s.reps}×{s.weight}kg
+                    </span>
+                  ))}
+                </div>
+
+                <div className="pt-3 border-t border-border/40 space-y-3">
+                  <div className="flex gap-4 text-[10px] text-muted-foreground font-mono">
                     <span>
                       TOP{' '}
-                      <span className="text-primary font-semibold">
-                        {top}kg
+                      <span className="text-primary font-bold">
+                        {entryTopWeight(lastSession)}kg
                       </span>
                     </span>
                     <span>
                       VOL{' '}
-                      <span className="text-primary font-semibold">
-                        {vol.toLocaleString()}kg
+                      <span className="text-primary font-bold">
+                        {entryVolume(lastSession).toLocaleString()}kg
                       </span>
                     </span>
                   </div>
+
+                  <Button
+                    size="sm"
+                    onClick={prefillFromLast}
+                    className="w-full h-9 gap-2 text-xs font-bold bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground border-none transition-all active:scale-[0.98]"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                    Copy Last Session
+                  </Button>
                 </div>
-              );
-            })}
+              </div>
+            )}
+
+            {/* Date picker */}
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground text-white">
+                Date
+              </Label>
+              <DatePicker
+                value={date}
+                onChange={setDate}
+                isMobile={isMobile}
+                open={dateOpen}
+                setOpen={setDateOpen}
+                formatDateID={formatDateID}
+              />
+            </div>
+
+            {/* Sets */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Sets</Label>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={addSet}
+                  className="h-8 gap-1 text-primary hover:text-primary"
+                >
+                  <Plus className="h-4 w-4" /> Add Set
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {sets.map((s, idx) => (
+                  <div
+                    key={s.id}
+                    className="p-3 sm:p-4 rounded-lg bg-secondary/40 border border-border/60"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                        Set {idx + 1}
+                      </span>
+                      {sets.length > 1 && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeSet(s.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    {/* On iPad+ give steppers more breathing room */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-5">
+                      <Stepper
+                        label="Reps"
+                        value={s.reps}
+                        step={1}
+                        min={0}
+                        onChange={(v) => updateSet(s.id, { reps: v })}
+                      />
+                      <Stepper
+                        label="Kg"
+                        value={s.weight}
+                        step={1}
+                        min={0}
+                        decimal
+                        onChange={(v) => updateSet(s.id, { weight: v })}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Button
+              onClick={save}
+              size="lg"
+              className="w-full font-semibold glow-primary text-base"
+            >
+              {editingWorkoutId ? 'Update Workout' : 'Save Workout'}
+            </Button>
+            {editingWorkoutId && (
+              <Button
+                type="button"
+                onClick={cancelEdit}
+                size="lg"
+                variant="outline"
+                className="w-full font-semibold text-base"
+              >
+                Cancel
+              </Button>
+            )}
           </div>
-        )}
-      </Card>
+        </Card>
+
+        {/* ── Recent Sessions ── */}
+        <Card className="p-4 sm:p-6 surface border-border/60">
+          <div className="flex items-center gap-2 mb-1">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            <h2 className="font-display text-2xl font-bold">Recent</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Your latest sessions.
+          </p>
+
+          {isLoadingWorkouts ? (
+            <div className="space-y-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="p-3 rounded-lg bg-secondary/40 border border-border/60 space-y-2"
+                >
+                  <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-3 w-1/3" />
+                  <div className="flex gap-1.5">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-5 w-16" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : recent.length === 0 ? (
+            <div className="text-center py-10 text-sm text-muted-foreground">
+              No workouts logged yet.
+            </div>
+          ) : (
+            /*
+              max-h tumbuh sesuai layar:
+              mobile  → 480px
+              tablet  → 560px
+              desktop → 640px
+            */
+            <div className="space-y-2 max-h-[480px] md:max-h-[560px] lg:max-h-[640px] overflow-y-auto pr-1">
+              {recent.map((w) => {
+                const ex = exMap[w.exerciseId];
+                const top = entryTopWeight(w);
+                const vol = entryVolume(w);
+                return (
+                  <div
+                    key={w.id}
+                    className="p-3 sm:p-4 rounded-lg bg-secondary/40 border border-border/60 animate-fade-up"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-display font-bold truncate">
+                            {ex?.name ?? '—'}
+                          </span>
+                          {ex && (
+                            <Badge variant="outline" className="text-[10px]">
+                              {ex.muscleGroup}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5 capitalize">
+                          {formatDateID(w.date)}
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-muted-foreground hover:text-primary"
+                          onClick={() => startEditWorkout(w.id)}
+                          aria-label="Edit workout"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={async () => {
+                            await removeWorkout(w.id);
+                            if (editingWorkoutId === w.id) cancelEdit();
+                          }}
+                          aria-label="Delete workout"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {w.sets.map((s, i) => (
+                        <span
+                          key={s.id}
+                          className="text-xs font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
+                        >
+                          {i + 1}: {s.reps}×{s.weight}kg
+                        </span>
+                      ))}
+                    </div>
+                    <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground font-mono">
+                      <span>
+                        TOP{' '}
+                        <span className="text-primary font-semibold">
+                          {top}kg
+                        </span>
+                      </span>
+                      <span>
+                        VOL{' '}
+                        <span className="text-primary font-semibold">
+                          {vol.toLocaleString()}kg
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }
@@ -800,6 +829,7 @@ function DatePicker({
     </div>
   );
 
+  // Use Drawer on both mobile and tablet (iPad) for better touch UX
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={setOpen}>
