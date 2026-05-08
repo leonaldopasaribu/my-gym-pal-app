@@ -76,7 +76,10 @@ const Index = () => {
             >
               <Trophy className="h-4 w-4" /> PRs
             </TabsTrigger>
-            <TabsTrigger value="coach" className="gap-2 ...">
+            <TabsTrigger
+              value="coach"
+              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
               <Sparkles className="h-4 w-4" /> Coach
             </TabsTrigger>
           </TabsList>
