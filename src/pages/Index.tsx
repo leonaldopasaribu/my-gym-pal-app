@@ -11,7 +11,7 @@ import {
   LineChart,
   Trophy,
   Home,
-  Brain,
+  Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
 import { AICoach } from '@/components/gym/AICoach';
@@ -77,7 +77,7 @@ const Index = () => {
               <Trophy className="h-4 w-4" /> PRs
             </TabsTrigger>
             <TabsTrigger value="coach" className="gap-2 ...">
-              <Brain className="h-4 w-4" /> Coach
+              <Sparkles className="h-4 w-4" /> Coach
             </TabsTrigger>
           </TabsList>
 
@@ -144,11 +144,11 @@ const Index = () => {
                 aria-label="Open AI Coach"
               >
                 <div className="absolute inset-0 rounded-full border-2 border-white/20 group-hover:border-white/40 transition-colors" />
-                <Brain className="h-7 w-7 animate-pulse-slow" />
+                <Sparkles className="h-7 w-7 animate-pulse-slow" />
 
                 {/* Optional: Small 'New' or 'AI' Badge */}
                 <span className="absolute -top-1 -right-1 bg-destructive text-[8px] font-bold px-1.5 py-0.5 rounded-full border-2 border-background">
-                  AI
+                  AI Coach
                 </span>
               </button>
             </div>
