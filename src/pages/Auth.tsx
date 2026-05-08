@@ -12,14 +12,14 @@ import { toast } from 'sonner';
 
 export default function Auth() {
   const navigate = useNavigate();
-  const { session, loading } = useAuth();
+  const { session, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!loading && session) navigate('/', { replace: true });
-  }, [session, loading, navigate]);
+    if (!isLoading && session) navigate('/', { replace: true });
+  }, [session, isLoading, navigate]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();

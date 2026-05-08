@@ -48,37 +48,37 @@ const Index = () => {
           <TabsList className="hidden md:flex bg-secondary/40 border border-border/60 p-1 h-auto flex-wrap">
             <TabsTrigger
               value="home"
-              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
             >
               <Home className="h-4 w-4" /> Home
             </TabsTrigger>
             <TabsTrigger
               value="log"
-              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
             >
               <ListChecks className="h-4 w-4" /> Log
             </TabsTrigger>
             <TabsTrigger
               value="library"
-              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
             >
               <Dumbbell className="h-4 w-4" /> Library
             </TabsTrigger>
             <TabsTrigger
               value="progress"
-              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
             >
               <LineChart className="h-4 w-4" /> Progress
             </TabsTrigger>
             <TabsTrigger
               value="prs"
-              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
             >
               <Trophy className="h-4 w-4" /> PRs
             </TabsTrigger>
             <TabsTrigger
               value="coach"
-              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground py-2"
             >
               <Sparkles className="h-4 w-4" /> Coach
             </TabsTrigger>
