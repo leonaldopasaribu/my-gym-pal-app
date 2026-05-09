@@ -205,14 +205,15 @@ export function AICoach() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [chatKey, setChatKey] = useState(0);
 
   const coachingContext = useMemo(
     () => buildCoachingContext(exercises, workouts, restDays),
     [exercises, workouts, restDays]
   );
 
-  const systemPrompt = `Kamu adalah AI coach gym personal di aplikasi MyGymPal.
+  const systemPrompt = useMemo(
+    () => `Kamu adalah AI coach gym personal di aplikasi MyGymPal.
 
 ${coachingContext}
 
@@ -221,7 +222,9 @@ INSTRUKSI:
 - Kalau ada ⚠️ PLATEAU, wajib berikan solusi teknis konkret
 - Bahasa: santai Indonesia/Inggris campur, bukan formal
 - Response padat, max 4 paragraf. Gunakan **bold** untuk angka penting
-- Hindari saran generik tanpa konteks data`;
+- Hindari saran generik tanpa konteks data`,
+    [coachingContext]
+  );
 
   useEffect(() => {
     if (exercises.length > 0 && messages.length === 0) {
@@ -255,7 +258,7 @@ INSTRUKSI:
         },
       ]);
     }
-  }, [exercises, workouts, restDays]);
+  }, [exercises, workouts, restDays, chatKey]); // FIX #3: chatKey in deps
 
   const handleSend = async (text?: string) => {
     const userText = (text ?? input).trim();
@@ -349,6 +352,7 @@ INSTRUKSI:
             onClick={() => {
               setMessages([]);
               setError(null);
+              setChatKey((k) => k + 1);
             }}
             className="gap-1.5 self-start sm:self-auto"
           >
@@ -466,8 +470,6 @@ INSTRUKSI:
               <span>{error}</span>
             </div>
           )}
-
-          <div ref={messagesEndRef} />
         </div>
 
         <div className="border-t border-border/60 p-3 flex gap-2">
