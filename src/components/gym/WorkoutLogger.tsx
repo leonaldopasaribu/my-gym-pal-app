@@ -132,7 +132,6 @@ function ExercisePicker({
       }}
     >
       <DrawerTrigger asChild>
-        {/* FIX: tambah min-w-0 dan overflow-hidden supaya truncate bekerja dengan benar di mobile */}
         <button
           type="button"
           className={cn(
@@ -143,7 +142,6 @@ function ExercisePicker({
               : 'bg-secondary/40 border-border/60 text-muted-foreground hover:border-primary/40'
           )}
         >
-          {/* FIX: min-w-0 supaya flex child bisa truncate */}
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <Dumbbell
               className={cn(
@@ -171,7 +169,6 @@ function ExercisePicker({
           </DrawerTitle>
         </DrawerHeader>
 
-        {/* Search input */}
         <div className="px-4 pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -185,7 +182,6 @@ function ExercisePicker({
           </div>
         </div>
 
-        {/* List */}
         <div className="overflow-y-auto px-4 pb-4 space-y-4 flex-1">
           {filtered.length === 0 ? (
             <div className="text-center py-10 text-sm text-muted-foreground">
@@ -387,7 +383,6 @@ export function WorkoutLogger() {
 
       <div className="grid gap-5 md:grid-cols-2">
         {/* ── Log Form ── */}
-        {/* FIX: tambah overflow-hidden supaya konten di dalam tidak bisa bocor keluar */}
         <Card
           ref={formRef}
           className="p-4 sm:p-6 surface border-border/60 overflow-hidden"
@@ -494,7 +489,8 @@ export function WorkoutLogger() {
                     key={s.id}
                     className="p-3 sm:p-4 rounded-lg bg-secondary/40 border border-border/60"
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    {/* Set header */}
+                    <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
                         Set {idx + 1}
                       </span>
@@ -509,19 +505,20 @@ export function WorkoutLogger() {
                         </Button>
                       )}
                     </div>
-                    {/* FIX: tambah min-w-0 ke grid supaya kolom tidak meluap */}
-                    <div className="grid grid-cols-2 gap-3 sm:gap-5 min-w-0">
-                      <Stepper
+
+                    {/* ── Row-style steppers ── */}
+                    <div className="divide-y divide-border/40">
+                      <RowStepper
                         label="Reps"
                         value={s.reps}
                         step={1}
                         min={0}
                         onChange={(v) => updateSet(s.id, { reps: v })}
                       />
-                      <Stepper
-                        label="Kg"
+                      <RowStepper
+                        label="Weight (kg)"
                         value={s.weight}
-                        step={1}
+                        step={2.5}
                         min={0}
                         decimal
                         onChange={(v) => updateSet(s.id, { weight: v })}
@@ -554,7 +551,6 @@ export function WorkoutLogger() {
         </Card>
 
         {/* ── Recent Sessions ── */}
-        {/* FIX: tambah overflow-hidden di card ini juga */}
         <Card className="p-4 sm:p-6 surface border-border/60 overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
             <CalendarDays className="h-4 w-4 text-primary" />
@@ -586,121 +582,115 @@ export function WorkoutLogger() {
               No workouts logged yet.
             </div>
           ) : (
-            <>
-              <div className="space-y-4 max-h-[480px] md:max-h-[560px] lg:max-h-[640px] overflow-y-auto pr-1">
-                {(() => {
-                  // Group workouts by date
-                  const grouped = new Map<string, typeof recent>();
-                  for (const w of recent) {
-                    if (!grouped.has(w.date)) grouped.set(w.date, []);
-                    grouped.get(w.date)!.push(w);
-                  }
-                  return Array.from(grouped.entries()).map(
-                    ([groupDate, workoutsOnDate]) => (
-                      <div key={groupDate}>
-                        {/* Date header */}
-                        <div className="flex items-center gap-2 mb-2 mt-1 bg-card/80 backdrop-blur-sm py-1 z-10">
-                          <CalendarDays className="h-3.5 w-3.5 text-primary shrink-0" />
-                          <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary">
-                            {formatDateID(groupDate)}
-                          </span>
-                          <div className="flex-1 h-px bg-border/50" />
-                          <span className="text-[10px] font-mono text-muted-foreground shrink-0">
-                            {workoutsOnDate.length} exercise
-                            {workoutsOnDate.length > 1 ? 's' : ''}
-                          </span>
-                        </div>
+            <div className="space-y-4 max-h-[480px] md:max-h-[560px] lg:max-h-[640px] overflow-y-auto pr-1">
+              {(() => {
+                const grouped = new Map<string, typeof recent>();
+                for (const w of recent) {
+                  if (!grouped.has(w.date)) grouped.set(w.date, []);
+                  grouped.get(w.date)!.push(w);
+                }
+                return Array.from(grouped.entries()).map(
+                  ([groupDate, workoutsOnDate]) => (
+                    <div key={groupDate}>
+                      <div className="flex items-center gap-2 mb-2 mt-1 bg-card/80 backdrop-blur-sm py-1 z-10">
+                        <CalendarDays className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary">
+                          {formatDateID(groupDate)}
+                        </span>
+                        <div className="flex-1 h-px bg-border/50" />
+                        <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                          {workoutsOnDate.length} exercise
+                          {workoutsOnDate.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
 
-                        {/* Workouts under this date */}
-                        <div className="space-y-2">
-                          {workoutsOnDate.map((w) => {
-                            const ex = exMap[w.exerciseId];
-                            const top = entryTopWeight(w);
-                            const vol = entryVolume(w);
-                            return (
-                              <div
-                                key={w.id}
-                                className="p-3 sm:p-4 rounded-lg bg-secondary/40 border border-border/60 animate-fade-up"
-                              >
-                                <div className="flex items-start justify-between gap-2">
-                                  {/* FIX: min-w-0 supaya nama exercise bisa truncate */}
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 min-w-0">
-                                      <span className="font-display font-bold truncate">
-                                        {ex?.name ?? '—'}
-                                      </span>
-                                      {ex && (
-                                        <Badge
-                                          variant="outline"
-                                          className="text-[10px] shrink-0"
-                                        >
-                                          {ex.muscleGroup}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-muted-foreground mt-0.5 capitalize">
-                                      {formatDateID(w.date)}
-                                    </div>
+                      <div className="space-y-2">
+                        {workoutsOnDate.map((w) => {
+                          const ex = exMap[w.exerciseId];
+                          const top = entryTopWeight(w);
+                          const vol = entryVolume(w);
+                          return (
+                            <div
+                              key={w.id}
+                              className="p-3 sm:p-4 rounded-lg bg-secondary/40 border border-border/60 animate-fade-up"
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <span className="font-display font-bold truncate">
+                                      {ex?.name ?? '—'}
+                                    </span>
+                                    {ex && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-[10px] shrink-0"
+                                      >
+                                        {ex.muscleGroup}
+                                      </Badge>
+                                    )}
                                   </div>
-                                  <div className="flex shrink-0 gap-1">
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-7 w-7 text-muted-foreground hover:text-primary"
-                                      onClick={() => startEditWorkout(w.id)}
-                                      aria-label="Edit workout"
-                                    >
-                                      <Pencil className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button
-                                      size="icon"
-                                      variant="ghost"
-                                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                      onClick={async () => {
-                                        await removeWorkout(w.id);
-                                        if (editingWorkoutId === w.id)
-                                          cancelEdit();
-                                      }}
-                                      aria-label="Delete workout"
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
+                                  <div className="text-xs text-muted-foreground mt-0.5 capitalize">
+                                    {formatDateID(w.date)}
                                   </div>
                                 </div>
-                                <div className="mt-2 flex flex-wrap gap-1.5">
-                                  {w.sets.map((s, i) => (
-                                    <span
-                                      key={s.id}
-                                      className="text-xs font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
-                                    >
-                                      {i + 1}: {s.reps}×{s.weight}kg
-                                    </span>
-                                  ))}
-                                </div>
-                                <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground font-mono">
-                                  <span>
-                                    TOP{' '}
-                                    <span className="text-primary font-semibold">
-                                      {top}kg
-                                    </span>
-                                  </span>
-                                  <span>
-                                    VOL{' '}
-                                    <span className="text-primary font-semibold">
-                                      {vol.toLocaleString()}kg
-                                    </span>
-                                  </span>
+                                <div className="flex shrink-0 gap-1">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                    onClick={() => startEditWorkout(w.id)}
+                                    aria-label="Edit workout"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                    onClick={async () => {
+                                      await removeWorkout(w.id);
+                                      if (editingWorkoutId === w.id)
+                                        cancelEdit();
+                                    }}
+                                    aria-label="Delete workout"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
                                 </div>
                               </div>
-                            );
-                          })}
-                        </div>
+                              <div className="mt-2 flex flex-wrap gap-1.5">
+                                {w.sets.map((s, i) => (
+                                  <span
+                                    key={s.id}
+                                    className="text-xs font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
+                                  >
+                                    {i + 1}: {s.reps}×{s.weight}kg
+                                  </span>
+                                ))}
+                              </div>
+                              <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground font-mono">
+                                <span>
+                                  TOP{' '}
+                                  <span className="text-primary font-semibold">
+                                    {top}kg
+                                  </span>
+                                </span>
+                                <span>
+                                  VOL{' '}
+                                  <span className="text-primary font-semibold">
+                                    {vol.toLocaleString()}kg
+                                  </span>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    )
-                  );
-                })()}
-              </div>
-            </>
+                    </div>
+                  )
+                );
+              })()}
+            </div>
           )}
         </Card>
       </div>
@@ -708,9 +698,9 @@ export function WorkoutLogger() {
   );
 }
 
-// ─── Stepper ─────────────────────────────────────────────────────────────────
+// ─── RowStepper ───────────────────────────────────────────────────────────────
 
-function Stepper({
+function RowStepper({
   label,
   value,
   onChange,
@@ -725,40 +715,34 @@ function Stepper({
   min?: number;
   decimal?: boolean;
 }) {
-  const dec = () => onChange(Math.max(min, +(value - step).toFixed(2)));
-  const inc = () => onChange(+(value + step).toFixed(2));
+  const [text, setText] = useState(String(value));
 
-  const [text, setText] = useState<string>(String(value));
   useEffect(() => {
     if (Number(text) !== value) setText(String(value));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
+  const dec = () => onChange(Math.max(min, +(value - step).toFixed(2)));
+  const inc = () => onChange(+(value + step).toFixed(2));
+
   return (
-    // FIX: min-w-0 supaya Stepper tidak memaksa grid meluap
-    <div className="space-y-1 min-w-0">
-      <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-1">
-        {label}
-      </div>
-      {/* FIX: min-w-0 di flex container supaya Input bisa menyusut */}
-      <div className="flex items-center gap-1 min-w-0">
+    <div className="flex items-center justify-between py-2.5 gap-4">
+      {/* Label */}
+      <span className="text-sm font-medium">{label}</span>
+
+      {/* Controls */}
+      <div className="flex items-center rounded-xl border border-border/60 overflow-hidden shrink-0">
         <Button
           type="button"
+          variant="ghost"
           size="icon"
-          variant="outline"
           onClick={dec}
-          className="h-11 w-11 shrink-0 border-border/60 hover:bg-primary/15 hover:border-primary/50 hover:text-primary"
+          className="h-11 w-11 rounded-none border-r border-border/60 bg-secondary/40 hover:bg-primary/10 hover:text-primary active:scale-95 transition-all"
           aria-label={`Decrease ${label}`}
         >
           <Minus className="h-4 w-4" />
         </Button>
-        {/*
-          FIX utama:
-          - min-w-0     → izinkan input menyusut di bawah min-width default browser
-          - w-full      → isi sisa ruang yang tersedia
-          - [appearance:textfield] & spin-button hidden → buang spin button number input
-            yang menambah lebar ekstra di beberapa browser
-        */}
+
         <Input
           type="number"
           inputMode={decimal ? 'decimal' : 'numeric'}
@@ -778,19 +762,19 @@ function Stepper({
           }}
           onBlur={() => setText(String(value))}
           className={cn(
-            'h-11 text-center font-mono text-sm font-semibold px-1',
-            'min-w-0 w-full',
+            'h-11 w-20 text-center font-mono text-sm font-semibold rounded-none border-0 border-r border-border/60 focus-visible:ring-0 focus-visible:ring-offset-0',
             '[appearance:textfield]',
             '[&::-webkit-inner-spin-button]:appearance-none',
             '[&::-webkit-outer-spin-button]:appearance-none'
           )}
         />
+
         <Button
           type="button"
+          variant="ghost"
           size="icon"
-          variant="outline"
           onClick={inc}
-          className="h-11 w-11 shrink-0 border-border/60 hover:bg-primary/15 hover:border-primary/50 hover:text-primary"
+          className="h-11 w-11 rounded-none bg-secondary/40 hover:bg-primary/10 hover:text-primary active:scale-95 transition-all"
           aria-label={`Increase ${label}`}
         >
           <Plus className="h-4 w-4" />
