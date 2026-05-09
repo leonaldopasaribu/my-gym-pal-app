@@ -759,7 +759,7 @@ function Stepper({
             if (!Number.isNaN(n)) onChange(n);
           }}
           onBlur={() => setText(String(value))}
-          className="h-11 text-center font-mono text-lg font-semibold px-1"
+          className="h-11 text-center font-mono text-sm font-semibold px-1"
         />
         <Button
           type="button"

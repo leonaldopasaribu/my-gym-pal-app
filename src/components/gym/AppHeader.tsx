@@ -40,17 +40,11 @@ export function AppHeader() {
             <span className="absolute inset-0 rounded-2xl ring-1 ring-foreground/10 animate-pulse-glow" />
           </div>
           <div className="leading-tight">
-            <h1 className="font-display text-base sm:text-lg font-bold tracking-tight flex items-center gap-1.5">
+            <h1 className="font-display text-xl sm:text-lg font-bold tracking-tight flex items-center gap-1.5">
               <span className="text-foreground">My</span>
               <span className="text-gradient-primary">Gym</span>
               <span className="text-foreground">Pal</span>
             </h1>
-            <div className="flex items-center gap-1.5">
-              <span className="h-1 w-1 rounded-full bg-foreground/60 animate-pulse" />
-              <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground font-mono">
-                Train · Track · Transform
-              </p>
-            </div>
           </div>
         </div>
         {user && (
