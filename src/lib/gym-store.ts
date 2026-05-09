@@ -191,7 +191,13 @@ export function useExercises() {
     await refresh();
   };
 
-  return { exercises: items, addExercise, removeExercise, updateExercise, isLoading };
+  return {
+    exercises: items,
+    addExercise,
+    removeExercise,
+    updateExercise,
+    isLoading,
+  };
 }
 
 export function useWorkouts() {
@@ -250,7 +256,86 @@ export function useWorkouts() {
     await refresh();
   };
 
-  return { workouts: items, addWorkout, removeWorkout, updateWorkout, isLoading };
+  return {
+    workouts: items,
+    addWorkout,
+    removeWorkout,
+    updateWorkout,
+    isLoading,
+  };
+}
+
+export interface RestDay {
+  id: string;
+  date: string;
+  note?: string;
+  createdAt: number;
+}
+
+interface DbRestDay {
+  id: string;
+  user_id: string;
+  date: string;
+  note: string | null;
+  created_at: string;
+}
+
+export function useRestDays() {
+  const { user } = useAuth();
+  const [items, setItems] = useState<RestDay[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setItems([]);
+      setIsLoading(false);
+      return;
+    }
+    const { data, error } = await supabase
+      .from('rest_days')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
+    if (!error && data) {
+      setItems(
+        (data as DbRestDay[]).map((r) => ({
+          id: r.id,
+          date: r.date,
+          note: r.note ?? undefined,
+          createdAt: new Date(r.created_at).getTime(),
+        }))
+      );
+    }
+    setIsLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    setIsLoading(true);
+    refresh();
+  }, [refresh]);
+
+  const addRestDay = async (date: string, note?: string) => {
+    if (!user) return;
+    await supabase
+      .from('rest_days')
+      .upsert(
+        { user_id: user.id, date, note: note ?? null },
+        { onConflict: 'user_id,date' }
+      );
+    await refresh();
+  };
+
+  const removeRestDay = async (date: string) => {
+    if (!user) return;
+    await supabase
+      .from('rest_days')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('date', date);
+    await refresh();
+  };
+
+  return { restDays: items, addRestDay, removeRestDay, isLoading };
 }
 
 // Helpers
