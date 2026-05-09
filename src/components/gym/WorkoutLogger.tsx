@@ -629,6 +629,9 @@ export function WorkoutLogger() {
                                         </Badge>
                                       )}
                                     </div>
+                                    <div className="text-xs text-muted-foreground mt-0.5 capitalize">
+                                      {formatDateID(w.date)}
+                                    </div>
                                   </div>
                                   <div className="flex shrink-0 gap-1">
                                     <Button
