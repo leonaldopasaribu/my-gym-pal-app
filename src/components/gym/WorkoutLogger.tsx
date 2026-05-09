@@ -238,7 +238,6 @@ function ExercisePicker({
 // ─── Main WorkoutLogger ───────────────────────────────────────────────────────
 
 export function WorkoutLogger() {
-  // Treat iPad (up to 1024px) as mobile so Drawer is used instead of Popover
   const isMobile = useIsMobile();
   const formRef = useRef<HTMLDivElement>(null);
   const [dateOpen, setDateOpen] = useState(false);
@@ -342,7 +341,6 @@ export function WorkoutLogger() {
     resetForm();
   };
 
-  // Show more recent entries on larger screens
   const recent = workouts.slice(0, 10);
 
   const orderedExerciseIds = useMemo(() => {
@@ -375,7 +373,6 @@ export function WorkoutLogger() {
   };
 
   return (
-    // ── Heading lives OUTSIDE the grid so it spans full width ──
     <div className="space-y-5">
       <div>
         <h2 className="font-display text-2xl font-bold">Log Workout</h2>
@@ -386,11 +383,6 @@ export function WorkoutLogger() {
         </p>
       </div>
 
-      {/*
-        Mobile  (<768px)  → single column (stacked)
-        iPad    (768-1023px) → single column (stacked, more room per card)
-        Desktop (≥1024px) → two columns side-by-side
-      */}
       <div className="grid gap-5 md:grid-cols-2">
         {/* ── Log Form ── */}
         <Card ref={formRef} className="p-4 sm:p-6 surface border-border/60">
@@ -511,7 +503,6 @@ export function WorkoutLogger() {
                         </Button>
                       )}
                     </div>
-                    {/* On iPad+ give steppers more breathing room */}
                     <div className="grid grid-cols-2 gap-3 sm:gap-5">
                       <Stepper
                         label="Reps"
@@ -587,90 +578,117 @@ export function WorkoutLogger() {
               No workouts logged yet.
             </div>
           ) : (
-            /*
-              max-h tumbuh sesuai layar:
-              mobile  → 480px
-              tablet  → 560px
-              desktop → 640px
-            */
-            <div className="space-y-2 max-h-[480px] md:max-h-[560px] lg:max-h-[640px] overflow-y-auto pr-1">
-              {recent.map((w) => {
-                const ex = exMap[w.exerciseId];
-                const top = entryTopWeight(w);
-                const vol = entryVolume(w);
-                return (
-                  <div
-                    key={w.id}
-                    className="p-3 sm:p-4 rounded-lg bg-secondary/40 border border-border/60 animate-fade-up"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-display font-bold truncate">
-                            {ex?.name ?? '—'}
+            <>
+              <div className="space-y-4 max-h-[480px] md:max-h-[560px] lg:max-h-[640px] overflow-y-auto pr-1">
+                {(() => {
+                  // Group workouts by date
+                  const grouped = new Map<string, typeof recent>();
+                  for (const w of recent) {
+                    if (!grouped.has(w.date)) grouped.set(w.date, []);
+                    grouped.get(w.date)!.push(w);
+                  }
+                  return Array.from(grouped.entries()).map(
+                    ([groupDate, workoutsOnDate]) => (
+                      <div key={groupDate}>
+                        {/* Date header */}
+                        <div className="flex items-center gap-2 mb-2 mt-1 bg-card/80 backdrop-blur-sm py-1 z-10">
+                          <CalendarDays className="h-3.5 w-3.5 text-primary shrink-0" />
+                          <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary">
+                            {formatDateID(groupDate)}
                           </span>
-                          {ex && (
-                            <Badge variant="outline" className="text-[10px]">
-                              {ex.muscleGroup}
-                            </Badge>
-                          )}
+                          <div className="flex-1 h-px bg-border/50" />
+                          <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                            {workoutsOnDate.length} exercise
+                            {workoutsOnDate.length > 1 ? 's' : ''}
+                          </span>
                         </div>
-                        <div className="text-xs text-muted-foreground mt-0.5 capitalize">
-                          {formatDateID(w.date)}
+
+                        {/* Workouts under this date */}
+                        <div className="space-y-2">
+                          {workoutsOnDate.map((w) => {
+                            const ex = exMap[w.exerciseId];
+                            const top = entryTopWeight(w);
+                            const vol = entryVolume(w);
+                            return (
+                              <div
+                                key={w.id}
+                                className="p-3 sm:p-4 rounded-lg bg-secondary/40 border border-border/60 animate-fade-up"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-display font-bold truncate">
+                                        {ex?.name ?? '—'}
+                                      </span>
+                                      {ex && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px]"
+                                        >
+                                          {ex.muscleGroup}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex shrink-0 gap-1">
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                      onClick={() => startEditWorkout(w.id)}
+                                      aria-label="Edit workout"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                      onClick={async () => {
+                                        await removeWorkout(w.id);
+                                        if (editingWorkoutId === w.id)
+                                          cancelEdit();
+                                      }}
+                                      aria-label="Delete workout"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="mt-2 flex flex-wrap gap-1.5">
+                                  {w.sets.map((s, i) => (
+                                    <span
+                                      key={s.id}
+                                      className="text-xs font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
+                                    >
+                                      {i + 1}: {s.reps}×{s.weight}kg
+                                    </span>
+                                  ))}
+                                </div>
+                                <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground font-mono">
+                                  <span>
+                                    TOP{' '}
+                                    <span className="text-primary font-semibold">
+                                      {top}kg
+                                    </span>
+                                  </span>
+                                  <span>
+                                    VOL{' '}
+                                    <span className="text-primary font-semibold">
+                                      {vol.toLocaleString()}kg
+                                    </span>
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                      <div className="flex shrink-0 gap-1">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-muted-foreground hover:text-primary"
-                          onClick={() => startEditWorkout(w.id)}
-                          aria-label="Edit workout"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                          onClick={async () => {
-                            await removeWorkout(w.id);
-                            if (editingWorkoutId === w.id) cancelEdit();
-                          }}
-                          aria-label="Delete workout"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {w.sets.map((s, i) => (
-                        <span
-                          key={s.id}
-                          className="text-xs font-mono px-2 py-0.5 rounded bg-background/60 border border-border/60"
-                        >
-                          {i + 1}: {s.reps}×{s.weight}kg
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-2 flex gap-4 text-[11px] text-muted-foreground font-mono">
-                      <span>
-                        TOP{' '}
-                        <span className="text-primary font-semibold">
-                          {top}kg
-                        </span>
-                      </span>
-                      <span>
-                        VOL{' '}
-                        <span className="text-primary font-semibold">
-                          {vol.toLocaleString()}kg
-                        </span>
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    )
+                  );
+                })()}
+              </div>
+            </>
           )}
         </Card>
       </div>
@@ -829,7 +847,6 @@ function DatePicker({
     </div>
   );
 
-  // Use Drawer on both mobile and tablet (iPad) for better touch UX
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={setOpen}>
