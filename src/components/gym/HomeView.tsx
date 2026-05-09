@@ -22,14 +22,14 @@ function toISODate(d: Date) {
 }
 
 export function HomeView() {
-  const { workouts, isLoading: woLoading } = useWorkouts();
+  const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
   const {
     restDays,
     addRestDay,
     removeRestDay,
-    isLoading: rdLoading,
+    isLoading: isLoadingRestDays,
   } = useRestDays();
-  const isLoading = woLoading || rdLoading;
+  const isLoading = isLoadingWorkouts || isLoadingRestDays;
 
   const [restNote, setRestNote] = useState('');
   const [restOpen, setRestOpen] = useState(false);

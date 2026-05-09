@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import {
   useExercises,
   useWorkouts,
+  useRestDays,
   epley1RM,
   entryTopWeight,
   entryVolume,
@@ -65,15 +66,19 @@ function toISODate(d: Date) {
 
 function buildCoachingContext(
   exercises: ReturnType<typeof useExercises>['exercises'],
-  workouts: ReturnType<typeof useWorkouts>['workouts']
+  workouts: ReturnType<typeof useWorkouts>['workouts'],
+  restDays: ReturnType<typeof useRestDays>['restDays']
 ): string {
   if (exercises.length === 0) return 'User belum punya exercise data.';
 
-  const dateSet = new Set(workouts.map((w) => w.date));
+  const workoutDateSet = new Set(workouts.map((w) => w.date));
+  const restDateSet = new Set(restDays.map((r) => r.date));
+  const activeDateSet = new Set([...workoutDateSet, ...restDateSet]);
   let streak = 0;
   const cursor = new Date();
-  if (!dateSet.has(toISODate(cursor))) cursor.setDate(cursor.getDate() - 1);
-  while (dateSet.has(toISODate(cursor))) {
+  if (!activeDateSet.has(toISODate(cursor)))
+    cursor.setDate(cursor.getDate() - 1);
+  while (activeDateSet.has(toISODate(cursor))) {
     streak++;
     cursor.setDate(cursor.getDate() - 1);
   }
@@ -82,6 +87,9 @@ function buildCoachingContext(
   thirtyAgo.setDate(thirtyAgo.getDate() - 30);
   const sessions30 = workouts.filter(
     (w) => w.date >= toISODate(thirtyAgo)
+  ).length;
+  const restCount30 = restDays.filter(
+    (r) => r.date >= toISODate(thirtyAgo)
   ).length;
 
   const summaries = exercises.map((ex) => {
@@ -137,9 +145,17 @@ function buildCoachingContext(
   const delta =
     volPrev > 0 ? `${(((volNow - volPrev) / volPrev) * 100).toFixed(0)}%` : '—';
 
+  const latestRest = restDays
+    .slice()
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
+  const restInsight = latestRest
+    ? `${latestRest.date}${latestRest.note ? ` (${latestRest.note})` : ''}`
+    : 'belum ada rest day tercatat';
+
   return `
 === DATA LATIHAN USER ===
-Streak: ${streak} hari | Sesi 30 hari: ${sessions30} | Volume minggu ini: ${volNow.toLocaleString()}kg (${delta !== '—' ? delta + ' vs minggu lalu' : 'no prev data'})
+Streak: ${streak} hari (workout/rest) | Sesi 30 hari: ${sessions30} | Rest 30 hari: ${restCount30} | Volume minggu ini: ${volNow.toLocaleString()}kg (${delta !== '—' ? delta + ' vs minggu lalu' : 'no prev data'})
+Last rest day: ${restInsight}
 
 === PER EXERCISE ===
 ${summaries.join('\n')}
@@ -184,6 +200,7 @@ const TAG_CONFIG = {
 export function AICoach() {
   const { exercises } = useExercises();
   const { workouts } = useWorkouts();
+  const { restDays } = useRestDays();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -191,8 +208,8 @@ export function AICoach() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const coachingContext = useMemo(
-    () => buildCoachingContext(exercises, workouts),
-    [exercises, workouts]
+    () => buildCoachingContext(exercises, workouts, restDays),
+    [exercises, workouts, restDays]
   );
 
   const systemPrompt = `Kamu adalah AI coach gym personal di aplikasi MyGymPal.
@@ -217,10 +234,18 @@ INSTRUKSI:
         return tops.length >= 3 && tops.every((t) => t === tops[0]);
       }).length;
 
+      const hasRecentRest = restDays.some((r) => {
+        const d = new Date();
+        d.setDate(d.getDate() - 7);
+        return r.date >= toISODate(d);
+      });
+
       const text =
         plateauCount > 0
           ? `Yo! Gue udah review data latihan lo. Ada **${plateauCount} exercise** yang kayaknya lagi plateau — kita perlu address itu. Tanya gue apa aja!`
-          : `Yo! Data latihan lo udah gue load. Progress keliatan solid — gue siap bantu optimize lebih lanjut. Mau analisis exercise, minta program, atau tanya apapun?`;
+          : hasRecentRest
+            ? `Yo! Data latihan + recovery lo udah gue load. Progress keliatan solid dan rest pattern juga kebaca — gue siap bantu optimize lebih lanjut. Mau analisis exercise, minta program, atau tanya apapun?`
+            : `Yo! Data latihan lo udah gue load. Progress keliatan solid — gue siap bantu optimize lebih lanjut. Mau analisis exercise, minta program, atau tanya apapun?`;
 
       setMessages([
         {
@@ -230,7 +255,7 @@ INSTRUKSI:
         },
       ]);
     }
-  }, [exercises, workouts]);
+  }, [exercises, workouts, restDays]);
 
   const handleSend = async (text?: string) => {
     const userText = (text ?? input).trim();
@@ -466,7 +491,8 @@ INSTRUKSI:
       </Card>
 
       <p className="text-[11px] text-muted-foreground text-center font-mono">
-        AI Coach membaca data real dari exercise library & workout history kamu
+        AI Coach membaca data real dari exercise library, workout history, dan
+        rest days kamu
       </p>
     </div>
   );
