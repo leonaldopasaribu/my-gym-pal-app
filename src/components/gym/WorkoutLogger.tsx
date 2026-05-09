@@ -132,17 +132,19 @@ function ExercisePicker({
       }}
     >
       <DrawerTrigger asChild>
+        {/* FIX: tambah min-w-0 dan overflow-hidden supaya truncate bekerja dengan benar di mobile */}
         <button
           type="button"
           className={cn(
-            'w-full flex items-center justify-between gap-3 px-4 h-12 rounded-xl border transition-all',
+            'w-full flex items-center justify-between gap-3 px-4 h-12 rounded-xl border transition-all overflow-hidden',
             'active:scale-[0.98]',
             selectedEx
               ? 'bg-primary/10 border-primary/40 text-foreground hover:border-primary/60'
               : 'bg-secondary/40 border-border/60 text-muted-foreground hover:border-primary/40'
           )}
         >
-          <div className="flex items-center gap-2 min-w-0">
+          {/* FIX: min-w-0 supaya flex child bisa truncate */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             <Dumbbell
               className={cn(
                 'h-4 w-4 shrink-0',
@@ -385,7 +387,11 @@ export function WorkoutLogger() {
 
       <div className="grid gap-5 md:grid-cols-2">
         {/* ── Log Form ── */}
-        <Card ref={formRef} className="p-4 sm:p-6 surface border-border/60">
+        {/* FIX: tambah overflow-hidden supaya konten di dalam tidak bisa bocor keluar */}
+        <Card
+          ref={formRef}
+          className="p-4 sm:p-6 surface border-border/60 overflow-hidden"
+        >
           <div className="space-y-5">
             {/* Exercise Picker */}
             <div className="space-y-2">
@@ -503,7 +509,8 @@ export function WorkoutLogger() {
                         </Button>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-5">
+                    {/* FIX: tambah min-w-0 ke grid supaya kolom tidak meluap */}
+                    <div className="grid grid-cols-2 gap-3 sm:gap-5 min-w-0">
                       <Stepper
                         label="Reps"
                         value={s.reps}
@@ -547,7 +554,8 @@ export function WorkoutLogger() {
         </Card>
 
         {/* ── Recent Sessions ── */}
-        <Card className="p-4 sm:p-6 surface border-border/60">
+        {/* FIX: tambah overflow-hidden di card ini juga */}
+        <Card className="p-4 sm:p-6 surface border-border/60 overflow-hidden">
           <div className="flex items-center gap-2 mb-1">
             <CalendarDays className="h-4 w-4 text-primary" />
             <h2 className="font-display text-2xl font-bold">Recent</h2>
@@ -615,15 +623,16 @@ export function WorkoutLogger() {
                                 className="p-3 sm:p-4 rounded-lg bg-secondary/40 border border-border/60 animate-fade-up"
                               >
                                 <div className="flex items-start justify-between gap-2">
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
+                                  {/* FIX: min-w-0 supaya nama exercise bisa truncate */}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center gap-2 min-w-0">
                                       <span className="font-display font-bold truncate">
                                         {ex?.name ?? '—'}
                                       </span>
                                       {ex && (
                                         <Badge
                                           variant="outline"
-                                          className="text-[10px]"
+                                          className="text-[10px] shrink-0"
                                         >
                                           {ex.muscleGroup}
                                         </Badge>
@@ -726,11 +735,13 @@ function Stepper({
   }, [value]);
 
   return (
-    <div className="space-y-1">
+    // FIX: min-w-0 supaya Stepper tidak memaksa grid meluap
+    <div className="space-y-1 min-w-0">
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-1">
         {label}
       </div>
-      <div className="flex items-center gap-1">
+      {/* FIX: min-w-0 di flex container supaya Input bisa menyusut */}
+      <div className="flex items-center gap-1 min-w-0">
         <Button
           type="button"
           size="icon"
@@ -741,6 +752,13 @@ function Stepper({
         >
           <Minus className="h-4 w-4" />
         </Button>
+        {/*
+          FIX utama:
+          - min-w-0     → izinkan input menyusut di bawah min-width default browser
+          - w-full      → isi sisa ruang yang tersedia
+          - [appearance:textfield] & spin-button hidden → buang spin button number input
+            yang menambah lebar ekstra di beberapa browser
+        */}
         <Input
           type="number"
           inputMode={decimal ? 'decimal' : 'numeric'}
@@ -759,7 +777,13 @@ function Stepper({
             if (!Number.isNaN(n)) onChange(n);
           }}
           onBlur={() => setText(String(value))}
-          className="h-11 text-center font-mono text-sm font-semibold px-1"
+          className={cn(
+            'h-11 text-center font-mono text-sm font-semibold px-1',
+            'min-w-0 w-full',
+            '[appearance:textfield]',
+            '[&::-webkit-inner-spin-button]:appearance-none',
+            '[&::-webkit-outer-spin-button]:appearance-none'
+          )}
         />
         <Button
           type="button"
