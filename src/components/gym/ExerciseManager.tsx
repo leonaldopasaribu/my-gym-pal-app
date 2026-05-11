@@ -12,6 +12,16 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -32,9 +42,10 @@ import { Skeleton } from '../ui/skeleton';
 export function ExerciseManager() {
   const { exercises, addExercise, removeExercise, updateExercise, isLoading } =
     useExercises();
-  const { workouts, removeWorkout } = useWorkouts();
-  const [open, setOpen] = useState(false);
+  const { workouts } = useWorkouts();
+  const [isOpen, setIsOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Exercise | null>(null);
   const [name, setName] = useState('');
   const [group, setGroup] = useState<MuscleGroup>('Chest');
   const [notes, setNotes] = useState('');
@@ -47,13 +58,13 @@ export function ExerciseManager() {
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
-    setOpen(nextOpen);
+    setIsOpen(nextOpen);
     if (!nextOpen) resetForm();
   };
 
   const handleNew = () => {
     resetForm();
-    setOpen(true);
+    setIsOpen(true);
   };
 
   const handleEdit = (exercise: Exercise) => {
@@ -61,7 +72,7 @@ export function ExerciseManager() {
     setName(exercise.name);
     setGroup(exercise.muscleGroup);
     setNotes(exercise.notes ?? '');
-    setOpen(true);
+    setIsOpen(true);
   };
 
   const handleSave = async () => {
@@ -81,18 +92,30 @@ export function ExerciseManager() {
       toast.success(`"${payload.name}" added`);
     }
 
-    setOpen(false);
+    setIsOpen(false);
     resetForm();
   };
 
-  const handleDelete = (id: string, name: string) => {
-    // also drop workouts of this exercise
-    workouts
-      .filter((w) => w.exerciseId === id)
-      .forEach((w) => removeWorkout(w.id));
-    removeExercise(id);
-    toast.success(`"${name}" deleted`);
+  const handleDeleteRequest = (exercise: Exercise) => {
+    setDeleteTarget(exercise);
   };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await removeExercise(deleteTarget.id);
+      toast.success(`"${deleteTarget.name}" deleted`);
+      setDeleteTarget(null);
+    } catch {
+      toast.error('Cannot delete — this exercise still has logged sessions.');
+    }
+  };
+
+  const sessionCount = deleteTarget
+    ? workouts.filter((w) => w.exerciseId === deleteTarget.id).length
+    : 0;
+
+  const hasSessions = sessionCount > 0;
 
   return (
     <div className="space-y-4">
@@ -103,7 +126,7 @@ export function ExerciseManager() {
             Build your own custom list of movements.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button
               className="gap-2 font-semibold w-full sm:w-auto"
@@ -112,7 +135,7 @@ export function ExerciseManager() {
               <Plus className="h-4 w-4" /> New Exercise
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg rounded-xl">
+          <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-lg rounded-xl">
             <DialogHeader>
               <DialogTitle className="font-display">
                 {editingExercise ? 'Edit Exercise' : 'Add Exercise'}
@@ -225,7 +248,7 @@ export function ExerciseManager() {
                       size="icon"
                       variant="ghost"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDelete(ex.id, ex.name)}
+                      onClick={() => handleDeleteRequest(ex)}
                       aria-label={`Delete ${ex.name}`}
                     >
                       <Trash2 className="h-4 w-4" />
@@ -242,6 +265,58 @@ export function ExerciseManager() {
           })}
         </div>
       )}
+
+      {/* Delete confirmation */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this exercise?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                {hasSessions ? (
+                  <>
+                    <p>
+                      <span className="font-semibold text-foreground">
+                        {deleteTarget?.name}
+                      </span>{' '}
+                      has{' '}
+                      <span className="font-semibold text-foreground">
+                        {sessionCount} logged session
+                        {sessionCount !== 1 ? 's' : ''}
+                      </span>
+                      .
+                    </p>
+                    <p>
+                      Remove all sessions for this exercise first before
+                      deleting it.
+                    </p>
+                  </>
+                ) : (
+                  <p>
+                    <span className="font-semibold text-foreground">
+                      {deleteTarget?.name}
+                    </span>{' '}
+                    will be permanently deleted. This action cannot be undone.
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={hasSessions}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
