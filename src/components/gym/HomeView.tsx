@@ -176,7 +176,7 @@ export function HomeView() {
                   <Moon className="h-3.5 w-3.5" /> Mark today as rest day
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md rounded-lg">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Moon className="h-4 w-4 text-primary" /> Log rest day
