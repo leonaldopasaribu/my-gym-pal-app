@@ -34,6 +34,16 @@ import {
   DrawerFooter,
   DrawerClose,
 } from '@/components/ui/drawer';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useExercises,
@@ -41,7 +51,7 @@ import {
   entryTopWeight,
   entryVolume,
 } from '@/lib/gym-store';
-import type { WorkoutSet } from '@/lib/gym-types';
+import type { WorkoutEntry, WorkoutSet } from '@/lib/gym-types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
@@ -254,6 +264,7 @@ export function WorkoutLogger() {
     { id: uuidv4(), reps: 8, weight: 20 },
   ]);
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<WorkoutEntry | null>(null);
 
   const exMap = useMemo(
     () => Object.fromEntries(exercises.map((e) => [e.id, e])),
@@ -339,6 +350,14 @@ export function WorkoutLogger() {
     resetForm();
   };
 
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    await removeWorkout(deleteTarget.id);
+    if (editingWorkoutId === deleteTarget.id) cancelEdit();
+    toast.success('Session deleted');
+    setDeleteTarget(null);
+  };
+
   const recent = workouts.slice(0, 10);
 
   const orderedExerciseIds = useMemo(() => {
@@ -369,6 +388,8 @@ export function WorkoutLogger() {
       year: 'numeric',
     }).format(d);
   };
+
+  const deleteTargetEx = deleteTarget ? exMap[deleteTarget.exerciseId] : null;
 
   return (
     <div className="space-y-5">
@@ -667,11 +688,7 @@ export function WorkoutLogger() {
                                     size="icon"
                                     variant="ghost"
                                     className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                                    onClick={async () => {
-                                      await removeWorkout(w.id);
-                                      if (editingWorkoutId === w.id)
-                                        cancelEdit();
-                                    }}
+                                    onClick={() => setDeleteTarget(w)}
                                     aria-label="Delete workout"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
@@ -714,6 +731,49 @@ export function WorkoutLogger() {
           )}
         </Card>
       </div>
+
+      {/* ── Delete confirmation ── */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this session?</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-1">
+                <p>
+                  <span className="font-semibold text-foreground">
+                    {deleteTargetEx?.name ?? 'This session'}
+                  </span>{' '}
+                  on{' '}
+                  <span className="font-semibold text-foreground">
+                    {deleteTarget ? formatDateID(deleteTarget.date) : ''}
+                  </span>{' '}
+                  will be permanently deleted.
+                </p>
+                {deleteTarget && deleteTarget.sets.length > 0 && (
+                  <p className="text-xs font-mono text-muted-foreground">
+                    {deleteTarget.sets.length} set
+                    {deleteTarget.sets.length !== 1 ? 's' : ''} ·{' '}
+                    {entryTopWeight(deleteTarget)}kg top ·{' '}
+                    {entryVolume(deleteTarget).toLocaleString()}kg vol
+                  </p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
