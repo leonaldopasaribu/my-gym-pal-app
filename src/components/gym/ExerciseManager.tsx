@@ -271,7 +271,7 @@ export function ExerciseManager() {
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md">
+        <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md rounded-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this exercise?</AlertDialogTitle>
             <AlertDialogDescription asChild>
