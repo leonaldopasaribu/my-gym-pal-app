@@ -506,24 +506,44 @@ export function WorkoutLogger() {
                       )}
                     </div>
 
-                    {/* ── Row-style steppers ── */}
-                    <div className="divide-y divide-border/40">
-                      <RowStepper
-                        label="Reps"
-                        value={s.reps}
-                        step={1}
-                        min={0}
-                        onChange={(v) => updateSet(s.id, { reps: v })}
-                      />
-                      <RowStepper
-                        label="Weight (kg)"
-                        value={s.weight}
-                        step={2.5}
-                        min={0}
-                        decimal
-                        onChange={(v) => updateSet(s.id, { weight: v })}
-                      />
-                    </div>
+                    {/* ── Steppers: row layout on mobile, grid on tablet/desktop ── */}
+                    {isMobile ? (
+                      <div className="divide-y divide-border/40">
+                        <RowStepper
+                          label="Reps"
+                          value={s.reps}
+                          step={1}
+                          min={0}
+                          onChange={(v) => updateSet(s.id, { reps: v })}
+                        />
+                        <RowStepper
+                          label="Weight (kg)"
+                          value={s.weight}
+                          step={1}
+                          min={0}
+                          decimal
+                          onChange={(v) => updateSet(s.id, { weight: v })}
+                        />
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3 sm:gap-5 min-w-0">
+                        <Stepper
+                          label="Reps"
+                          value={s.reps}
+                          step={1}
+                          min={0}
+                          onChange={(v) => updateSet(s.id, { reps: v })}
+                        />
+                        <Stepper
+                          label="Kg"
+                          value={s.weight}
+                          step={1}
+                          min={0}
+                          decimal
+                          onChange={(v) => updateSet(s.id, { weight: v })}
+                        />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -698,7 +718,90 @@ export function WorkoutLogger() {
   );
 }
 
-// ─── RowStepper ───────────────────────────────────────────────────────────────
+// ─── Stepper (tablet / desktop) ──────────────────────────────────────────────
+
+function Stepper({
+  label,
+  value,
+  onChange,
+  step = 1,
+  min = 0,
+  decimal = false,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  step?: number;
+  min?: number;
+  decimal?: boolean;
+}) {
+  const dec = () => onChange(Math.max(min, +(value - step).toFixed(2)));
+  const inc = () => onChange(+(value + step).toFixed(2));
+
+  const [text, setText] = useState<string>(String(value));
+  useEffect(() => {
+    if (Number(text) !== value) setText(String(value));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
+
+  return (
+    <div className="space-y-1 min-w-0">
+      <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-1">
+        {label}
+      </div>
+      <div className="flex items-center gap-1 min-w-0">
+        <Button
+          type="button"
+          size="icon"
+          variant="outline"
+          onClick={dec}
+          className="h-11 w-11 shrink-0 border-border/60 hover:bg-primary/15 hover:border-primary/50 hover:text-primary"
+          aria-label={`Decrease ${label}`}
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <Input
+          type="number"
+          inputMode={decimal ? 'decimal' : 'numeric'}
+          min={min}
+          step={step}
+          value={text}
+          onFocus={(e) => e.target.select()}
+          onChange={(e) => {
+            const raw = e.target.value;
+            setText(raw);
+            if (raw === '' || raw === '-') {
+              onChange(min);
+              return;
+            }
+            const n = Number(raw);
+            if (!Number.isNaN(n)) onChange(n);
+          }}
+          onBlur={() => setText(String(value))}
+          className={cn(
+            'h-11 text-center font-mono text-sm font-semibold px-1',
+            'min-w-0 w-full',
+            '[appearance:textfield]',
+            '[&::-webkit-inner-spin-button]:appearance-none',
+            '[&::-webkit-outer-spin-button]:appearance-none'
+          )}
+        />
+        <Button
+          type="button"
+          size="icon"
+          variant="outline"
+          onClick={inc}
+          className="h-11 w-11 shrink-0 border-border/60 hover:bg-primary/15 hover:border-primary/50 hover:text-primary"
+          aria-label={`Increase ${label}`}
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ─── RowStepper (mobile only) ─────────────────────────────────────────────────
 
 function RowStepper({
   label,
