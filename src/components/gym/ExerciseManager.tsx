@@ -119,7 +119,7 @@ export function ExerciseManager() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold">Exercise Library</h2>
           <p className="text-sm text-muted-foreground">
@@ -129,13 +129,13 @@ export function ExerciseManager() {
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button
-              className="gap-2 font-semibold w-full sm:w-auto"
+              className="w-full gap-2 font-semibold sm:w-auto"
               onClick={handleNew}
             >
               <Plus className="h-4 w-4" /> New Exercise
             </Button>
           </DialogTrigger>
-          <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-lg rounded-xl">
+          <DialogContent className="w-[calc(100%-2rem)] rounded-xl sm:w-full sm:max-w-lg">
             <DialogHeader>
               <DialogTitle className="font-display">
                 {editingExercise ? 'Edit Exercise' : 'Add Exercise'}
@@ -191,19 +191,19 @@ export function ExerciseManager() {
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="p-4 surface border-border/60 space-y-3">
+            <Card key={i} className="surface space-y-3 border-border/60 p-4">
               <Skeleton className="h-5 w-3/4" />
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-3 w-full" />
-              <div className="pt-3 border-t border-border/60">
+              <div className="border-t border-border/60 pt-3">
                 <Skeleton className="h-3 w-16" />
               </div>
             </Card>
           ))}
         </div>
       ) : exercises.length === 0 ? (
-        <Card className="p-10 text-center surface">
-          <Dumbbell className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+        <Card className="surface p-10 text-center">
+          <Dumbbell className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">
             No exercises yet. Add your first one!
           </p>
@@ -215,11 +215,11 @@ export function ExerciseManager() {
             return (
               <Card
                 key={ex.id}
-                className="p-4 surface border-border/60 hover:border-primary/40 transition-colors group animate-fade-up"
+                className="surface group animate-fade-up border-border/60 p-4 transition-colors hover:border-primary/40"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="font-display font-bold text-lg leading-tight truncate">
+                    <h3 className="truncate font-display text-lg font-bold leading-tight">
                       {ex.name}
                     </h3>
                     <Badge
@@ -229,12 +229,12 @@ export function ExerciseManager() {
                       {ex.muscleGroup}
                     </Badge>
                     {ex.notes && (
-                      <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                      <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
                         {ex.notes}
                       </p>
                     )}
                   </div>
-                  <div className="flex shrink-0 items-center gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  <div className="flex shrink-0 items-center gap-1 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                     <Button
                       size="icon"
                       variant="ghost"
@@ -255,7 +255,7 @@ export function ExerciseManager() {
                     </Button>
                   </div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
+                <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3 text-xs text-muted-foreground">
                   <span className="font-mono">
                     {count} session{count !== 1 ? 's' : ''}
                   </span>
@@ -271,7 +271,7 @@ export function ExerciseManager() {
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md rounded-lg">
+        <AlertDialogContent className="w-[calc(100%-2rem)] rounded-lg sm:w-full sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this exercise?</AlertDialogTitle>
             <AlertDialogDescription asChild>
@@ -310,7 +310,7 @@ export function ExerciseManager() {
             <AlertDialogAction
               onClick={confirmDelete}
               disabled={hasSessions}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Delete
             </AlertDialogAction>

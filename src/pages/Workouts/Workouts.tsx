@@ -130,20 +130,24 @@ export default function Workouts() {
 
   return (
     <div className="min-h-screen">
-      <AppHeader isShowButtonBack={true} handleBack={() => navigate(ROUTE_URL.HOME)} />
-        <div className='container mt-2'>
-              <div>
-            <h2 className="font-display text-2xl font-bold">All Workouts</h2>
-            <p className="text-sm text-muted-foreground">
-            {isLoading ? '—' : `${workouts.length} sessions across ${stats.uniqueDays} training days`}
-            </p>
+      <AppHeader
+        isShowButtonBack={true}
+        handleBack={() => navigate(ROUTE_URL.HOME)}
+      />
+      <div className="container mt-2">
+        <div>
+          <h2 className="font-display text-2xl font-bold">All Workouts</h2>
+          <p className="text-sm text-muted-foreground">
+            {isLoading
+              ? '—'
+              : `${workouts.length} sessions across ${stats.uniqueDays} training days`}
+          </p>
         </div>
-        </div>
+      </div>
 
-      <div className="container py-5 pb-24 space-y-5">
-      
+      <div className="container space-y-5 py-5 pb-24">
         {/* Summary cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             {
               label: 'Total Sessions',
@@ -161,9 +165,9 @@ export default function Workouts() {
           ].map((s) => (
             <div
               key={s.label}
-              className="p-4 rounded-xl border border-border/60 bg-secondary/30 space-y-1"
+              className="space-y-1 rounded-xl border border-border/60 bg-secondary/30 p-4"
             >
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground font-mono">
+              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
                 {s.label}
               </div>
               <div className="font-display text-2xl font-bold">{s.value}</div>
@@ -172,14 +176,14 @@ export default function Workouts() {
         </div>
 
         {/* Search + Filter */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search exercises…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 bg-secondary/40 border-border/60 text-sm"
+              className="h-10 border-border/60 bg-secondary/40 pl-9 text-sm"
             />
             {search && (
               <button
@@ -193,15 +197,15 @@ export default function Workouts() {
           </div>
 
           {/* Muscle group filter chips */}
-          <div className="mt-2 sm:mt-0 flex gap-1.5 flex-wrap">
+          <div className="mt-2 flex flex-wrap gap-1.5 sm:mt-0">
             <button
               type="button"
               onClick={() => setMuscleFilter('')}
               className={cn(
-                'px-3 py-1.5 rounded-full text-xs font-medium border transition-all',
+                'rounded-full border px-3 py-1.5 text-xs font-medium transition-all',
                 !muscleFilter
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-secondary/40 border-border/60 hover:border-primary/50 text-muted-foreground'
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border/60 bg-secondary/40 text-muted-foreground hover:border-primary/50'
               )}
             >
               All
@@ -212,10 +216,10 @@ export default function Workouts() {
                 type="button"
                 onClick={() => setMuscleFilter(mg === muscleFilter ? '' : mg)}
                 className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-all',
+                  'rounded-full border px-3 py-1.5 text-xs font-medium transition-all',
                   muscleFilter === mg
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-secondary/40 border-border/60 hover:border-primary/50 text-muted-foreground'
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-border/60 bg-secondary/40 text-muted-foreground hover:border-primary/50'
                 )}
               >
                 {mg}
@@ -226,7 +230,7 @@ export default function Workouts() {
 
         {/* Results count when filtering */}
         {(search || muscleFilter) && !isLoading && (
-          <p className="text-sm text-muted-foreground font-mono">
+          <p className="font-mono text-sm text-muted-foreground">
             {filtered.length} session{filtered.length !== 1 ? 's' : ''} found
           </p>
         )}
@@ -245,9 +249,9 @@ export default function Workouts() {
             ))}
           </div>
         ) : grouped.size === 0 ? (
-          <div className="py-20 text-center space-y-3">
-            <Dumbbell className="h-10 w-10 text-muted-foreground/40 mx-auto" />
-            <p className="text-muted-foreground text-sm">
+          <div className="space-y-3 py-20 text-center">
+            <Dumbbell className="mx-auto h-10 w-10 text-muted-foreground/40" />
+            <p className="text-sm text-muted-foreground">
               {search || muscleFilter
                 ? 'No sessions match your filter.'
                 : 'No workouts logged yet.'}
@@ -271,13 +275,13 @@ export default function Workouts() {
               ([groupDate, workoutsOnDate]) => (
                 <div key={groupDate}>
                   {/* Date header */}
-                  <div className="flex items-center gap-2 mb-3 sticky top-14 z-20 bg-background/90 backdrop-blur-sm py-1.5">
-                    <CalendarDays className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-primary">
+                  <div className="sticky top-14 z-20 mb-3 flex items-center gap-2 bg-background/90 py-1.5 backdrop-blur-sm">
+                    <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary" />
+                    <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-primary">
                       {formatDateLabel(groupDate)}
                     </span>
-                    <div className="flex-1 h-px bg-border/50" />
-                    <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                    <div className="h-px flex-1 bg-border/50" />
+                    <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
                       {workoutsOnDate.length} exercise
                       {workoutsOnDate.length > 1 ? 's' : ''}
                     </span>
@@ -293,24 +297,24 @@ export default function Workouts() {
                       return (
                         <div
                           key={w.id}
-                          className="p-4 rounded-xl bg-secondary/30 border border-border/60 hover:border-border/80 transition-colors"
+                          className="rounded-xl border border-border/60 bg-secondary/30 p-4 transition-colors hover:border-border/80"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                                <span className="font-display font-bold truncate">
+                              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                <span className="truncate font-display font-bold">
                                   {ex?.name ?? '—'}
                                 </span>
                                 {ex && (
                                   <Badge
                                     variant="outline"
-                                    className="text-[10px] shrink-0"
+                                    className="shrink-0 text-[10px]"
                                   >
                                     {ex.muscleGroup}
                                   </Badge>
                                 )}
                               </div>
-                              <div className="text-xs text-muted-foreground mt-0.5">
+                              <div className="mt-0.5 text-xs text-muted-foreground">
                                 {w.sets.length} set
                                 {w.sets.length !== 1 ? 's' : ''}
                               </div>
@@ -334,7 +338,7 @@ export default function Workouts() {
                             {w.sets.map((s, i) => (
                               <span
                                 key={s.id}
-                                className="text-xs font-mono px-2 py-0.5 rounded-md bg-background/60 border border-border/60"
+                                className="rounded-md border border-border/60 bg-background/60 px-2 py-0.5 font-mono text-xs"
                               >
                                 {i + 1}: {s.reps}×{s.weight}kg
                               </span>
@@ -342,16 +346,16 @@ export default function Workouts() {
                           </div>
 
                           {/* Stats row */}
-                          <div className="mt-3 flex gap-4 text-[11px] text-muted-foreground font-mono border-t border-border/40 pt-2.5">
+                          <div className="mt-3 flex gap-4 border-t border-border/40 pt-2.5 font-mono text-[11px] text-muted-foreground">
                             <span>
                               TOP{' '}
-                              <span className="text-foreground font-semibold">
+                              <span className="font-semibold text-foreground">
                                 {top}kg
                               </span>
                             </span>
                             <span>
                               VOL{' '}
-                              <span className="text-foreground font-semibold">
+                              <span className="font-semibold text-foreground">
                                 {vol.toLocaleString()}kg
                               </span>
                             </span>
@@ -372,7 +376,7 @@ export default function Workouts() {
         open={!!deleteTarget}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
       >
-        <AlertDialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md rounded-lg">
+        <AlertDialogContent className="w-[calc(100%-2rem)] rounded-lg sm:w-full sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this session?</AlertDialogTitle>
             <AlertDialogDescription asChild>
@@ -388,7 +392,7 @@ export default function Workouts() {
                   will be permanently deleted.
                 </p>
                 {deleteTarget && deleteTarget.sets.length > 0 && (
-                  <p className="text-xs font-mono text-muted-foreground">
+                  <p className="font-mono text-xs text-muted-foreground">
                     {deleteTarget.sets.length} set
                     {deleteTarget.sets.length !== 1 ? 's' : ''} ·{' '}
                     {entryTopWeight(deleteTarget)}kg top ·{' '}

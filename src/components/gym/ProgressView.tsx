@@ -67,7 +67,7 @@ export function ProgressView() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="space-y-2">
             <Skeleton className="h-7 w-56" />
             <Skeleton className="h-4 w-72" />
@@ -77,7 +77,7 @@ export function ProgressView() {
             <Skeleton className="h-10 w-44" />
           </div>
         </div>
-        <Card className="p-4 sm:p-5 surface border-border/60 space-y-4">
+        <Card className="surface space-y-4 border-border/60 p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <Skeleton className="h-3 w-32" />
@@ -85,7 +85,7 @@ export function ProgressView() {
             </div>
             <Skeleton className="h-8 w-16" />
           </div>
-          <Skeleton className="h-[260px] sm:h-[320px] w-full" />
+          <Skeleton className="h-[260px] w-full sm:h-[320px]" />
         </Card>
       </div>
     );
@@ -93,7 +93,7 @@ export function ProgressView() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-end sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold">
             Progressive Overload
@@ -102,7 +102,7 @@ export function ProgressView() {
             Track weight & volume progress over time.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Select value={activeId} onValueChange={setExerciseId}>
             <SelectTrigger className="w-full sm:w-[220px]">
               <SelectValue placeholder="Select exercise" />
@@ -119,23 +119,23 @@ export function ProgressView() {
             type="single"
             value={metric}
             onValueChange={(v) => v && setMetric(v as Metric)}
-            className="bg-secondary/40 rounded-md p-0.5 grid grid-cols-3 sm:flex w-full sm:w-auto"
+            className="grid w-full grid-cols-3 rounded-md bg-secondary/40 p-0.5 sm:flex sm:w-auto"
           >
             <ToggleGroupItem
               value="top"
-              className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              className="px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
             >
               Top
             </ToggleGroupItem>
             <ToggleGroupItem
               value="volume"
-              className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              className="px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
             >
               Volume
             </ToggleGroupItem>
             <ToggleGroupItem
               value="e1rm"
-              className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              className="px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
             >
               e1RM
             </ToggleGroupItem>
@@ -143,20 +143,20 @@ export function ProgressView() {
         </div>
       </div>
 
-      <Card className="p-4 sm:p-5 surface border-border/60">
-        <div className="flex items-center justify-between mb-4">
+      <Card className="surface border-border/60 p-4 sm:p-5">
+        <div className="mb-4 flex items-center justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
               {METRIC_LABEL[metric]}
             </div>
-            <div className="font-display text-3xl font-bold mt-1">
+            <div className="mt-1 font-display text-3xl font-bold">
               {last ? Number(last[metric]).toLocaleString() : '—'}
-              <span className="text-base text-muted-foreground ml-1">kg</span>
+              <span className="ml-1 text-base text-muted-foreground">kg</span>
             </div>
           </div>
           {last && prev && (
             <div
-              className={`flex items-center gap-1.5 text-sm font-mono px-3 py-1.5 rounded-md ${
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-sm ${
                 delta > 0
                   ? 'bg-primary/15 text-primary'
                   : delta < 0
@@ -174,7 +174,7 @@ export function ProgressView() {
         </div>
 
         {data.length === 0 ? (
-          <div className="h-[260px] sm:h-[320px] grid place-items-center text-sm text-muted-foreground text-center px-4">
+          <div className="grid h-[260px] place-items-center px-4 text-center text-sm text-muted-foreground sm:h-[320px]">
             No data for this exercise yet. Log a workout first!
           </div>
         ) : (

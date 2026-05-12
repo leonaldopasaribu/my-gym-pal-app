@@ -98,12 +98,12 @@ export function HomeView() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <Card className="surface border-border/60 p-6 sm:p-8 space-y-4">
+        <Card className="surface space-y-4 border-border/60 p-6 sm:p-8">
           <Skeleton className="h-3 w-32" />
           <Skeleton className="h-16 w-48" />
           <Skeleton className="h-4 w-3/4" />
         </Card>
-        <Card className="surface border-border/60 p-5 sm:p-6 space-y-4">
+        <Card className="surface space-y-4 border-border/60 p-5 sm:p-6">
           <Skeleton className="h-3 w-40" />
           <Skeleton className="h-12 w-32" />
           <div className="grid grid-cols-10 gap-1.5">
@@ -119,21 +119,21 @@ export function HomeView() {
   return (
     <div className="space-y-4">
       {/* Momentum / Streak */}
-      <Card className="surface border-border/60 p-6 sm:p-8 relative overflow-hidden">
-        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-primary font-mono mb-3">
+      <Card className="surface relative overflow-hidden border-border/60 p-6 sm:p-8">
+        <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
+        <div className="mb-3 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.3em] text-primary">
           <Flame className="h-3.5 w-3.5" />
           Momentum
         </div>
         <div className="flex items-baseline gap-3">
-          <div className="font-display text-6xl sm:text-7xl font-bold leading-none text-gradient-primary">
+          <div className="text-gradient-primary font-display text-6xl font-bold leading-none sm:text-7xl">
             {streak}
           </div>
-          <div className="text-lg sm:text-xl text-muted-foreground font-medium">
+          <div className="text-lg font-medium text-muted-foreground sm:text-xl">
             {streak === 1 ? 'Day' : 'Days'} Streak
           </div>
         </div>
-        <p className="text-sm text-muted-foreground mt-3">
+        <p className="mt-3 text-sm text-muted-foreground">
           {streak === 0
             ? 'Log a workout or mark a rest day to start your streak.'
             : 'Keep showing up. Rest days count too — recovery is progress.'}
@@ -176,7 +176,7 @@ export function HomeView() {
                   <Moon className="h-3.5 w-3.5" /> Mark today as rest day
                 </Button>
               </DialogTrigger>
-              <DialogContent className="w-[calc(100%-2rem)] sm:w-full sm:max-w-md rounded-lg">
+              <DialogContent className="w-[calc(100%-2rem)] rounded-lg sm:w-full sm:max-w-md">
                 <DialogHeader>
                   <DialogTitle className="flex items-center gap-2">
                     <Moon className="h-4 w-4 text-primary" /> Log rest day
@@ -210,14 +210,14 @@ export function HomeView() {
 
       {/* 30-day velocity */}
       <Card className="surface border-border/60 p-5 sm:p-6">
-        <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.3em] text-primary font-mono mb-2">
+            <div className="mb-2 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.3em] text-primary">
               <Activity className="h-3.5 w-3.5" />
               30 Day Velocity
             </div>
             <div className="flex items-baseline gap-2">
-              <div className="font-display text-4xl sm:text-5xl font-bold">
+              <div className="font-display text-4xl font-bold sm:text-5xl">
                 {sessions30}
               </div>
               <div className="text-sm text-muted-foreground">
@@ -227,7 +227,7 @@ export function HomeView() {
           </div>
           {restCount30 > 0 && (
             <div className="text-right">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-mono mb-1 flex items-center gap-1 justify-end">
+              <div className="mb-1 flex items-center justify-end gap-1 font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                 <Moon className="h-3 w-3" /> Rest
               </div>
               <div className="font-display text-2xl font-bold text-muted-foreground">
@@ -249,7 +249,7 @@ export function HomeView() {
               <div
                 key={d.date}
                 title={tip}
-                className="aspect-square rounded-[5px] border border-border/40 relative"
+                className="relative aspect-square rounded-[5px] border border-border/40"
                 style={{
                   backgroundColor:
                     d.count > 0
@@ -267,7 +267,7 @@ export function HomeView() {
           })}
         </div>
 
-        <div className="flex items-center justify-between mt-4 text-[10px] uppercase tracking-wider text-muted-foreground font-mono flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
           <span>30 days ago</span>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -284,7 +284,7 @@ export function HomeView() {
             <span className="opacity-50">·</span>
             <div className="flex items-center gap-1">
               <div
-                className="h-2.5 w-2.5 rounded-[3px] border border-border/40 flex items-center justify-center"
+                className="flex h-2.5 w-2.5 items-center justify-center rounded-[3px] border border-border/40"
                 style={{
                   backgroundColor: `hsl(var(--muted-foreground) / 0.25)`,
                 }}

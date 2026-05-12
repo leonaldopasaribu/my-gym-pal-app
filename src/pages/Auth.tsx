@@ -59,25 +59,25 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center p-4">
+    <div className="grid min-h-screen place-items-center p-4">
       <div className="w-full max-w-md">
-        <div className="flex flex-col items-center mb-6">
-          <div className="h-14 w-14 grid place-items-center rounded-2xl bg-gradient-to-br from-foreground/10 to-foreground/[0.02] border border-border mb-3 shadow-card">
+        <div className="mb-6 flex flex-col items-center">
+          <div className="mb-3 grid h-14 w-14 place-items-center rounded-2xl border border-border bg-gradient-to-br from-foreground/10 to-foreground/[0.02] shadow-card">
             <Dumbbell className="h-7 w-7 text-foreground" />
           </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight flex items-center gap-2">
+          <h1 className="flex items-center gap-2 font-display text-3xl font-bold tracking-tight">
             <span>My</span>
             <span className="text-gradient-primary">Gym</span>
             <span>Pal</span>
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Train · Track · Transform
           </p>
         </div>
 
-        <Card className="p-5 surface border-border/60">
+        <Card className="surface border-border/60 p-5">
           <Tabs defaultValue="signin">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsList className="mb-4 grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
@@ -110,7 +110,7 @@ export default function Auth() {
                   type="submit"
                   disabled={busy}
                   size="lg"
-                  className="w-full font-semibold glow-primary"
+                  className="glow-primary w-full font-semibold"
                 >
                   {busy ? 'Processing...' : 'Sign In'}
                 </Button>
@@ -146,7 +146,7 @@ export default function Auth() {
                   type="submit"
                   disabled={busy}
                   size="lg"
-                  className="w-full font-semibold glow-primary"
+                  className="glow-primary w-full font-semibold"
                 >
                   {busy ? 'Processing...' : 'Create Account'}
                 </Button>
@@ -155,7 +155,7 @@ export default function Auth() {
           </Tabs>
         </Card>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
+        <p className="mt-4 text-center text-xs text-muted-foreground">
           Your data is securely stored in the cloud — never lost again 🔒
         </p>
       </div>

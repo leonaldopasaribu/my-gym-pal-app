@@ -362,7 +362,7 @@ export function AICoach() {
       <span key={lineIdx}>
         {line.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
           part.startsWith('**') && part.endsWith('**') ? (
-            <strong key={i} className="text-foreground font-semibold">
+            <strong key={i} className="font-semibold text-foreground">
               {part.slice(2, -2)}
             </strong>
           ) : (
@@ -375,9 +375,9 @@ export function AICoach() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-display text-2xl font-bold flex items-center gap-2">
+          <h2 className="flex items-center gap-2 font-display text-2xl font-bold">
             <Bot className="h-6 w-6 text-primary" />
             AI Coach
           </h2>
@@ -408,9 +408,9 @@ export function AICoach() {
             onClick={() => handleSend(p)}
             disabled={loading}
             className={cn(
-              'px-3 py-1.5 rounded-full text-xs font-medium border transition-all active:scale-95',
-              'bg-secondary/40 border-border/60 text-foreground/80 hover:border-primary/50 hover:text-foreground',
-              'disabled:opacity-40 disabled:cursor-not-allowed'
+              'rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95',
+              'border-border/60 bg-secondary/40 text-foreground/80 hover:border-primary/50 hover:text-foreground',
+              'disabled:cursor-not-allowed disabled:opacity-40'
             )}
           >
             {p}
@@ -418,12 +418,12 @@ export function AICoach() {
         ))}
       </div>
 
-      <Card className="surface border-border/60 overflow-hidden">
-        <div className="h-[420px] overflow-y-auto p-4 space-y-4">
+      <Card className="surface overflow-hidden border-border/60">
+        <div className="h-[420px] space-y-4 overflow-y-auto p-4">
           {messages.length === 0 && (
-            <div className="h-full grid place-items-center text-center">
+            <div className="grid h-full place-items-center text-center">
               <div>
-                <Bot className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                <Bot className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
                   {exercises.length === 0
                     ? 'Add exercise first in Library.'
@@ -443,7 +443,7 @@ export function AICoach() {
             >
               <div
                 className={cn(
-                  'h-7 w-7 rounded-lg grid place-items-center shrink-0 mt-0.5 text-xs font-bold',
+                  'mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold',
                   msg.role === 'assistant'
                     ? 'bg-foreground text-background'
                     : 'bg-secondary text-muted-foreground'
@@ -455,8 +455,8 @@ export function AICoach() {
                 className={cn(
                   'max-w-[82%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed',
                   msg.role === 'assistant'
-                    ? 'bg-secondary/40 border border-border/60 rounded-tl-sm'
-                    : 'bg-foreground text-background rounded-tr-sm font-medium'
+                    ? 'rounded-tl-sm border border-border/60 bg-secondary/40'
+                    : 'rounded-tr-sm bg-foreground font-medium text-background'
                 )}
               >
                 {msg.role === 'assistant' &&
@@ -467,7 +467,7 @@ export function AICoach() {
                     return (
                       <div
                         className={cn(
-                          'inline-flex items-center gap-1 text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded mb-2',
+                          'mb-2 inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest',
                           cfg.className
                         )}
                       >
@@ -487,15 +487,15 @@ export function AICoach() {
 
           {loading && (
             <div className="flex gap-3">
-              <div className="h-7 w-7 rounded-lg grid place-items-center shrink-0 bg-foreground text-background text-xs font-bold">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-foreground text-xs font-bold text-background">
                 AI
               </div>
-              <div className="bg-secondary/40 border border-border/60 rounded-xl rounded-tl-sm px-4 py-3">
+              <div className="rounded-xl rounded-tl-sm border border-border/60 bg-secondary/40 px-4 py-3">
                 <div className="flex items-center gap-1.5">
                   {[0, 150, 300].map((d) => (
                     <span
                       key={d}
-                      className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-pulse"
+                      className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground"
                       style={{ animationDelay: `${d}ms` }}
                     />
                   ))}
@@ -505,14 +505,14 @@ export function AICoach() {
           )}
 
           {error && (
-            <div className="flex gap-2 items-start p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs">
-              <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
         </div>
 
-        <div className="border-t border-border/60 p-3 flex gap-2">
+        <div className="flex gap-2 border-t border-border/60 p-3">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -525,14 +525,14 @@ export function AICoach() {
             onClick={() => handleSend()}
             disabled={loading || !input.trim()}
             size="icon"
-            className="h-11 w-11 shrink-0 glow-primary"
+            className="glow-primary h-11 w-11 shrink-0"
           >
             <Send className="h-4 w-4" />
           </Button>
         </div>
       </Card>
 
-      <p className="text-[11px] text-muted-foreground text-center font-mono">
+      <p className="text-center font-mono text-[11px] text-muted-foreground">
         AI Coach membaca data real dari exercise library, workout history, dan
         rest days kamu
       </p>

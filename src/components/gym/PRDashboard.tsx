@@ -79,7 +79,7 @@ export function PRDashboard() {
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="p-5 surface border-border/60 space-y-3">
+            <Card key={i} className="surface space-y-3 border-border/60 p-5">
               <Skeleton className="h-5 w-2/3" />
               <Skeleton className="h-4 w-20" />
               <div className="grid grid-cols-3 gap-3 pt-2">
@@ -92,8 +92,8 @@ export function PRDashboard() {
           ))}
         </div>
       ) : prs.length === 0 ? (
-        <Card className="p-10 text-center surface">
-          <Trophy className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+        <Card className="surface p-10 text-center">
+          <Trophy className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
           <p className="text-muted-foreground">
             Log a workout to start setting records 💥
           </p>
@@ -103,17 +103,17 @@ export function PRDashboard() {
           {prs.map(({ ex, maxWeight, maxReps, max1RM, bestSet }, idx) => (
             <Card
               key={ex.id}
-              className="p-5 surface border-border/60 relative overflow-hidden animate-fade-up"
+              className="surface relative animate-fade-up overflow-hidden border-border/60 p-5"
             >
               {idx === 0 && (
-                <div className="absolute top-3 right-3">
-                  <Badge className="bg-accent text-accent-foreground gap-1 text-[10px] uppercase tracking-widest">
+                <div className="absolute right-3 top-3">
+                  <Badge className="gap-1 bg-accent text-[10px] uppercase tracking-widest text-accent-foreground">
                     <Trophy className="h-3 w-3" /> Top PR
                   </Badge>
                 </div>
               )}
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-display font-bold text-lg">{ex.name}</h3>
+              <div className="mb-1 flex items-center gap-2">
+                <h3 className="font-display text-lg font-bold">{ex.name}</h3>
               </div>
               <Badge
                 variant="outline"
@@ -122,14 +122,14 @@ export function PRDashboard() {
                 {ex.muscleGroup}
               </Badge>
 
-              <div className="grid grid-cols-3 gap-3 mt-4">
+              <div className="mt-4 grid grid-cols-3 gap-3">
                 <Mini label="Max Weight" value={`${maxWeight}kg`} />
                 <Mini label="Max Reps" value={`${maxReps}`} />
                 <Mini label="e1RM" value={`${max1RM}kg`} highlight />
               </div>
 
               {bestSet && (
-                <div className="mt-3 pt-3 border-t border-border/60 text-xs text-muted-foreground font-mono">
+                <div className="mt-3 border-t border-border/60 pt-3 font-mono text-xs text-muted-foreground">
                   Best: {bestSet.reps}×{bestSet.weight}kg · {bestSet.date}
                 </div>
               )}
@@ -152,13 +152,13 @@ function StatCard({
 }) {
   return (
     <Card
-      className={`p-4 surface border-border/60 ${accent ? 'border-primary/40' : ''}`}
+      className={`surface border-border/60 p-4 ${accent ? 'border-primary/40' : ''}`}
     >
       <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
         {label}
       </div>
       <div
-        className={`font-display text-2xl font-bold mt-1 ${accent ? 'text-gradient-primary' : ''}`}
+        className={`mt-1 font-display text-2xl font-bold ${accent ? 'text-gradient-primary' : ''}`}
       >
         {value}
       </div>
@@ -176,13 +176,13 @@ function Mini({
   highlight?: boolean;
 }) {
   return (
-    <div className="rounded-lg bg-secondary/40 border border-border/60 p-2.5">
-      <div className="text-[9px] uppercase tracking-widest text-muted-foreground flex items-center gap-1">
+    <div className="rounded-lg border border-border/60 bg-secondary/40 p-2.5">
+      <div className="flex items-center gap-1 text-[9px] uppercase tracking-widest text-muted-foreground">
         {highlight && <Zap className="h-2.5 w-2.5 text-primary" />}
         {label}
       </div>
       <div
-        className={`font-display font-bold text-base mt-0.5 ${highlight ? 'text-primary' : ''}`}
+        className={`mt-0.5 font-display text-base font-bold ${highlight ? 'text-primary' : ''}`}
       >
         {value}
       </div>
