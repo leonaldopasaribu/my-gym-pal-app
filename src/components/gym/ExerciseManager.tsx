@@ -38,6 +38,7 @@ import {
 } from '@/lib/gym-types';
 import { toast } from 'sonner';
 import { Skeleton } from '../ui/skeleton';
+import { Loading } from '@/components/ui/loading';
 
 export function ExerciseManager() {
   const { exercises, addExercise, removeExercise, updateExercise, isLoading } =
@@ -49,6 +50,8 @@ export function ExerciseManager() {
   const [name, setName] = useState('');
   const [group, setGroup] = useState<MuscleGroup>('Chest');
   const [notes, setNotes] = useState('');
+  const [isSavingExercise, setIsSavingExercise] = useState(false);
+  const [isDeletingExercise, setIsDeletingExercise] = useState(false);
 
   const resetForm = () => {
     setEditingExercise(null);
@@ -58,6 +61,7 @@ export function ExerciseManager() {
   };
 
   const handleOpenChange = (nextOpen: boolean) => {
+    if (isSavingExercise) return;
     setIsOpen(nextOpen);
     if (!nextOpen) resetForm();
   };
@@ -76,6 +80,7 @@ export function ExerciseManager() {
   };
 
   const handleSave = async () => {
+    if (isSavingExercise) return;
     if (!name.trim()) return toast.error('Exercise name is required');
 
     const payload = {
@@ -84,16 +89,21 @@ export function ExerciseManager() {
       notes: notes.trim() || undefined,
     };
 
-    if (editingExercise) {
-      await updateExercise(editingExercise.id, payload);
-      toast.success(`"${payload.name}" updated`);
-    } else {
-      await addExercise(payload);
-      toast.success(`"${payload.name}" added`);
-    }
+    setIsSavingExercise(true);
+    try {
+      if (editingExercise) {
+        await updateExercise(editingExercise.id, payload);
+        toast.success(`"${payload.name}" updated`);
+      } else {
+        await addExercise(payload);
+        toast.success(`"${payload.name}" added`);
+      }
 
-    setIsOpen(false);
-    resetForm();
+      setIsOpen(false);
+      resetForm();
+    } finally {
+      setIsSavingExercise(false);
+    }
   };
 
   const handleDeleteRequest = (exercise: Exercise) => {
@@ -101,13 +111,16 @@ export function ExerciseManager() {
   };
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || isDeletingExercise) return;
+    setIsDeletingExercise(true);
     try {
       await removeExercise(deleteTarget.id);
       toast.success(`"${deleteTarget.name}" deleted`);
       setDeleteTarget(null);
     } catch {
       toast.error('Cannot delete — this exercise still has logged sessions.');
+    } finally {
+      setIsDeletingExercise(false);
     }
   };
 
@@ -131,6 +144,7 @@ export function ExerciseManager() {
             <Button
               className="w-full gap-2 font-semibold sm:w-auto"
               onClick={handleNew}
+              disabled={isSavingExercise}
             >
               <Plus className="h-4 w-4" /> New Exercise
             </Button>
@@ -149,6 +163,7 @@ export function ExerciseManager() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g. Incline Dumbbell Press"
+                  disabled={isSavingExercise}
                 />
               </div>
               <div className="space-y-2">
@@ -156,6 +171,7 @@ export function ExerciseManager() {
                 <Select
                   value={group}
                   onValueChange={(v) => setGroup(v as MuscleGroup)}
+                  disabled={isSavingExercise}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -176,12 +192,27 @@ export function ExerciseManager() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Form cues, grip, etc."
+                  disabled={isSavingExercise}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleSave} className="font-semibold">
-                {editingExercise ? 'Update' : 'Save'}
+              <Button
+                onClick={handleSave}
+                className="font-semibold"
+                disabled={isSavingExercise}
+              >
+                {isSavingExercise ? (
+                  <Loading
+                    size="sm"
+                    label={editingExercise ? 'Updating...' : 'Saving...'}
+                    className="flex-row gap-2"
+                  />
+                ) : editingExercise ? (
+                  'Update'
+                ) : (
+                  'Save'
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -269,7 +300,9 @@ export function ExerciseManager() {
       {/* Delete confirmation */}
       <AlertDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onOpenChange={(open) => {
+          if (!open && !isDeletingExercise) setDeleteTarget(null);
+        }}
       >
         <AlertDialogContent className="w-[calc(100%-2rem)] rounded-lg sm:w-full sm:max-w-md">
           <AlertDialogHeader>
@@ -306,13 +339,23 @@ export function ExerciseManager() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeletingExercise}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
-              disabled={hasSessions}
+              disabled={hasSessions || isDeletingExercise}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Delete
+              {isDeletingExercise ? (
+                <Loading
+                  size="sm"
+                  label="Deleting..."
+                  className="flex-row gap-2"
+                />
+              ) : (
+                'Delete'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

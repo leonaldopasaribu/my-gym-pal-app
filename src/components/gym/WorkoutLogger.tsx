@@ -57,6 +57,7 @@ import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_URL } from '@/constants/route-url';
+import { Loading } from '@/components/ui/loading';
 
 function todayISO() {
   const d = new Date();
@@ -267,6 +268,8 @@ export function WorkoutLogger() {
   ]);
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkoutEntry | null>(null);
+  const [isSavingWorkout, setIsSavingWorkout] = useState(false);
+  const [isDeletingWorkout, setIsDeletingWorkout] = useState(false);
 
   const navigate = useNavigate();
 
@@ -325,6 +328,7 @@ export function WorkoutLogger() {
   };
 
   const save = async () => {
+    if (isSavingWorkout) return;
     if (!exerciseId) return toast.error('Pick an exercise first');
     if (sets.some((s) => s.reps <= 0)) return toast.error('Reps must be > 0');
     const duplicate = workouts.some(
@@ -339,27 +343,37 @@ export function WorkoutLogger() {
         description: 'Edit the existing entry or pick a different date.',
       });
     }
-    if (editingWorkoutId) {
-      await updateWorkout(editingWorkoutId, {
-        exerciseId,
-        date,
-        sets,
-        note: undefined,
-      });
-      toast.success('Workout updated ✅');
-    } else {
-      await addWorkout({ exerciseId, date, sets, note: undefined });
-      toast.success('Workout saved 💪');
+    setIsSavingWorkout(true);
+    try {
+      if (editingWorkoutId) {
+        await updateWorkout(editingWorkoutId, {
+          exerciseId,
+          date,
+          sets,
+          note: undefined,
+        });
+        toast.success('Workout updated ✅');
+      } else {
+        await addWorkout({ exerciseId, date, sets, note: undefined });
+        toast.success('Workout saved 💪');
+      }
+      resetForm();
+    } finally {
+      setIsSavingWorkout(false);
     }
-    resetForm();
   };
 
   const confirmDelete = async () => {
-    if (!deleteTarget) return;
-    await removeWorkout(deleteTarget.id);
-    if (editingWorkoutId === deleteTarget.id) cancelEdit();
-    toast.success('Session deleted');
-    setDeleteTarget(null);
+    if (!deleteTarget || isDeletingWorkout) return;
+    setIsDeletingWorkout(true);
+    try {
+      await removeWorkout(deleteTarget.id);
+      if (editingWorkoutId === deleteTarget.id) cancelEdit();
+      toast.success('Session deleted');
+      setDeleteTarget(null);
+    } finally {
+      setIsDeletingWorkout(false);
+    }
   };
 
   const recent = workouts.slice(0, 10);
@@ -578,8 +592,19 @@ export function WorkoutLogger() {
               onClick={save}
               size="lg"
               className="glow-primary w-full text-base font-semibold"
+              disabled={isSavingWorkout}
             >
-              {editingWorkoutId ? 'Update Workout' : 'Save Workout'}
+              {isSavingWorkout ? (
+                <Loading
+                  size="sm"
+                  label={editingWorkoutId ? 'Updating...' : 'Saving...'}
+                  className="flex-row gap-2"
+                />
+              ) : editingWorkoutId ? (
+                'Update Workout'
+              ) : (
+                'Save Workout'
+              )}
             </Button>
             {editingWorkoutId && (
               <Button
@@ -588,6 +613,7 @@ export function WorkoutLogger() {
                 size="lg"
                 variant="outline"
                 className="w-full text-base font-semibold"
+                disabled={isSavingWorkout}
               >
                 Cancel
               </Button>
@@ -750,7 +776,9 @@ export function WorkoutLogger() {
       {/* ── Delete confirmation ── */}
       <AlertDialog
         open={!!deleteTarget}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onOpenChange={(open) => {
+          if (!open && !isDeletingWorkout) setDeleteTarget(null);
+        }}
       >
         <AlertDialogContent className="w-[calc(100%-2rem)] rounded-lg sm:w-full sm:max-w-md">
           <AlertDialogHeader>
@@ -779,12 +807,19 @@ export function WorkoutLogger() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeletingWorkout}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={confirmDelete}
+              disabled={isDeletingWorkout}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {isDeletingWorkout ? (
+                <Loading size="sm" label="Deleting..." className="flex-row gap-2" />
+              ) : (
+                'Delete'
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
