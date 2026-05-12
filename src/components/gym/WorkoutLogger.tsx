@@ -55,6 +55,8 @@ import type { WorkoutEntry, WorkoutSet } from '@/lib/gym-types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '../ui/skeleton';
+import { useNavigate } from 'react-router-dom';
+import { ROUTE_URL } from '@/constants/route-url';
 
 function todayISO() {
   const d = new Date();
@@ -265,6 +267,8 @@ export function WorkoutLogger() {
   ]);
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkoutEntry | null>(null);
+
+  const navigate = useNavigate();
 
   const exMap = useMemo(
     () => Object.fromEntries(exercises.map((e) => [e.id, e])),
@@ -593,12 +597,23 @@ export function WorkoutLogger() {
 
         {/* ── Recent Sessions ── */}
         <Card className="p-4 sm:p-6 surface border-border/60 overflow-hidden">
-          <div className="flex items-center gap-2 mb-1">
-            <CalendarDays className="h-4 w-4 text-primary" />
-            <h2 className="font-display text-2xl font-bold">Recent</h2>
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              <h2 className="font-display text-2xl font-bold">Recent</h2>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-xs text-muted-foreground hover:text-primary gap-1 pr-0"
+              onClick={() => navigate(ROUTE_URL.WORKOUTS)}
+            >
+              View all
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Your latest sessions.
+            Your latest 10 sessions.
           </p>
 
           {isLoadingWorkouts ? (

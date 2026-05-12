@@ -1,9 +1,14 @@
-import { Dumbbell, LogOut, Flame } from 'lucide-react';
+import { Dumbbell, LogOut, Flame, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
-export function AppHeader() {
+interface AppHeaderProps {
+  isShowButtonBack?: boolean;
+  handleBack?: () => void;
+};
+
+export function AppHeader({ isShowButtonBack, handleBack }: AppHeaderProps) {
   const { user, signOut } = useAuth();
 
   const handleLogout = async () => {
@@ -32,13 +37,29 @@ export function AppHeader() {
 
       <div className="container relative flex items-center justify-between h-16">
         <div className="flex items-center gap-3">
-          <div className="relative h-11 w-11 grid place-items-center rounded-2xl bg-gradient-to-br from-foreground/10 to-foreground/[0.02] border border-border shadow-card group">
-            <Dumbbell className="h-5 w-5 text-foreground transition-transform group-hover:rotate-12" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-foreground grid place-items-center">
-              <Flame className="h-2 w-2 text-background" strokeWidth={3} />
-            </span>
-            <span className="absolute inset-0 rounded-2xl ring-1 ring-foreground/10 animate-pulse-glow" />
-          </div>
+          
+          {isShowButtonBack ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-9 w-9 shrink-0"
+              onClick={handleBack}
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          ) : (
+            <div className="relative h-11 w-11 grid place-items-center rounded-2xl bg-gradient-to-br from-foreground/10 to-foreground/[0.02] border border-border shadow-card group">
+              <Dumbbell className="h-5 w-5 text-foreground transition-transform group-hover:rotate-12" />
+
+              <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-foreground grid place-items-center">
+                <Flame className="h-2 w-2 text-background" strokeWidth={3} />
+              </span>
+
+              <span className="absolute inset-0 rounded-2xl ring-1 ring-foreground/10 animate-pulse-glow" />
+            </div>
+          )}
+          
           <div className="leading-tight">
             <h1 className="font-display text-xl sm:text-lg font-bold tracking-tight flex items-center gap-1.5">
               <span className="text-foreground">My</span>

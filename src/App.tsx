@@ -8,6 +8,7 @@ import Index from './pages/Index.tsx';
 import Auth from './pages/Auth.tsx';
 import NotFound from './pages/NotFound.tsx';
 import { Loading } from './components/ui/loading.tsx';
+import Workouts from './pages/Workouts/Workouts.tsx';
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workouts"
+              element={
+                <ProtectedRoute>
+                  <Workouts />
                 </ProtectedRoute>
               }
             />
