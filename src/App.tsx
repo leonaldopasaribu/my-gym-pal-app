@@ -1,5 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+} from 'react-router-dom';
+import { useEffect } from 'react';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -8,9 +15,19 @@ import Index from './pages/Index.tsx';
 import Auth from './pages/Auth.tsx';
 import NotFound from './pages/NotFound.tsx';
 import { Loading } from './components/ui/loading.tsx';
-import Workouts from './pages/Workouts/Workouts.tsx';
+import Workouts from './pages/Workouts.tsx';
 
 const queryClient = new QueryClient();
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [pathname]);
+
+  return null;
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, isLoading } = useAuth();
@@ -27,6 +44,7 @@ const App = () => (
       <Toaster />
       <Sonner position="top-center" />
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <Routes>
             <Route path="/auth" element={<Auth />} />
