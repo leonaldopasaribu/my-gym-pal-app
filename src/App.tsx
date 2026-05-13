@@ -16,6 +16,13 @@ import Auth from './pages/Auth.tsx';
 import NotFound from './pages/NotFound.tsx';
 import { Loading } from './components/ui/loading.tsx';
 import Workouts from './pages/Workouts.tsx';
+import { AICoach } from './components/gym/AICoach.tsx';
+import { ExerciseManager } from './components/gym/ExerciseManager.tsx';
+import { HomeView } from './components/gym/HomeView.tsx';
+import { PRDashboard } from './components/gym/PRDashboard.tsx';
+import { ProgressView } from './components/gym/ProgressView.tsx';
+import { WorkoutLogger } from './components/gym/WorkoutLogger.tsx';
+import { ROUTE_URL } from './constants/route-url.ts';
 
 const queryClient = new QueryClient();
 
@@ -47,7 +54,7 @@ const App = () => (
         <ScrollToTop />
         <AuthProvider>
           <Routes>
-            <Route path="/auth" element={<Auth />} />
+            <Route path={ROUTE_URL.AUTH} element={<Auth />} />
             <Route
               path="/"
               element={
@@ -55,9 +62,29 @@ const App = () => (
                   <Index />
                 </ProtectedRoute>
               }
-            />
+            >
+              <Route index element={<HomeView />} />
+              <Route
+                path={ROUTE_URL.WORKOUT_LOGGER}
+                element={<WorkoutLogger />}
+              />
+              <Route
+                path={ROUTE_URL.EXERCISE_MANAGER}
+                element={<ExerciseManager />}
+              />
+              <Route
+                path={ROUTE_URL.PROGRESS_VIEW}
+                element={<ProgressView />}
+              />
+              <Route
+                path={ROUTE_URL.PERSONAL_RECORDS}
+                element={<PRDashboard />}
+              />
+              <Route path={ROUTE_URL.COACH} element={<AICoach />} />
+            </Route>
+
             <Route
-              path="/workouts"
+              path={ROUTE_URL.WORKOUTS}
               element={
                 <ProtectedRoute>
                   <Workouts />
