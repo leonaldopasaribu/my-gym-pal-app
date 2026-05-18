@@ -41,7 +41,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (isLoading) {
     return <Loading fullPage label="Loading your gym..." size="lg" />;
   }
-  if (!session) return <Navigate to="/auth" replace />;
+  if (!session) return <Navigate to={ROUTE_URL.AUTH} replace />;
   return <>{children}</>;
 }
 
