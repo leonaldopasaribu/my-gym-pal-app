@@ -50,6 +50,8 @@ import {
   useWorkouts,
   entryTopWeight,
   entryVolume,
+  entryTotalDistance,
+  entryTotalDuration,
 } from '@/lib/gym-store';
 import type { WorkoutEntry, WorkoutSet } from '@/lib/gym-types';
 import { toast } from 'sonner';
@@ -58,6 +60,7 @@ import { Skeleton } from '../ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_URL } from '@/constants/route-url';
 import { Loading } from '@/components/ui/loading';
+import { WorkoutUtil } from '../../lib/workout-util';
 
 function todayISO() {
   const d = new Date();
@@ -78,6 +81,19 @@ function shiftDays(n: number) {
   const d = new Date();
   d.setDate(d.getDate() + n);
   return dateToISO(d);
+}
+
+function defaultStrengthSet(): WorkoutSet {
+  return { id: uuidv4(), reps: 8, weight: 20 };
+}
+function defaultCardioSet(last?: WorkoutSet): WorkoutSet {
+  return {
+    id: uuidv4(),
+    reps: 0,
+    weight: 0,
+    durationMinutes: last?.durationMinutes ?? 30,
+    distanceKm: last?.distanceKm ?? 5,
+  };
 }
 
 // ─── Exercise Picker Bottom Sheet ────────────────────────────────────────────
@@ -263,9 +279,7 @@ export function WorkoutLogger() {
 
   const [exerciseId, setExerciseId] = useState<string>('');
   const [date, setDate] = useState(todayISO());
-  const [sets, setSets] = useState<WorkoutSet[]>([
-    { id: uuidv4(), reps: 8, weight: 20 },
-  ]);
+  const [sets, setSets] = useState<WorkoutSet[]>([defaultStrengthSet()]);
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkoutEntry | null>(null);
   const [isSavingWorkout, setIsSavingWorkout] = useState(false);
@@ -278,6 +292,20 @@ export function WorkoutLogger() {
     [exercises]
   );
 
+  const selectedEx = exerciseId ? exMap[exerciseId] : null;
+  const isCardio = selectedEx
+    ? WorkoutUtil.isCardioGroup(selectedEx.muscleGroup)
+    : false;
+
+  // Reset sets when exercise type changes (strength ↔ cardio)
+  const prevIsCardioRef = useRef(isCardio);
+  useEffect(() => {
+    if (prevIsCardioRef.current !== isCardio && !editingWorkoutId) {
+      setSets([isCardio ? defaultCardioSet() : defaultStrengthSet()]);
+      prevIsCardioRef.current = isCardio;
+    }
+  }, [isCardio, editingWorkoutId]);
+
   const lastSession = useMemo(() => {
     if (!exerciseId) return null;
     return workouts.find((w) => w.exerciseId === exerciseId) ?? null;
@@ -288,10 +316,14 @@ export function WorkoutLogger() {
 
   const addSet = () => {
     const last = sets[sets.length - 1];
-    setSets([
-      ...sets,
-      { id: uuidv4(), reps: last?.reps ?? 8, weight: last?.weight ?? 20 },
-    ]);
+    if (isCardio) {
+      setSets([...sets, defaultCardioSet(last)]);
+    } else {
+      setSets([
+        ...sets,
+        { id: uuidv4(), reps: last?.reps ?? 8, weight: last?.weight ?? 20 },
+      ]);
+    }
   };
 
   const removeSet = (id: string) =>
@@ -306,7 +338,7 @@ export function WorkoutLogger() {
   };
 
   const resetForm = () => {
-    setSets([{ id: uuidv4(), reps: 8, weight: 20 }]);
+    setSets([isCardio ? defaultCardioSet() : defaultStrengthSet()]);
     setEditingWorkoutId(null);
   };
 
@@ -330,7 +362,14 @@ export function WorkoutLogger() {
   const save = async () => {
     if (isSavingWorkout) return;
     if (!exerciseId) return toast.error('Pick an exercise first');
-    if (sets.some((s) => s.reps <= 0)) return toast.error('Reps must be > 0');
+
+    if (isCardio) {
+      if (sets.some((s) => !s.durationMinutes || s.durationMinutes <= 0))
+        return toast.error('Duration must be > 0');
+    } else {
+      if (sets.some((s) => s.reps <= 0)) return toast.error('Reps must be > 0');
+    }
+
     const duplicate = workouts.some(
       (w) =>
         w.exerciseId === exerciseId &&
@@ -343,6 +382,7 @@ export function WorkoutLogger() {
         description: 'Edit the existing entry or pick a different date.',
       });
     }
+
     setIsSavingWorkout(true);
     try {
       if (editingWorkoutId) {
@@ -416,7 +456,9 @@ export function WorkoutLogger() {
         <p className="text-muted-foreground text-sm">
           {editingWorkoutId
             ? 'Edit the selected recent session.'
-            : 'Track sets, reps & weight (kg).'}
+            : isCardio
+              ? 'Track duration, distance & heart rate.'
+              : 'Track sets, reps & weight (kg).'}
         </p>
       </div>
 
@@ -460,26 +502,59 @@ export function WorkoutLogger() {
                       key={s.id}
                       className="border-border/60 bg-background/60 rounded border px-2 py-0.5 font-mono text-[11px]"
                     >
-                      {i + 1}: {s.reps}×{s.weight}kg
+                      {i + 1}:{' '}
+                      {isCardio
+                        ? WorkoutUtil.formatCardioSet(s)
+                        : `${s.reps}×${s.weight}kg`}
                     </span>
                   ))}
                 </div>
 
                 <div className="border-border/40 space-y-3 border-t pt-3">
-                  <div className="text-muted-foreground flex gap-4 font-mono text-[10px]">
-                    <span>
-                      TOP{' '}
-                      <span className="text-primary font-bold">
-                        {entryTopWeight(lastSession)}kg
+                  {isCardio ? (
+                    <div className="text-muted-foreground flex gap-4 font-mono text-[10px]">
+                      <span>
+                        DUR{' '}
+                        <span className="text-primary font-bold">
+                          {entryTotalDuration(lastSession)}min
+                        </span>
                       </span>
-                    </span>
-                    <span>
-                      VOL{' '}
-                      <span className="text-primary font-bold">
-                        {entryVolume(lastSession).toLocaleString()}kg
+                      {entryTotalDistance(lastSession) > 0 && (
+                        <span>
+                          DIST{' '}
+                          <span className="text-primary font-bold">
+                            {entryTotalDistance(lastSession)}km
+                          </span>
+                        </span>
+                      )}
+                      {entryTotalDistance(lastSession) > 0 && (
+                        <span>
+                          PACE{' '}
+                          <span className="text-primary font-bold">
+                            {WorkoutUtil.formatPace(
+                              entryTotalDuration(lastSession),
+                              entryTotalDistance(lastSession)
+                            )}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground flex gap-4 font-mono text-[10px]">
+                      <span>
+                        TOP{' '}
+                        <span className="text-primary font-bold">
+                          {entryTopWeight(lastSession)}kg
+                        </span>
                       </span>
-                    </span>
-                  </div>
+                      <span>
+                        VOL{' '}
+                        <span className="text-primary font-bold">
+                          {entryVolume(lastSession).toLocaleString()}kg
+                        </span>
+                      </span>
+                    </div>
+                  )}
 
                   <Button
                     size="sm"
@@ -509,14 +584,15 @@ export function WorkoutLogger() {
             {/* Sets */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Sets</Label>
+                <Label>{isCardio ? 'Intervals' : 'Sets'}</Label>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={addSet}
                   className="text-primary hover:text-primary h-8 gap-1"
                 >
-                  <Plus className="h-4 w-4" /> Add Set
+                  <Plus className="h-4 w-4" />
+                  {isCardio ? 'Add Interval' : 'Add Set'}
                 </Button>
               </div>
 
@@ -529,7 +605,7 @@ export function WorkoutLogger() {
                     {/* Set header */}
                     <div className="mb-1 flex items-center justify-between">
                       <span className="text-muted-foreground font-mono text-xs tracking-wider uppercase">
-                        Set {idx + 1}
+                        {isCardio ? `Interval ${idx + 1}` : `Set ${idx + 1}`}
                       </span>
                       {sets.length > 1 && (
                         <Button
@@ -543,8 +619,50 @@ export function WorkoutLogger() {
                       )}
                     </div>
 
-                    {/* ── Steppers: row layout on mobile, grid on tablet/desktop ── */}
-                    {isMobile ? (
+                    {/* Steppers — cardio or strength */}
+                    {isCardio ? (
+                      isMobile ? (
+                        <div className="divide-border/40 divide-y">
+                          <RowStepper
+                            label="Duration (min)"
+                            value={s.durationMinutes ?? 30}
+                            step={5}
+                            min={1}
+                            onChange={(v) =>
+                              updateSet(s.id, { durationMinutes: v })
+                            }
+                          />
+                          <RowStepper
+                            label="Distance (km)"
+                            value={s.distanceKm ?? 0}
+                            step={0.5}
+                            min={0}
+                            decimal
+                            onChange={(v) => updateSet(s.id, { distanceKm: v })}
+                          />
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-3">
+                          <Stepper
+                            label="Duration (min)"
+                            value={s.durationMinutes ?? 30}
+                            step={5}
+                            min={1}
+                            onChange={(v) =>
+                              updateSet(s.id, { durationMinutes: v })
+                            }
+                          />
+                          <Stepper
+                            label="Distance (km)"
+                            value={s.distanceKm ?? 0}
+                            step={0.5}
+                            min={0}
+                            decimal
+                            onChange={(v) => updateSet(s.id, { distanceKm: v })}
+                          />
+                        </div>
+                      )
+                    ) : isMobile ? (
                       <div className="divide-border/40 divide-y">
                         <RowStepper
                           label="Reps"
@@ -581,6 +699,22 @@ export function WorkoutLogger() {
                         />
                       </div>
                     )}
+
+                    {/* Pace preview for cardio */}
+                    {isCardio &&
+                      s.durationMinutes &&
+                      s.distanceKm &&
+                      s.distanceKm > 0 && (
+                        <div className="text-muted-foreground mt-2 font-mono text-[10px]">
+                          PACE{' '}
+                          <span className="text-primary font-bold">
+                            {WorkoutUtil.formatPace(
+                              s.durationMinutes,
+                              s.distanceKm
+                            )}
+                          </span>
+                        </div>
+                      )}
                   </div>
                 ))}
               </div>
@@ -687,8 +821,14 @@ export function WorkoutLogger() {
                       <div className="space-y-2">
                         {workoutsOnDate.map((w) => {
                           const ex = exMap[w.exerciseId];
+                          const wIsCardio = ex
+                            ? WorkoutUtil.isCardioGroup(ex.muscleGroup)
+                            : false;
+                          const dur = entryTotalDuration(w);
+                          const dist = entryTotalDistance(w);
                           const top = entryTopWeight(w);
                           const vol = entryVolume(w);
+
                           return (
                             <div
                               key={w.id}
@@ -734,30 +874,64 @@ export function WorkoutLogger() {
                                   </Button>
                                 </div>
                               </div>
+
+                              {/* Set / interval badges */}
                               <div className="mt-2 flex flex-wrap gap-1.5">
                                 {w.sets.map((s, i) => (
                                   <span
                                     key={s.id}
                                     className="border-border/60 bg-background/60 rounded border px-2 py-0.5 font-mono text-xs"
                                   >
-                                    {i + 1}: {s.reps}×{s.weight}kg
+                                    {i + 1}:{' '}
+                                    {wIsCardio
+                                      ? WorkoutUtil.formatCardioSet(s)
+                                      : `${s.reps}×${s.weight}kg`}
                                   </span>
                                 ))}
                               </div>
-                              <div className="text-muted-foreground mt-2 flex gap-4 font-mono text-[11px]">
-                                <span>
-                                  TOP{' '}
-                                  <span className="text-primary font-semibold">
-                                    {top}kg
+
+                              {/* Stats row */}
+                              {wIsCardio ? (
+                                <div className="text-muted-foreground mt-2 flex gap-4 font-mono text-[11px]">
+                                  <span>
+                                    DUR{' '}
+                                    <span className="text-primary font-semibold">
+                                      {dur}min
+                                    </span>
                                   </span>
-                                </span>
-                                <span>
-                                  VOL{' '}
-                                  <span className="text-primary font-semibold">
-                                    {vol.toLocaleString()}kg
+                                  {dist > 0 && (
+                                    <span>
+                                      DIST{' '}
+                                      <span className="text-primary font-semibold">
+                                        {dist}km
+                                      </span>
+                                    </span>
+                                  )}
+                                  {dist > 0 && (
+                                    <span>
+                                      PACE{' '}
+                                      <span className="text-primary font-semibold">
+                                        {WorkoutUtil.formatPace(dur, dist)}
+                                      </span>
+                                    </span>
+                                  )}
+                                </div>
+                              ) : (
+                                <div className="text-muted-foreground mt-2 flex gap-4 font-mono text-[11px]">
+                                  <span>
+                                    TOP{' '}
+                                    <span className="text-primary font-semibold">
+                                      {top}kg
+                                    </span>
                                   </span>
-                                </span>
-                              </div>
+                                  <span>
+                                    VOL{' '}
+                                    <span className="text-primary font-semibold">
+                                      {vol.toLocaleString()}kg
+                                    </span>
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
@@ -797,8 +971,16 @@ export function WorkoutLogger() {
                   <p className="text-muted-foreground font-mono text-xs">
                     {deleteTarget.sets.length} set
                     {deleteTarget.sets.length !== 1 ? 's' : ''} ·{' '}
-                    {entryTopWeight(deleteTarget)}kg top ·{' '}
-                    {entryVolume(deleteTarget).toLocaleString()}kg vol
+                    {entryTopWeight(deleteTarget)}
+                    {deleteTargetEx &&
+                    WorkoutUtil.isCardioGroup(deleteTargetEx.muscleGroup)
+                      ? 'km top'
+                      : 'kg top'}{' '}
+                    · {entryVolume(deleteTarget).toLocaleString()}
+                    {deleteTargetEx &&
+                    WorkoutUtil.isCardioGroup(deleteTargetEx.muscleGroup)
+                      ? 'min total'
+                      : 'kg vol'}
                   </p>
                 )}
               </div>
@@ -942,10 +1124,8 @@ function RowStepper({
 
   return (
     <div className="flex items-center justify-between gap-4 py-2.5">
-      {/* Label */}
       <span className="text-sm font-medium">{label}</span>
 
-      {/* Controls */}
       <div className="border-border/60 flex shrink-0 items-center overflow-hidden rounded-xl border">
         <Button
           type="button"

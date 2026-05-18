@@ -18,8 +18,13 @@ export interface Exercise {
 
 export interface WorkoutSet {
   id: string;
+  // Strength
   reps: number;
-  weight: number; // kg
+  weight: number;
+  // Cardio (optional — only present when muscleGroup === 'Cardio')
+  durationMinutes?: number;
+  distanceKm?: number;
+  avgHeartRate?: number;
 }
 
 export interface WorkoutEntry {

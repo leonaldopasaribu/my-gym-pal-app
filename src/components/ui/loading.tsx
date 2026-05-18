@@ -27,9 +27,9 @@ export function Loading({
         className
       )}
     >
-      <Loader2 className={cn('animate-spin text-primary', SIZES[size])} />
+      <Loader2 className={cn('text-primary animate-spin', SIZES[size])} />
       {label && (
-        <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+        <p className="text-muted-foreground font-mono text-xs tracking-wider uppercase">
           {label}
         </p>
       )}
@@ -38,7 +38,7 @@ export function Loading({
 
   if (fullPage) {
     return (
-      <div className="grid min-h-[100vh] place-items-center">{content}</div>
+      <div className="grid min-h-screen place-items-center">{content}</div>
     );
   }
   return content;

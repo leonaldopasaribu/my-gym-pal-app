@@ -54,7 +54,6 @@ const fromDbWo = (r: DbWorkout): WorkoutEntry => ({
   createdAt: new Date(r.created_at).getTime(),
 });
 
-// Migrate localStorage data to the user's account on first login
 async function migrateLocalData(userId: string) {
   if (typeof window === 'undefined') return;
   if (localStorage.getItem(MIGRATED_FLAG)) return;
@@ -65,7 +64,6 @@ async function migrateLocalData(userId: string) {
     const localEx: any[] = rawEx ? JSON.parse(rawEx) : [];
     const localWo: any[] = rawWo ? JSON.parse(rawWo) : [];
 
-    // Map of old id -> new id
     const idMap: Record<string, string> = {};
 
     if (localEx.length > 0) {
@@ -338,7 +336,8 @@ export function useRestDays() {
   return { restDays: items, addRestDay, removeRestDay, isLoading };
 }
 
-// Helpers
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 export function bestSet(entries: WorkoutEntry[]) {
   let best = { weight: 0, reps: 0 };
   entries.forEach((e) =>
@@ -359,14 +358,32 @@ export function epley1RM(weight: number, reps: number) {
   return weight * (1 + reps / 30);
 }
 
+// Strength: max weight. Cardio: max distance in a single set.
 export function entryTopWeight(e: WorkoutEntry) {
+  const isCardio = e.sets.some((s) => s.durationMinutes !== undefined);
+  if (isCardio) {
+    return e.sets.reduce((m, s) => Math.max(m, s.distanceKm ?? 0), 0);
+  }
   return e.sets.reduce((m, s) => Math.max(m, s.weight), 0);
 }
 
+// Strength: total volume (reps × weight). Cardio: total duration (minutes).
 export function entryVolume(e: WorkoutEntry) {
+  const isCardio = e.sets.some((s) => s.durationMinutes !== undefined);
+  if (isCardio) {
+    return e.sets.reduce((m, s) => m + (s.durationMinutes ?? 0), 0);
+  }
   return e.sets.reduce((m, s) => m + s.weight * s.reps, 0);
 }
 
 export function entryBest1RM(e: WorkoutEntry) {
   return e.sets.reduce((m, s) => Math.max(m, epley1RM(s.weight, s.reps)), 0);
+}
+
+export function entryTotalDistance(e: WorkoutEntry): number {
+  return e.sets.reduce((m, s) => m + (s.distanceKm ?? 0), 0);
+}
+
+export function entryTotalDuration(e: WorkoutEntry): number {
+  return e.sets.reduce((m, s) => m + (s.durationMinutes ?? 0), 0);
 }

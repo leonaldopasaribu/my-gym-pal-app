@@ -14,12 +14,13 @@ import {
   entryTopWeight,
   entryVolume,
   entryBest1RM,
+  entryTotalDistance,
+  entryTotalDuration,
 } from '@/lib/gym-store';
+import { WorkoutUtil } from '@/lib/workout-util';
 import { TrendingUp } from 'lucide-react';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -29,13 +30,50 @@ import {
 } from 'recharts';
 import { Skeleton } from '../ui/skeleton';
 
-type Metric = 'top' | 'volume' | 'e1rm';
+type StrengthMetric = 'top' | 'volume' | 'e1rm';
+type CardioMetric = 'duration' | 'distance' | 'pace';
+type Metric = StrengthMetric | CardioMetric;
 
 const METRIC_LABEL: Record<Metric, string> = {
   top: 'Top Set Weight (kg)',
   volume: 'Total Volume (kg)',
   e1rm: 'Estimated 1RM (kg)',
+  duration: 'Total Duration (min)',
+  distance: 'Total Distance (km)',
+  pace: 'Average Pace (min/km)',
 };
+
+const METRIC_UNIT: Record<Metric, string> = {
+  top: 'kg',
+  volume: 'kg',
+  e1rm: 'kg',
+  duration: 'min',
+  distance: 'km',
+  pace: 'min/km',
+};
+
+const STRENGTH_METRICS: { value: StrengthMetric; label: string }[] = [
+  { value: 'top', label: 'Top' },
+  { value: 'volume', label: 'Volume' },
+  { value: 'e1rm', label: 'e1RM' },
+];
+
+const CARDIO_METRICS: { value: CardioMetric; label: string }[] = [
+  { value: 'duration', label: 'Duration' },
+  { value: 'distance', label: 'Distance' },
+  { value: 'pace', label: 'Pace' },
+];
+
+function formatMetricValue(metric: Metric, value?: number) {
+  if (value === undefined || Number.isNaN(value)) return '—';
+  if (metric === 'pace') {
+    const minutes = Math.floor(value);
+    const seconds = Math.round((value - minutes) * 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+  const rounded = Math.round(value * 10) / 10;
+  return rounded.toLocaleString();
+}
 
 export function ProgressView() {
   const { exercises, isLoading: isLoadingExercises } = useExercises();
@@ -46,23 +84,44 @@ export function ProgressView() {
 
   // Sync selection when exercises load
   const activeId = exerciseId || exercises[0]?.id || '';
+  const selectedExercise = exercises.find((e) => e.id === activeId);
+  const isCardio = selectedExercise
+    ? WorkoutUtil.isCardioGroup(selectedExercise.muscleGroup)
+    : false;
+  const metricOptions = isCardio ? CARDIO_METRICS : STRENGTH_METRICS;
+  const activeMetric = metricOptions.some((option) => option.value === metric)
+    ? metric
+    : isCardio
+      ? 'duration'
+      : 'top';
 
   const data = useMemo(() => {
     const filtered = workouts
       .filter((w) => w.exerciseId === activeId)
       .sort((a, b) => a.date.localeCompare(b.date));
-    return filtered.map((w) => ({
-      date: w.date.slice(5), // mm-dd
-      top: entryTopWeight(w),
-      volume: entryVolume(w),
-      e1rm: Math.round(entryBest1RM(w) * 10) / 10,
-    }));
+    return filtered.map((w) => {
+      const duration = entryTotalDuration(w);
+      const distance = entryTotalDistance(w);
+      return {
+        date: w.date.slice(5), // mm-dd
+        top: entryTopWeight(w),
+        volume: entryVolume(w),
+        e1rm: Math.round(entryBest1RM(w) * 10) / 10,
+        duration,
+        distance,
+        pace: distance > 0 ? duration / distance : 0,
+      };
+    });
   }, [workouts, activeId]);
 
   const last = data[data.length - 1];
   const prev = data[data.length - 2];
   const delta =
-    last && prev ? (last[metric] as number) - (prev[metric] as number) : 0;
+    last && prev
+      ? (last[activeMetric] as number) - (prev[activeMetric] as number)
+      : 0;
+  const isPositiveTrend = activeMetric === 'pace' ? delta < 0 : delta > 0;
+  const isNegativeTrend = activeMetric === 'pace' ? delta > 0 : delta < 0;
 
   if (isLoading) {
     return (
@@ -73,11 +132,11 @@ export function ProgressView() {
             <Skeleton className="h-4 w-72" />
           </div>
           <div className="flex gap-2">
-            <Skeleton className="h-10 w-full sm:w-[220px]" />
+            <Skeleton className="h-10 w-full sm:w-55" />
             <Skeleton className="h-10 w-44" />
           </div>
         </div>
-        <Card className="surface space-y-4 border-border/60 p-4 sm:p-5">
+        <Card className="surface border-border/60 space-y-4 p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
               <Skeleton className="h-3 w-32" />
@@ -85,7 +144,7 @@ export function ProgressView() {
             </div>
             <Skeleton className="h-8 w-16" />
           </div>
-          <Skeleton className="h-[260px] w-full sm:h-[320px]" />
+          <Skeleton className="h-65 w-full sm:h-80" />
         </Card>
       </div>
     );
@@ -98,13 +157,15 @@ export function ProgressView() {
           <h2 className="font-display text-2xl font-bold">
             Progressive Overload
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Track weight & volume progress over time.
+          <p className="text-muted-foreground text-sm">
+            {isCardio
+              ? 'Track duration, distance & pace over time.'
+              : 'Track weight & volume progress over time.'}
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
           <Select value={activeId} onValueChange={setExerciseId}>
-            <SelectTrigger className="w-full sm:w-[220px]">
+            <SelectTrigger className="w-full sm:w-55">
               <SelectValue placeholder="Select exercise" />
             </SelectTrigger>
             <SelectContent>
@@ -117,28 +178,19 @@ export function ProgressView() {
           </Select>
           <ToggleGroup
             type="single"
-            value={metric}
+            value={activeMetric}
             onValueChange={(v) => v && setMetric(v as Metric)}
-            className="grid w-full grid-cols-3 rounded-md bg-secondary/40 p-0.5 sm:flex sm:w-auto"
+            className="bg-secondary/40 grid w-full grid-cols-3 rounded-md p-0.5 sm:flex sm:w-auto"
           >
-            <ToggleGroupItem
-              value="top"
-              className="px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-            >
-              Top
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="volume"
-              className="px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-            >
-              Volume
-            </ToggleGroupItem>
-            <ToggleGroupItem
-              value="e1rm"
-              className="px-3 text-xs data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-            >
-              e1RM
-            </ToggleGroupItem>
+            {metricOptions.map((option) => (
+              <ToggleGroupItem
+                key={option.value}
+                value={option.value}
+                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground px-3 text-xs"
+              >
+                {option.label}
+              </ToggleGroupItem>
+            ))}
           </ToggleGroup>
         </div>
       </div>
@@ -146,39 +198,43 @@ export function ProgressView() {
       <Card className="surface border-border/60 p-4 sm:p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <div className="text-[11px] uppercase tracking-widest text-muted-foreground">
-              {METRIC_LABEL[metric]}
+            <div className="text-muted-foreground text-[11px] tracking-widest uppercase">
+              {METRIC_LABEL[activeMetric]}
             </div>
-            <div className="mt-1 font-display text-3xl font-bold">
-              {last ? Number(last[metric]).toLocaleString() : '—'}
-              <span className="ml-1 text-base text-muted-foreground">kg</span>
+            <div className="font-display mt-1 text-3xl font-bold">
+              {last ? formatMetricValue(activeMetric, last[activeMetric]) : '—'}
+              <span className="text-muted-foreground ml-1 text-base">
+                {METRIC_UNIT[activeMetric]}
+              </span>
             </div>
           </div>
           {last && prev && (
             <div
               className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-sm ${
-                delta > 0
+                isPositiveTrend
                   ? 'bg-primary/15 text-primary'
-                  : delta < 0
+                  : isNegativeTrend
                     ? 'bg-destructive/15 text-destructive'
                     : 'bg-secondary text-muted-foreground'
               }`}
             >
               <TrendingUp
-                className={`h-4 w-4 ${delta < 0 ? 'rotate-180' : ''}`}
+                className={`h-4 w-4 ${isNegativeTrend ? 'rotate-180' : ''}`}
               />
               {delta > 0 ? '+' : ''}
-              {delta.toFixed(1)}
+              {activeMetric === 'pace'
+                ? formatMetricValue(activeMetric, Math.abs(delta))
+                : delta.toFixed(1)}
             </div>
           )}
         </div>
 
         {data.length === 0 ? (
-          <div className="grid h-[260px] place-items-center px-4 text-center text-sm text-muted-foreground sm:h-[320px]">
+          <div className="text-muted-foreground grid h-65 place-items-center px-4 text-center text-sm sm:h-80">
             No data for this exercise yet. Log a workout first!
           </div>
         ) : (
-          <div className="h-[260px] sm:h-[320px]">
+          <div className="h-65 sm:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={data}
@@ -227,7 +283,7 @@ export function ProgressView() {
                 />
                 <Area
                   type="monotone"
-                  dataKey={metric}
+                  dataKey={activeMetric}
                   stroke="hsl(var(--primary))"
                   strokeWidth={2.5}
                   fill="url(#grad)"
