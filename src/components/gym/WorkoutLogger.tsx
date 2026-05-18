@@ -130,7 +130,7 @@ function ExercisePicker({
 
   if (exercises.length === 0) {
     return (
-      <div className="rounded-md border border-border/60 bg-secondary/40 p-3 text-sm text-muted-foreground">
+      <div className="border-border/60 bg-secondary/40 text-muted-foreground rounded-md border p-3 text-sm">
         Create an exercise first in the Library tab.
       </div>
     );
@@ -171,7 +171,7 @@ function ExercisePicker({
               </Badge>
             )}
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
         </button>
       </DrawerTrigger>
 
@@ -184,12 +184,12 @@ function ExercisePicker({
 
         <div className="px-4 pb-3">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search exercises…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-10 border-border/60 bg-secondary/40 pl-9"
+              className="border-border/60 bg-secondary/40 h-10 pl-9"
               autoFocus={false}
             />
           </div>
@@ -197,13 +197,13 @@ function ExercisePicker({
 
         <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
           {filtered.length === 0 ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground py-10 text-center text-sm">
               No exercises found.
             </div>
           ) : (
             Array.from(grouped.entries()).map(([group, exList]) => (
               <div key={group}>
-                <div className="mb-1.5 px-1 font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+                <div className="text-muted-foreground mb-1.5 px-1 font-mono text-[10px] tracking-widest uppercase">
                   {group}
                 </div>
                 <div className="space-y-1.5">
@@ -223,7 +223,7 @@ function ExercisePicker({
                       >
                         <span className="text-sm font-medium">{ex.name}</span>
                         {isActive && (
-                          <div className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                          <div className="bg-primary h-2 w-2 shrink-0 rounded-full" />
                         )}
                       </button>
                     );
@@ -413,7 +413,7 @@ export function WorkoutLogger() {
     <div className="space-y-5">
       <div>
         <h2 className="font-display text-2xl font-bold">Log Workout</h2>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {editingWorkoutId
             ? 'Edit the selected recent session.'
             : 'Track sets, reps & weight (kg).'}
@@ -424,7 +424,7 @@ export function WorkoutLogger() {
         {/* ── Log Form ── */}
         <Card
           ref={formRef}
-          className="surface overflow-hidden border-border/60 p-4 sm:p-6"
+          className="surface border-border/60 overflow-hidden p-4 sm:p-6"
         >
           <div className="space-y-5">
             {/* Exercise Picker */}
@@ -441,14 +441,14 @@ export function WorkoutLogger() {
 
             {/* Last session hint */}
             {lastSession && (
-              <div className="animate-fade-up rounded-xl border border-border/60 bg-secondary/40 p-4">
+              <div className="animate-fade-up border-border/60 bg-secondary/40 rounded-xl border p-4">
                 <div className="mb-3 flex items-center gap-2">
-                  <Zap className="h-3.5 w-3.5 fill-primary/20 text-primary" />
+                  <Zap className="fill-primary/20 text-primary h-3.5 w-3.5" />
                   <div className="min-w-0">
-                    <span className="block font-display text-sm font-bold leading-none tracking-tight">
+                    <span className="font-display block text-sm leading-none font-bold tracking-tight">
                       Last Session
                     </span>
-                    <span className="font-mono text-[10px] leading-none text-muted-foreground">
+                    <span className="text-muted-foreground font-mono text-[10px] leading-none">
                       {formatDateID(lastSession.date)}
                     </span>
                   </div>
@@ -458,24 +458,24 @@ export function WorkoutLogger() {
                   {lastSession.sets.map((s, i) => (
                     <span
                       key={s.id}
-                      className="rounded border border-border/60 bg-background/60 px-2 py-0.5 font-mono text-[11px]"
+                      className="border-border/60 bg-background/60 rounded border px-2 py-0.5 font-mono text-[11px]"
                     >
                       {i + 1}: {s.reps}×{s.weight}kg
                     </span>
                   ))}
                 </div>
 
-                <div className="space-y-3 border-t border-border/40 pt-3">
-                  <div className="flex gap-4 font-mono text-[10px] text-muted-foreground">
+                <div className="border-border/40 space-y-3 border-t pt-3">
+                  <div className="text-muted-foreground flex gap-4 font-mono text-[10px]">
                     <span>
                       TOP{' '}
-                      <span className="font-bold text-primary">
+                      <span className="text-primary font-bold">
                         {entryTopWeight(lastSession)}kg
                       </span>
                     </span>
                     <span>
                       VOL{' '}
-                      <span className="font-bold text-primary">
+                      <span className="text-primary font-bold">
                         {entryVolume(lastSession).toLocaleString()}kg
                       </span>
                     </span>
@@ -484,7 +484,7 @@ export function WorkoutLogger() {
                   <Button
                     size="sm"
                     onClick={prefillFromLast}
-                    className="h-9 w-full gap-2 border-none bg-primary/10 text-xs font-bold text-primary transition-all hover:bg-primary hover:text-primary-foreground active:scale-[0.98]"
+                    className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground h-9 w-full gap-2 border-none text-xs font-bold transition-all active:scale-[0.98]"
                   >
                     <Copy className="h-3.5 w-3.5" />
                     Copy Last Session
@@ -495,9 +495,7 @@ export function WorkoutLogger() {
 
             {/* Date picker */}
             <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground text-white">
-                Date
-              </Label>
+              <Label className="text-sm text-white">Date</Label>
               <DatePicker
                 value={date}
                 onChange={setDate}
@@ -516,7 +514,7 @@ export function WorkoutLogger() {
                   size="sm"
                   variant="ghost"
                   onClick={addSet}
-                  className="h-8 gap-1 text-primary hover:text-primary"
+                  className="text-primary hover:text-primary h-8 gap-1"
                 >
                   <Plus className="h-4 w-4" /> Add Set
                 </Button>
@@ -526,18 +524,18 @@ export function WorkoutLogger() {
                 {sets.map((s, idx) => (
                   <div
                     key={s.id}
-                    className="rounded-lg border border-border/60 bg-secondary/40 p-3 sm:p-4"
+                    className="border-border/60 bg-secondary/40 rounded-lg border p-3 sm:p-4"
                   >
                     {/* Set header */}
                     <div className="mb-1 flex items-center justify-between">
-                      <span className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+                      <span className="text-muted-foreground font-mono text-xs tracking-wider uppercase">
                         Set {idx + 1}
                       </span>
                       {sets.length > 1 && (
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          className="text-muted-foreground hover:text-destructive h-7 w-7"
                           onClick={() => removeSet(s.id)}
                         >
                           <X className="h-4 w-4" />
@@ -547,7 +545,7 @@ export function WorkoutLogger() {
 
                     {/* ── Steppers: row layout on mobile, grid on tablet/desktop ── */}
                     {isMobile ? (
-                      <div className="divide-y divide-border/40">
+                      <div className="divide-border/40 divide-y">
                         <RowStepper
                           label="Reps"
                           value={s.reps}
@@ -622,23 +620,23 @@ export function WorkoutLogger() {
         </Card>
 
         {/* ── Recent Sessions ── */}
-        <Card className="surface overflow-hidden border-border/60 p-4 sm:p-6">
+        <Card className="surface border-border/60 overflow-hidden p-4 sm:p-6">
           <div className="mb-1 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-primary" />
+              <CalendarDays className="text-primary h-4 w-4" />
               <h2 className="font-display text-2xl font-bold">Recent</h2>
             </div>
             <Button
               size="sm"
               variant="ghost"
-              className="gap-1 pr-0 text-xs text-muted-foreground hover:text-primary"
+              className="text-muted-foreground hover:text-primary gap-1 pr-0 text-xs"
               onClick={() => navigate(ROUTE_URL.WORKOUTS)}
             >
               View all
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <p className="mb-4 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mb-4 text-sm">
             Your latest 10 sessions.
           </p>
 
@@ -647,7 +645,7 @@ export function WorkoutLogger() {
               {Array.from({ length: 5 }).map((_, i) => (
                 <div
                   key={i}
-                  className="space-y-2 rounded-lg border border-border/60 bg-secondary/40 p-3"
+                  className="border-border/60 bg-secondary/40 space-y-2 rounded-lg border p-3"
                 >
                   <Skeleton className="h-4 w-1/2" />
                   <Skeleton className="h-3 w-1/3" />
@@ -660,11 +658,11 @@ export function WorkoutLogger() {
               ))}
             </div>
           ) : recent.length === 0 ? (
-            <div className="py-10 text-center text-sm text-muted-foreground">
+            <div className="text-muted-foreground py-10 text-center text-sm">
               No workouts logged yet.
             </div>
           ) : (
-            <div className="max-h-[480px] space-y-4 overflow-y-auto pr-1 md:max-h-[560px] lg:max-h-[640px]">
+            <div className="max-h-120 space-y-4 overflow-y-auto pr-1 md:max-h-140 lg:max-h-160">
               {(() => {
                 const grouped = new Map<string, typeof recent>();
                 for (const w of recent) {
@@ -674,13 +672,13 @@ export function WorkoutLogger() {
                 return Array.from(grouped.entries()).map(
                   ([groupDate, workoutsOnDate]) => (
                     <div key={groupDate}>
-                      <div className="z-10 mb-2 mt-1 flex items-center gap-2 bg-card/80 py-1 backdrop-blur-sm">
-                        <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary" />
-                        <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-primary">
+                      <div className="bg-card/80 z-10 mt-1 mb-2 flex items-center gap-2 py-1 backdrop-blur-sm">
+                        <CalendarDays className="text-primary h-3.5 w-3.5 shrink-0" />
+                        <span className="text-primary font-mono text-[11px] font-semibold tracking-wider uppercase">
                           {formatDateID(groupDate)}
                         </span>
-                        <div className="h-px flex-1 bg-border/50" />
-                        <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                        <div className="bg-border/50 h-px flex-1" />
+                        <span className="text-muted-foreground shrink-0 font-mono text-[10px]">
                           {workoutsOnDate.length} exercise
                           {workoutsOnDate.length > 1 ? 's' : ''}
                         </span>
@@ -694,12 +692,12 @@ export function WorkoutLogger() {
                           return (
                             <div
                               key={w.id}
-                              className="animate-fade-up rounded-lg border border-border/60 bg-secondary/40 p-3 sm:p-4"
+                              className="animate-fade-up border-border/60 bg-secondary/40 rounded-lg border p-3 sm:p-4"
                             >
                               <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0 flex-1">
                                   <div className="flex min-w-0 items-center gap-2">
-                                    <span className="truncate font-display font-bold">
+                                    <span className="font-display truncate font-bold">
                                       {ex?.name ?? '—'}
                                     </span>
                                     {ex && (
@@ -711,7 +709,7 @@ export function WorkoutLogger() {
                                       </Badge>
                                     )}
                                   </div>
-                                  <div className="mt-0.5 text-xs capitalize text-muted-foreground">
+                                  <div className="text-muted-foreground mt-0.5 text-xs capitalize">
                                     {formatDateID(w.date)}
                                   </div>
                                 </div>
@@ -719,7 +717,7 @@ export function WorkoutLogger() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                    className="text-muted-foreground hover:text-primary h-7 w-7"
                                     onClick={() => startEditWorkout(w.id)}
                                     aria-label="Edit workout"
                                   >
@@ -728,7 +726,7 @@ export function WorkoutLogger() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                                    className="text-muted-foreground hover:text-destructive h-7 w-7"
                                     onClick={() => setDeleteTarget(w)}
                                     aria-label="Delete workout"
                                   >
@@ -740,22 +738,22 @@ export function WorkoutLogger() {
                                 {w.sets.map((s, i) => (
                                   <span
                                     key={s.id}
-                                    className="rounded border border-border/60 bg-background/60 px-2 py-0.5 font-mono text-xs"
+                                    className="border-border/60 bg-background/60 rounded border px-2 py-0.5 font-mono text-xs"
                                   >
                                     {i + 1}: {s.reps}×{s.weight}kg
                                   </span>
                                 ))}
                               </div>
-                              <div className="mt-2 flex gap-4 font-mono text-[11px] text-muted-foreground">
+                              <div className="text-muted-foreground mt-2 flex gap-4 font-mono text-[11px]">
                                 <span>
                                   TOP{' '}
-                                  <span className="font-semibold text-primary">
+                                  <span className="text-primary font-semibold">
                                     {top}kg
                                   </span>
                                 </span>
                                 <span>
                                   VOL{' '}
-                                  <span className="font-semibold text-primary">
+                                  <span className="text-primary font-semibold">
                                     {vol.toLocaleString()}kg
                                   </span>
                                 </span>
@@ -786,17 +784,17 @@ export function WorkoutLogger() {
             <AlertDialogDescription asChild>
               <div className="space-y-1">
                 <p>
-                  <span className="font-semibold text-foreground">
+                  <span className="text-foreground font-semibold">
                     {deleteTargetEx?.name ?? 'This session'}
                   </span>{' '}
                   on{' '}
-                  <span className="font-semibold text-foreground">
+                  <span className="text-foreground font-semibold">
                     {deleteTarget ? formatDateID(deleteTarget.date) : ''}
                   </span>{' '}
                   will be permanently deleted.
                 </p>
                 {deleteTarget && deleteTarget.sets.length > 0 && (
-                  <p className="font-mono text-xs text-muted-foreground">
+                  <p className="text-muted-foreground font-mono text-xs">
                     {deleteTarget.sets.length} set
                     {deleteTarget.sets.length !== 1 ? 's' : ''} ·{' '}
                     {entryTopWeight(deleteTarget)}kg top ·{' '}
@@ -816,7 +814,11 @@ export function WorkoutLogger() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {isDeletingWorkout ? (
-                <Loading size="sm" label="Deleting..." className="flex-row gap-2" />
+                <Loading
+                  size="sm"
+                  label="Deleting..."
+                  className="flex-row gap-2"
+                />
               ) : (
                 'Delete'
               )}
@@ -856,7 +858,7 @@ function Stepper({
 
   return (
     <div className="min-w-0 space-y-1">
-      <div className="px-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+      <div className="text-muted-foreground px-1 text-[10px] tracking-widest uppercase">
         {label}
       </div>
       <div className="flex min-w-0 items-center gap-1">
@@ -865,7 +867,7 @@ function Stepper({
           size="icon"
           variant="outline"
           onClick={dec}
-          className="h-11 w-11 shrink-0 border-border/60 hover:border-primary/50 hover:bg-primary/15 hover:text-primary"
+          className="border-border/60 hover:border-primary/50 hover:bg-primary/15 hover:text-primary h-11 w-11 shrink-0"
           aria-label={`Decrease ${label}`}
         >
           <Minus className="h-4 w-4" />
@@ -901,7 +903,7 @@ function Stepper({
           size="icon"
           variant="outline"
           onClick={inc}
-          className="h-11 w-11 shrink-0 border-border/60 hover:border-primary/50 hover:bg-primary/15 hover:text-primary"
+          className="border-border/60 hover:border-primary/50 hover:bg-primary/15 hover:text-primary h-11 w-11 shrink-0"
           aria-label={`Increase ${label}`}
         >
           <Plus className="h-4 w-4" />
@@ -944,13 +946,13 @@ function RowStepper({
       <span className="text-sm font-medium">{label}</span>
 
       {/* Controls */}
-      <div className="flex shrink-0 items-center overflow-hidden rounded-xl border border-border/60">
+      <div className="border-border/60 flex shrink-0 items-center overflow-hidden rounded-xl border">
         <Button
           type="button"
           variant="ghost"
           size="icon"
           onClick={dec}
-          className="h-11 w-11 rounded-none border-r border-border/60 bg-secondary/40 transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
+          className="border-border/60 bg-secondary/40 hover:bg-primary/10 hover:text-primary h-11 w-11 rounded-none border-r transition-all active:scale-95"
           aria-label={`Decrease ${label}`}
         >
           <Minus className="h-4 w-4" />
@@ -975,7 +977,7 @@ function RowStepper({
           }}
           onBlur={() => setText(String(value))}
           className={cn(
-            'h-11 w-20 rounded-none border-0 border-r border-border/60 text-center font-mono text-sm font-semibold focus-visible:ring-0 focus-visible:ring-offset-0',
+            'border-border/60 h-11 w-20 rounded-none border-0 border-r text-center font-mono text-sm font-semibold focus-visible:ring-0 focus-visible:ring-offset-0',
             '[appearance:textfield]',
             '[&::-webkit-inner-spin-button]:appearance-none',
             '[&::-webkit-outer-spin-button]:appearance-none'
@@ -987,7 +989,7 @@ function RowStepper({
           variant="ghost"
           size="icon"
           onClick={inc}
-          className="h-11 w-11 rounded-none bg-secondary/40 transition-all hover:bg-primary/10 hover:text-primary active:scale-95"
+          className="bg-secondary/40 hover:bg-primary/10 hover:text-primary h-11 w-11 rounded-none transition-all active:scale-95"
           aria-label={`Increase ${label}`}
         >
           <Plus className="h-4 w-4" />
@@ -1025,9 +1027,9 @@ function DatePicker({
     <Button
       type="button"
       variant="outline"
-      className="h-12 w-full justify-start gap-2 border-border/60 bg-secondary/40 text-left font-normal text-muted-foreground hover:border-primary/40"
+      className="border-border/60 bg-secondary/40 text-muted-foreground hover:border-primary/40 h-12 w-full justify-start gap-2 text-left font-normal"
     >
-      <CalendarIcon className="h-4 w-4 shrink-0 text-primary" />
+      <CalendarIcon className="text-primary h-4 w-4 shrink-0" />
       <span className="truncate capitalize">{formatDateID(value)}</span>
     </Button>
   );
@@ -1043,7 +1045,6 @@ function DatePicker({
         }
       }}
       disabled={(d) => d > new Date()}
-      initialFocus
       className={cn('pointer-events-auto p-3')}
     />
   );
