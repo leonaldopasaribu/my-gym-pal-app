@@ -1,17 +1,6 @@
-// src/pages/AllWorkouts.tsx
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  ArrowLeft,
-  CalendarDays,
-  Search,
-  Trash2,
-  Pencil,
-  Filter,
-  X,
-  Dumbbell,
-  BarChart3,
-} from 'lucide-react';
+import { CalendarDays, Search, Trash2, X, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -31,12 +20,15 @@ import {
   useWorkouts,
   entryTopWeight,
   entryVolume,
+  entryTotalDistance,
+  entryTotalDuration,
 } from '@/lib/gym-store';
 import type { WorkoutEntry } from '@/lib/gym-types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/gym/AppHeader';
 import { ROUTE_URL } from '@/constants/route-url';
+import { WorkoutUtil } from '@/lib/workout-util';
 
 function formatDateLabel(iso: string) {
   const d = new Date(iso + 'T00:00:00');
@@ -108,14 +100,19 @@ export default function Workouts() {
     return map;
   }, [filtered]);
 
-  // Summary stats
+  // Summary stats — only count strength volume (cardio volume = duration, different unit)
   const stats = useMemo(() => {
     const totalSets = workouts.reduce((a, w) => a + w.sets.length, 0);
-    const totalVol = workouts.reduce((a, w) => a + entryVolume(w), 0);
+    const totalVol = workouts
+      .filter((w) => {
+        const ex = exMap[w.exerciseId];
+        return ex && !WorkoutUtil.isCardioGroup(ex.muscleGroup);
+      })
+      .reduce((a, w) => a + entryVolume(w), 0);
     const thisWeek = workouts.filter((w) => isThisWeek(w.date)).length;
     const uniqueDays = new Set(workouts.map((w) => w.date)).size;
     return { totalSets, totalVol, thisWeek, uniqueDays };
-  }, [workouts]);
+  }, [workouts, exMap]);
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -125,6 +122,9 @@ export default function Workouts() {
   };
 
   const deleteTargetEx = deleteTarget ? exMap[deleteTarget.exerciseId] : null;
+  const deleteTargetIsCardio = deleteTargetEx
+    ? WorkoutUtil.isCardioGroup(deleteTargetEx.muscleGroup)
+    : false;
 
   const isLoading = isLoadingWorkouts || isLoadingExercises;
 
@@ -137,7 +137,7 @@ export default function Workouts() {
       <div className="container mt-2">
         <div>
           <h2 className="font-display text-2xl font-bold">All Workouts</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {isLoading
               ? '—'
               : `${workouts.length} sessions across ${stats.uniqueDays} training days`}
@@ -159,15 +159,15 @@ export default function Workouts() {
               value: isLoading ? '—' : stats.totalSets.toLocaleString(),
             },
             {
-              label: 'Total Volume',
+              label: 'Strength Vol',
               value: isLoading ? '—' : `${(stats.totalVol / 1000).toFixed(1)}t`,
             },
           ].map((s) => (
             <div
               key={s.label}
-              className="space-y-1 rounded-xl border border-border/60 bg-secondary/30 p-4"
+              className="border-border/60 bg-secondary/30 space-y-1 rounded-xl border p-4"
             >
-              <div className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
+              <div className="text-muted-foreground font-mono text-[10px] tracking-widest uppercase">
                 {s.label}
               </div>
               <div className="font-display text-2xl font-bold">{s.value}</div>
@@ -178,18 +178,18 @@ export default function Workouts() {
         {/* Search + Filter */}
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search exercises…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-10 border-border/60 bg-secondary/40 pl-9 text-sm"
+              className="border-border/60 bg-secondary/40 h-10 pl-9 text-sm"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -230,7 +230,7 @@ export default function Workouts() {
 
         {/* Results count when filtering */}
         {(search || muscleFilter) && !isLoading && (
-          <p className="font-mono text-sm text-muted-foreground">
+          <p className="text-muted-foreground font-mono text-sm">
             {filtered.length} session{filtered.length !== 1 ? 's' : ''} found
           </p>
         )}
@@ -250,8 +250,8 @@ export default function Workouts() {
           </div>
         ) : grouped.size === 0 ? (
           <div className="space-y-3 py-20 text-center">
-            <Dumbbell className="mx-auto h-10 w-10 text-muted-foreground/40" />
-            <p className="text-sm text-muted-foreground">
+            <Dumbbell className="text-muted-foreground/40 mx-auto h-10 w-10" />
+            <p className="text-muted-foreground text-sm">
               {search || muscleFilter
                 ? 'No sessions match your filter.'
                 : 'No workouts logged yet.'}
@@ -275,13 +275,13 @@ export default function Workouts() {
               ([groupDate, workoutsOnDate]) => (
                 <div key={groupDate}>
                   {/* Date header */}
-                  <div className="sticky top-14 z-20 mb-3 flex items-center gap-2 bg-background/90 py-1.5 backdrop-blur-sm">
-                    <CalendarDays className="h-3.5 w-3.5 shrink-0 text-primary" />
-                    <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-primary">
+                  <div className="bg-background/90 sticky top-14 z-20 mb-3 flex items-center gap-2 py-1.5 backdrop-blur-sm">
+                    <CalendarDays className="text-primary h-3.5 w-3.5 shrink-0" />
+                    <span className="text-primary font-mono text-[11px] font-semibold tracking-wider uppercase">
                       {formatDateLabel(groupDate)}
                     </span>
-                    <div className="h-px flex-1 bg-border/50" />
-                    <span className="shrink-0 font-mono text-[10px] text-muted-foreground">
+                    <div className="bg-border/50 h-px flex-1" />
+                    <span className="text-muted-foreground shrink-0 font-mono text-[10px]">
                       {workoutsOnDate.length} exercise
                       {workoutsOnDate.length > 1 ? 's' : ''}
                     </span>
@@ -291,18 +291,23 @@ export default function Workouts() {
                   <div className="space-y-2">
                     {workoutsOnDate.map((w) => {
                       const ex = exMap[w.exerciseId];
+                      const wIsCardio = ex
+                        ? WorkoutUtil.isCardioGroup(ex.muscleGroup)
+                        : false;
                       const top = entryTopWeight(w);
                       const vol = entryVolume(w);
+                      const dur = entryTotalDuration(w);
+                      const dist = entryTotalDistance(w);
 
                       return (
                         <div
                           key={w.id}
-                          className="rounded-xl border border-border/60 bg-secondary/30 p-4 transition-colors hover:border-border/80"
+                          className="border-border/60 bg-secondary/30 hover:border-border/80 rounded-xl border p-4 transition-colors"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
                               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                                <span className="truncate font-display font-bold">
+                                <span className="font-display truncate font-bold">
                                   {ex?.name ?? '—'}
                                 </span>
                                 {ex && (
@@ -314,8 +319,8 @@ export default function Workouts() {
                                   </Badge>
                                 )}
                               </div>
-                              <div className="mt-0.5 text-xs text-muted-foreground">
-                                {w.sets.length} set
+                              <div className="text-muted-foreground mt-0.5 text-xs">
+                                {w.sets.length} {wIsCardio ? 'interval' : 'set'}
                                 {w.sets.length !== 1 ? 's' : ''}
                               </div>
                             </div>
@@ -324,7 +329,7 @@ export default function Workouts() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                className="text-muted-foreground hover:text-destructive h-8 w-8"
                                 onClick={() => setDeleteTarget(w)}
                                 aria-label="Delete workout"
                               >
@@ -333,33 +338,63 @@ export default function Workouts() {
                             </div>
                           </div>
 
-                          {/* Set chips */}
+                          {/* Set / interval chips */}
                           <div className="mt-3 flex flex-wrap gap-1.5">
                             {w.sets.map((s, i) => (
                               <span
                                 key={s.id}
-                                className="rounded-md border border-border/60 bg-background/60 px-2 py-0.5 font-mono text-xs"
+                                className="border-border/60 bg-background/60 rounded-md border px-2 py-0.5 font-mono text-xs"
                               >
-                                {i + 1}: {s.reps}×{s.weight}kg
+                                {i + 1}:{' '}
+                                {wIsCardio
+                                  ? WorkoutUtil.formatCardioSet(s)
+                                  : `${s.reps}×${s.weight}kg`}
                               </span>
                             ))}
                           </div>
 
                           {/* Stats row */}
-                          <div className="mt-3 flex gap-4 border-t border-border/40 pt-2.5 font-mono text-[11px] text-muted-foreground">
-                            <span>
-                              TOP{' '}
-                              <span className="font-semibold text-foreground">
-                                {top}kg
+                          {wIsCardio ? (
+                            <div className="border-border/40 text-muted-foreground mt-3 flex gap-4 border-t pt-2.5 font-mono text-[11px]">
+                              <span>
+                                DUR{' '}
+                                <span className="text-foreground font-semibold">
+                                  {dur}min
+                                </span>
                               </span>
-                            </span>
-                            <span>
-                              VOL{' '}
-                              <span className="font-semibold text-foreground">
-                                {vol.toLocaleString()}kg
+                              {dist > 0 && (
+                                <span>
+                                  DIST{' '}
+                                  <span className="text-foreground font-semibold">
+                                    {dist}km
+                                  </span>
+                                </span>
+                              )}
+                              {dist > 0 && (
+                                <span>
+                                  PACE{' '}
+                                  <span className="text-foreground font-semibold">
+                                    {WorkoutUtil.formatPace(dur, dist)}
+                                  </span>
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="border-border/40 text-muted-foreground mt-3 flex gap-4 border-t pt-2.5 font-mono text-[11px]">
+                              <span>
+                                TOP{' '}
+                                <span className="text-foreground font-semibold">
+                                  {top}kg
+                                </span>
                               </span>
-                            </span>
-                          </div>
+                              <span>
+                                VOL{' '}
+                                <span className="text-foreground font-semibold">
+                                  {vol.toLocaleString()}kg
+                                </span>
+                              </span>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -382,21 +417,23 @@ export default function Workouts() {
             <AlertDialogDescription asChild>
               <div className="space-y-1">
                 <p>
-                  <span className="font-semibold text-foreground">
+                  <span className="text-foreground font-semibold">
                     {deleteTargetEx?.name ?? 'This session'}
                   </span>{' '}
                   on{' '}
-                  <span className="font-semibold text-foreground">
+                  <span className="text-foreground font-semibold">
                     {deleteTarget ? formatDateLabel(deleteTarget.date) : ''}
                   </span>{' '}
                   will be permanently deleted.
                 </p>
                 {deleteTarget && deleteTarget.sets.length > 0 && (
-                  <p className="font-mono text-xs text-muted-foreground">
-                    {deleteTarget.sets.length} set
+                  <p className="text-muted-foreground font-mono text-xs">
+                    {deleteTarget.sets.length}{' '}
+                    {deleteTargetIsCardio ? 'interval' : 'set'}
                     {deleteTarget.sets.length !== 1 ? 's' : ''} ·{' '}
-                    {entryTopWeight(deleteTarget)}kg top ·{' '}
-                    {entryVolume(deleteTarget).toLocaleString()}kg vol
+                    {deleteTargetIsCardio
+                      ? `${entryTotalDuration(deleteTarget)}min · ${entryTotalDistance(deleteTarget)}km`
+                      : `${entryTopWeight(deleteTarget)}kg top · ${entryVolume(deleteTarget).toLocaleString()}kg vol`}
                   </p>
                 )}
               </div>
