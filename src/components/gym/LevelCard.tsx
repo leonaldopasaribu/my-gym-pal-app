@@ -164,12 +164,17 @@ export function LevelCard() {
       {/* Current level */}
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span
-            className="border-border/60 bg-secondary/40 flex h-12 w-12 items-center justify-center rounded-xl border text-2xl"
+          <div
+            className="border-border/60 bg-secondary/40 relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border shadow-sm"
             aria-hidden="true"
           >
-            {tier.emoji}
-          </span>
+            {/* subtle glow */}
+            <div className="bg-primary/10 absolute inset-0 rounded-2xl blur-xl" />
+            {/* glossy overlay */}
+            <div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent" />
+            {/* emoji/icon */}
+            <span className="relative text-2xl leading-none">{tier.emoji}</span>
+          </div>
           <div>
             <div className="font-display text-2xl leading-none font-bold sm:text-3xl">
               {tier.label}
