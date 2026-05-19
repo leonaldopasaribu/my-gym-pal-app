@@ -91,9 +91,9 @@ const TIERS = [
   },
   {
     id: 'olympia',
-    label: 'Mr. Olympia',
+    label: 'Olympian',
     emoji: '🏆', // Trofi emas murni untuk kasta tertinggi binaraga
-    min: 1000,
+    min: 1_000,
     max: Infinity,
     description: 'The ultimate peak. Welcome to the pantheon of gods.',
   },
