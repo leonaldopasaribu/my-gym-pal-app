@@ -62,15 +62,15 @@ export default function Auth() {
     <div className="grid min-h-screen place-items-center p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 flex flex-col items-center">
-          <div className="mb-3 grid h-14 w-14 place-items-center rounded-2xl border border-border bg-gradient-to-br from-foreground/10 to-foreground/[0.02] shadow-card">
-            <Dumbbell className="h-7 w-7 text-foreground" />
+          <div className="border-border from-foreground/10 to-foreground/2 shadow-card mb-3 grid h-14 w-14 place-items-center rounded-2xl border bg-linear-to-br">
+            <Dumbbell className="text-foreground h-7 w-7" />
           </div>
-          <h1 className="flex items-center gap-2 font-display text-3xl font-bold tracking-tight">
+          <h1 className="font-display flex items-center gap-2 text-3xl font-bold tracking-tight">
             <span>My</span>
             <span className="text-gradient-primary">Gym</span>
             <span>Pal</span>
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Train · Track · Transform
           </p>
         </div>
@@ -155,7 +155,7 @@ export default function Auth() {
           </Tabs>
         </Card>
 
-        <p className="mt-4 text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-4 text-center text-xs">
           Your data is securely stored in the cloud — never lost again 🔒
         </p>
       </div>

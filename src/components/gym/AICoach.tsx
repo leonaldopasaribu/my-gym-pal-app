@@ -419,7 +419,7 @@ export function AICoach() {
       </div>
 
       <Card className="surface overflow-hidden border-border/60">
-        <div className="h-[420px] space-y-4 overflow-y-auto p-4">
+        <div className="h-105 space-y-4 overflow-y-auto p-4">
           {messages.length === 0 && (
             <div className="grid h-full place-items-center text-center">
               <div>
