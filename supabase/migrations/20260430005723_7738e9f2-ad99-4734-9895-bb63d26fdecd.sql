@@ -10,6 +10,9 @@ CREATE TABLE public.exercises (
 
 CREATE INDEX exercises_user_id_idx ON public.exercises(user_id);
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.exercises TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.exercises TO service_role;
+
 ALTER TABLE public.exercises ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own exercises" ON public.exercises
@@ -34,6 +37,9 @@ CREATE TABLE public.workouts (
 
 CREATE INDEX workouts_user_id_date_idx ON public.workouts(user_id, date DESC);
 CREATE INDEX workouts_exercise_id_idx ON public.workouts(exercise_id);
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.workouts TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.workouts TO service_role;
 
 ALTER TABLE public.workouts ENABLE ROW LEVEL SECURITY;
 

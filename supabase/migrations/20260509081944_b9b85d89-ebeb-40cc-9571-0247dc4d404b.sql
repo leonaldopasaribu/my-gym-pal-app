@@ -7,6 +7,9 @@ CREATE TABLE public.rest_days (
   UNIQUE (user_id, date)
 );
 
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.rest_days TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.rest_days TO service_role;
+
 ALTER TABLE public.rest_days ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own rest days"
