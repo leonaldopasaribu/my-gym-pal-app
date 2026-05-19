@@ -132,7 +132,7 @@ export default function Workouts() {
     <div className="min-h-screen">
       <AppHeader
         isShowButtonBack={true}
-        handleBack={() => navigate(ROUTE_URL.HOME)}
+        handleBack={() => navigate(ROUTE_URL.WORKOUT_LOGGER)}
       />
       <div className="container mt-2">
         <div>
