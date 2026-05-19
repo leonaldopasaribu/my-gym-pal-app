@@ -642,7 +642,7 @@ export function WorkoutLogger() {
                           />
                         </div>
                       ) : (
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-5">
                           <Stepper
                             label="Duration (min)"
                             value={s.durationMinutes ?? 30}
