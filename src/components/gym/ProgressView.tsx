@@ -49,7 +49,7 @@ const METRIC_UNIT: Record<Metric, string> = {
   e1rm: 'kg',
   duration: 'min',
   distance: 'km',
-  pace: 'min/km',
+  pace: '/km',
 };
 
 const STRENGTH_METRICS: { value: StrengthMetric; label: string }[] = [
@@ -64,15 +64,35 @@ const CARDIO_METRICS: { value: CardioMetric; label: string }[] = [
   { value: 'pace', label: 'Pace' },
 ];
 
-function formatMetricValue(metric: Metric, value?: number) {
-  if (value === undefined || Number.isNaN(value)) return '—';
-  if (metric === 'pace') {
-    const minutes = Math.floor(value);
-    const seconds = Math.round((value - minutes) * 60);
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  }
+// Format raw decimal minutes → mm:ss string
+function minutesToMMSS(value: number): string {
+  const minutes = Math.floor(value);
+  const seconds = Math.round((value - minutes) * 60);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function formatMetricValue(metric: Metric, value?: number): string {
+  if (value === undefined || Number.isNaN(value) || value === 0) return '—';
+  if (metric === 'pace') return minutesToMMSS(value);
   const rounded = Math.round(value * 10) / 10;
   return rounded.toLocaleString();
+}
+
+// Custom Y-axis tick formatter
+function makeYAxisFormatter(metric: Metric) {
+  return (value: number) => {
+    if (metric === 'pace') return minutesToMMSS(value);
+    if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+    return String(Math.round(value * 10) / 10);
+  };
+}
+
+// Custom tooltip formatter for Recharts
+function makeTooltipFormatter(metric: Metric) {
+  return (value: number) => {
+    const formatted = formatMetricValue(metric, value);
+    return [`${formatted} ${METRIC_UNIT[metric]}`, METRIC_LABEL[metric]];
+  };
 }
 
 export function ProgressView() {
@@ -82,7 +102,6 @@ export function ProgressView() {
   const [metric, setMetric] = useState<Metric>('top');
   const isLoading = isLoadingExercises || isLoadingWorkouts;
 
-  // Sync selection when exercises load
   const activeId = exerciseId || exercises[0]?.id || '';
   const selectedExercise = exercises.find((e) => e.id === activeId);
   const isCardio = selectedExercise
@@ -94,6 +113,9 @@ export function ProgressView() {
     : isCardio
       ? 'duration'
       : 'top';
+
+  // For pace: lower is better → invert Y-axis so improvement looks like going up
+  const isPace = activeMetric === 'pace';
 
   const data = useMemo(() => {
     const filtered = workouts
@@ -109,7 +131,7 @@ export function ProgressView() {
         e1rm: Math.round(entryBest1RM(w) * 10) / 10,
         duration,
         distance,
-        pace: distance > 0 ? duration / distance : 0,
+        pace: distance > 0 ? Math.round((duration / distance) * 100) / 100 : 0,
       };
     });
   }, [workouts, activeId]);
@@ -120,8 +142,8 @@ export function ProgressView() {
     last && prev
       ? (last[activeMetric] as number) - (prev[activeMetric] as number)
       : 0;
-  const isPositiveTrend = activeMetric === 'pace' ? delta < 0 : delta > 0;
-  const isNegativeTrend = activeMetric === 'pace' ? delta > 0 : delta < 0;
+  const isPositiveTrend = isPace ? delta < 0 : delta > 0;
+  const isNegativeTrend = isPace ? delta > 0 : delta < 0;
 
   if (isLoading) {
     return (
@@ -200,6 +222,11 @@ export function ProgressView() {
           <div>
             <div className="text-muted-foreground text-[11px] tracking-widest uppercase">
               {METRIC_LABEL[activeMetric]}
+              {isPace && (
+                <span className="text-primary ml-2 normal-case">
+                  ↓ lower is faster
+                </span>
+              )}
             </div>
             <div className="font-display mt-1 text-3xl font-bold">
               {last ? formatMetricValue(activeMetric, last[activeMetric]) : '—'}
@@ -208,7 +235,8 @@ export function ProgressView() {
               </span>
             </div>
           </div>
-          {last && prev && (
+
+          {last && prev ? (
             <div
               className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-sm ${
                 isPositiveTrend
@@ -221,12 +249,15 @@ export function ProgressView() {
               <TrendingUp
                 className={`h-4 w-4 ${isNegativeTrend ? 'rotate-180' : ''}`}
               />
-              {delta > 0 ? '+' : ''}
-              {activeMetric === 'pace'
-                ? formatMetricValue(activeMetric, Math.abs(delta))
-                : delta.toFixed(1)}
+              {isPace
+                ? `${delta > 0 ? '+' : '-'}${minutesToMMSS(Math.abs(delta))}`
+                : `${delta > 0 ? '+' : ''}${delta.toFixed(1)}`}
             </div>
-          )}
+          ) : data.length === 1 ? (
+            <div className="text-muted-foreground rounded-md bg-secondary px-3 py-1.5 font-mono text-xs">
+              Log more sessions to see trend
+            </div>
+          ) : null}
         </div>
 
         {data.length === 0 ? (
@@ -271,6 +302,9 @@ export function ProgressView() {
                   fontSize={11}
                   tickLine={false}
                   axisLine={false}
+                  tickFormatter={makeYAxisFormatter(activeMetric)}
+                  // Invert Y-axis for pace so lower (faster) looks like going up
+                  reversed={isPace}
                 />
                 <Tooltip
                   contentStyle={{
@@ -280,6 +314,7 @@ export function ProgressView() {
                     fontSize: 12,
                   }}
                   labelStyle={{ color: 'hsl(var(--muted-foreground))' }}
+                  formatter={makeTooltipFormatter(activeMetric)}
                 />
                 <Area
                   type="monotone"

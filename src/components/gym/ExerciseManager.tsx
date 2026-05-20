@@ -36,9 +36,21 @@ import {
   type Exercise,
   type MuscleGroup,
 } from '@/lib/gym-types';
+import { WorkoutUtil } from '@/lib/workout-util';
 import { toast } from 'sonner';
 import { Skeleton } from '../ui/skeleton';
 import { Loading } from '@/components/ui/loading';
+
+const NOTES_PLACEHOLDER: Record<string, string> = {
+  Cardio: 'Target pace, indoor/outdoor, machine type, etc.',
+  Chest: 'Form cues, grip width, incline angle, etc.',
+  Back: 'Form cues, grip type, cable vs barbell, etc.',
+  Shoulders: 'Form cues, unilateral or bilateral, etc.',
+  Arms: 'Form cues, curl style, grip, etc.',
+  Legs: 'Form cues, stance width, belt, etc.',
+  Core: 'Tempo, breathing cues, progression, etc.',
+  Other: 'Notes, tips, progressions, etc.',
+};
 
 export function ExerciseManager() {
   const { exercises, addExercise, removeExercise, updateExercise, isLoading } =
@@ -135,7 +147,7 @@ export function ExerciseManager() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="font-display text-2xl font-bold">Exercise Library</h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Build your own custom list of movements.
           </p>
         </div>
@@ -162,7 +174,11 @@ export function ExerciseManager() {
                   id="ex-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Incline Dumbbell Press"
+                  placeholder={
+                    WorkoutUtil.isCardioGroup(group)
+                      ? 'e.g. Treadmill, Outdoor Run, Hyrox…'
+                      : 'e.g. Incline Dumbbell Press'
+                  }
                   disabled={isSavingExercise}
                 />
               </div>
@@ -191,7 +207,9 @@ export function ExerciseManager() {
                   id="ex-notes"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Form cues, grip, etc."
+                  placeholder={
+                    NOTES_PLACEHOLDER[group] ?? NOTES_PLACEHOLDER['Other']
+                  }
                   disabled={isSavingExercise}
                 />
               </div>
@@ -222,11 +240,11 @@ export function ExerciseManager() {
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="surface space-y-3 border-border/60 p-4">
+            <Card key={i} className="surface border-border/60 space-y-3 p-4">
               <Skeleton className="h-5 w-3/4" />
               <Skeleton className="h-4 w-20" />
               <Skeleton className="h-3 w-full" />
-              <div className="border-t border-border/60 pt-3">
+              <div className="border-border/60 border-t pt-3">
                 <Skeleton className="h-3 w-16" />
               </div>
             </Card>
@@ -234,7 +252,7 @@ export function ExerciseManager() {
         </div>
       ) : exercises.length === 0 ? (
         <Card className="surface p-10 text-center">
-          <Dumbbell className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+          <Dumbbell className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
           <p className="text-muted-foreground">
             No exercises yet. Add your first one!
           </p>
@@ -243,24 +261,25 @@ export function ExerciseManager() {
         <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
           {exercises.map((ex) => {
             const count = workouts.filter((w) => w.exerciseId === ex.id).length;
+
             return (
               <Card
                 key={ex.id}
-                className="surface group animate-fade-up border-border/60 p-4 transition-colors hover:border-primary/40"
+                className="surface group animate-fade-up border-border/60 hover:border-primary/40 p-4 transition-colors"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <h3 className="truncate font-display text-lg font-bold leading-tight">
+                    <h3 className="font-display truncate text-lg leading-tight font-bold">
                       {ex.name}
                     </h3>
                     <Badge
                       variant="secondary"
-                      className="mt-1.5 text-[10px] uppercase tracking-widest"
+                      className="mt-1.5 text-[10px] tracking-widest uppercase"
                     >
                       {ex.muscleGroup}
                     </Badge>
                     {ex.notes && (
-                      <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">
+                      <p className="text-muted-foreground mt-2 line-clamp-2 text-xs">
                         {ex.notes}
                       </p>
                     )}
@@ -269,7 +288,7 @@ export function ExerciseManager() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-primary"
+                      className="text-muted-foreground hover:text-primary h-8 w-8"
                       onClick={() => handleEdit(ex)}
                       aria-label={`Edit ${ex.name}`}
                     >
@@ -278,7 +297,7 @@ export function ExerciseManager() {
                     <Button
                       size="icon"
                       variant="ghost"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      className="text-muted-foreground hover:text-destructive h-8 w-8"
                       onClick={() => handleDeleteRequest(ex)}
                       aria-label={`Delete ${ex.name}`}
                     >
@@ -286,8 +305,9 @@ export function ExerciseManager() {
                     </Button>
                   </div>
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t border-border/60 pt-3 text-xs text-muted-foreground">
-                  <span className="font-mono">
+
+                <div className="border-border/60 text-muted-foreground mt-3 flex items-center justify-between border-t pt-3 font-mono text-xs">
+                  <span>
                     {count} session{count !== 1 ? 's' : ''}
                   </span>
                 </div>
@@ -312,11 +332,11 @@ export function ExerciseManager() {
                 {hasSessions ? (
                   <>
                     <p>
-                      <span className="font-semibold text-foreground">
+                      <span className="text-foreground font-semibold">
                         {deleteTarget?.name}
                       </span>{' '}
                       has{' '}
-                      <span className="font-semibold text-foreground">
+                      <span className="text-foreground font-semibold">
                         {sessionCount} logged session
                         {sessionCount !== 1 ? 's' : ''}
                       </span>
@@ -329,7 +349,7 @@ export function ExerciseManager() {
                   </>
                 ) : (
                   <p>
-                    <span className="font-semibold text-foreground">
+                    <span className="text-foreground font-semibold">
                       {deleteTarget?.name}
                     </span>{' '}
                     will be permanently deleted. This action cannot be undone.

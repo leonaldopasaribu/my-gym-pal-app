@@ -18,7 +18,10 @@ import {
   epley1RM,
   entryTopWeight,
   entryVolume,
+  entryTotalDistance,
+  entryTotalDuration,
 } from '@/lib/gym-store';
+import { WorkoutUtil } from '@/lib/workout-util';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
@@ -92,14 +95,88 @@ function buildCoachingContext(
     (r) => r.date >= toISODate(thirtyAgo)
   ).length;
 
+  // Volume delta — strength only (cardio volume = minutes, different unit)
+  const oneWeekAgo = toISODate(
+    (() => {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      return d;
+    })()
+  );
+  const twoWeeksAgo = toISODate(
+    (() => {
+      const d = new Date();
+      d.setDate(d.getDate() - 14);
+      return d;
+    })()
+  );
+
+  const exMap = Object.fromEntries(exercises.map((e) => [e.id, e]));
+
+  const strengthWorkouts = workouts.filter((w) => {
+    const ex = exMap[w.exerciseId];
+    return ex && !WorkoutUtil.isCardioGroup(ex.muscleGroup);
+  });
+  const cardioWorkouts = workouts.filter((w) => {
+    const ex = exMap[w.exerciseId];
+    return ex && WorkoutUtil.isCardioGroup(ex.muscleGroup);
+  });
+
+  const volNow = strengthWorkouts
+    .filter((w) => w.date >= oneWeekAgo)
+    .reduce((m, w) => m + entryVolume(w), 0);
+  const volPrev = strengthWorkouts
+    .filter((w) => w.date >= twoWeeksAgo && w.date < oneWeekAgo)
+    .reduce((m, w) => m + entryVolume(w), 0);
+  const delta =
+    volPrev > 0 ? `${(((volNow - volPrev) / volPrev) * 100).toFixed(0)}%` : '—';
+
+  // Cardio summary for last 7 days
+  const cardioNow = cardioWorkouts.filter((w) => w.date >= oneWeekAgo);
+  const totalCardioMin = cardioNow.reduce(
+    (m, w) => m + entryTotalDuration(w),
+    0
+  );
+  const totalCardioDist = cardioNow.reduce(
+    (m, w) => m + entryTotalDistance(w),
+    0
+  );
+  const cardioSummary =
+    cardioNow.length > 0
+      ? `Cardio 7 hari: ${cardioNow.length} sesi, ${totalCardioMin}min${totalCardioDist > 0 ? `, ${totalCardioDist.toFixed(1)}km` : ''}`
+      : 'Cardio 7 hari: tidak ada sesi';
+
+  // Per-exercise summaries
   const summaries = exercises.map((ex) => {
     const sessions = workouts
       .filter((w) => w.exerciseId === ex.id)
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 5);
+
     if (sessions.length === 0)
       return `${ex.name} (${ex.muscleGroup}): belum ada sesi`;
 
+    const isCardio = WorkoutUtil.isCardioGroup(ex.muscleGroup);
+
+    if (isCardio) {
+      const recent = sessions
+        .slice(0, 3)
+        .map((s) => {
+          const dur = entryTotalDuration(s);
+          const dist = entryTotalDistance(s);
+          const pace = dist > 0 ? WorkoutUtil.formatPace(dur, dist) : null;
+          return `${s.date}: ${dur}min${dist > 0 ? ` ${dist}km` : ''}${pace ? ` @${pace}` : ''}`;
+        })
+        .join(' | ');
+
+      // Cardio plateau: duration stuck across last 3 sessions
+      const durs = sessions.slice(0, 3).map(entryTotalDuration);
+      const plateau = durs.length >= 3 && durs.every((d) => d === durs[0]);
+
+      return `${ex.name} (${ex.muscleGroup}): ${plateau ? '⚠️ PLATEAU (duration stuck) ' : ''}Recent → ${recent}`;
+    }
+
+    // Strength
     const maxE1RM = sessions.reduce((max, s) => {
       const e = s.sets.reduce(
         (m, set) => Math.max(m, epley1RM(set.weight, set.reps)),
@@ -122,29 +199,6 @@ function buildCoachingContext(
     return `${ex.name} (${ex.muscleGroup}): e1RM ~${maxE1RM.toFixed(1)}kg${plateau ? ' ⚠️ PLATEAU' : ''}. Recent → ${recent}`;
   });
 
-  const oneWeekAgo = toISODate(
-    (() => {
-      const d = new Date();
-      d.setDate(d.getDate() - 7);
-      return d;
-    })()
-  );
-  const twoWeeksAgo = toISODate(
-    (() => {
-      const d = new Date();
-      d.setDate(d.getDate() - 14);
-      return d;
-    })()
-  );
-  const volNow = workouts
-    .filter((w) => w.date >= oneWeekAgo)
-    .reduce((m, w) => m + entryVolume(w), 0);
-  const volPrev = workouts
-    .filter((w) => w.date >= twoWeeksAgo && w.date < oneWeekAgo)
-    .reduce((m, w) => m + entryVolume(w), 0);
-  const delta =
-    volPrev > 0 ? `${(((volNow - volPrev) / volPrev) * 100).toFixed(0)}%` : '—';
-
   const latestRest = restDays
     .slice()
     .sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -154,7 +208,9 @@ function buildCoachingContext(
 
   return `
 === DATA LATIHAN USER ===
-Streak: ${streak} hari (workout/rest) | Sesi 30 hari: ${sessions30} | Rest 30 hari: ${restCount30} | Volume minggu ini: ${volNow.toLocaleString()}kg (${delta !== '—' ? delta + ' vs minggu lalu' : 'no prev data'})
+Streak: ${streak} hari (workout/rest) | Sesi 30 hari: ${sessions30} | Rest 30 hari: ${restCount30}
+Strength volume minggu ini: ${volNow.toLocaleString()}kg (${delta !== '—' ? delta + ' vs minggu lalu' : 'no prev data'})
+${cardioSummary}
 Last rest day: ${restInsight}
 
 === PER EXERCISE ===
@@ -170,6 +226,8 @@ const QUICK_PROMPTS = [
   'Program latihan minggu depan gimana?',
   'Volume aku udah optimal belum?',
   'Kapan waktu yang tepat buat deload?',
+  'Gimana cara improve pace cardio aku?',
+  'Cardio vs strength, balance aku udah bener?',
 ];
 
 const TAG_CONFIG = {
@@ -215,7 +273,7 @@ export function AICoach() {
   const systemPrompt = useMemo(
     () => `Kamu adalah Coach — AI gym partner personal di MyGymPal. Bukan personal trainer korporat yang baca script, tapi temen yang udah nemenin user dari hari pertama mereka angkat beban, tau persis history latihan mereka, dan genuinely peduli sama progress mereka.
 
-    Expertise lo: progressive overload, periodisasi, recovery optimization, dan baca pola data latihan.
+    Expertise lo: progressive overload, periodisasi, recovery optimization, cardio programming, dan baca pola data latihan.
 
     ---
 
@@ -236,19 +294,25 @@ export function AICoach() {
 
     ## Analisis Plateau
 
-    Kalau ada tanda plateau (weight stuck, reps gak naik, atau performance drop beberapa sesi berturut-turut), lo **wajib** kasih solusi konkret — pilih yang paling relevan berdasarkan data:
+    **Strength plateau** (weight stuck, reps gak naik, atau performance drop beberapa sesi berturut-turut):
     - **Deload**: kalau volume tinggi dan ada tanda fatigue
     - **Rep range change**: kalau udah terlalu lama di range yang sama
     - **Tempo variation**: kalau form dan range of motion bisa dieksplor lebih
     - **Exercise swap**: kalau ada tanda stagnasi neuromuskular di movement pattern itu
 
-    Jangan sebut semua opsi sekaligus — pilih satu yang paling masuk akal, jelaskan kenapa berdasarkan data mereka.
+    **Cardio plateau** (durasi atau jarak stuck beberapa sesi berturut-turut):
+    - **Interval training**: selingi dengan sesi high-intensity pendek
+    - **Tambah jarak/durasi**: progressive overload versi cardio — naik 10% per minggu
+    - **Pace target**: kasih target pace yang sedikit lebih cepat dari biasanya
+    - **Cross-training**: variasi jenis cardio supaya adaptasi gak stagnan
+
+    Jangan sebut semua opsi sekaligus — pilih satu yang paling masuk akal berdasarkan data mereka.
 
     ---
 
     ## Motivasi
 
-    Kalau mau kasih semangat, harus nyambung sama situasi spesifik user saat itu — bukan frase motivasi generik yang ditempel di akhir. Kalau mereka baru aja berhasil naikin PR, rayain itu. Kalau mereka lagi struggle, acknowledge dulu baru kasih perspektif. Bold kata kunci motivasinya.
+    Kalau mau kasih semangat, harus nyambung sama situasi spesifik user saat itu — bukan frase motivasi generik yang ditempel di akhir. Kalau mereka baru aja berhasil naikin PR atau personal best cardio, rayain itu. Kalau mereka lagi struggle, acknowledge dulu baru kasih perspektif. Bold kata kunci motivasinya.
 
     Tutup setiap respons dengan satu kalimat singkat yang personal ke situasi mereka — bukan template, tapi sesuatu yang cuma bisa lo bilang ke mereka hari itu berdasarkan data yang lo lihat.
 
@@ -263,13 +327,24 @@ export function AICoach() {
 
   useEffect(() => {
     if (exercises.length > 0 && messages.length === 0) {
+      const exMap = Object.fromEntries(exercises.map((e) => [e.id, e]));
+
       const plateauCount = exercises.filter((ex) => {
-        const tops = workouts
+        const isCardio = WorkoutUtil.isCardioGroup(ex.muscleGroup);
+        const sessions = workouts
           .filter((w) => w.exerciseId === ex.id)
           .sort((a, b) => b.date.localeCompare(a.date))
-          .slice(0, 3)
-          .map(entryTopWeight);
-        return tops.length >= 3 && tops.every((t) => t === tops[0]);
+          .slice(0, 3);
+
+        if (sessions.length < 3) return false;
+
+        if (isCardio) {
+          const durs = sessions.map(entryTotalDuration);
+          return durs.every((d) => d === durs[0]);
+        } else {
+          const tops = sessions.map(entryTopWeight);
+          return tops.every((t) => t === tops[0]);
+        }
       }).length;
 
       const hasRecentRest = restDays.some((r) => {
@@ -293,7 +368,7 @@ export function AICoach() {
         },
       ]);
     }
-  }, [exercises, workouts, restDays, chatKey]); // FIX #3: chatKey in deps
+  }, [exercises, workouts, restDays, chatKey]);
 
   const handleSend = async (text?: string) => {
     const userText = (text ?? input).trim();
@@ -362,7 +437,7 @@ export function AICoach() {
       <span key={lineIdx}>
         {line.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
           part.startsWith('**') && part.endsWith('**') ? (
-            <strong key={i} className="font-semibold text-foreground">
+            <strong key={i} className="text-foreground font-semibold">
               {part.slice(2, -2)}
             </strong>
           ) : (
@@ -377,11 +452,11 @@ export function AICoach() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="flex items-center gap-2 font-display text-2xl font-bold">
-            <Bot className="h-6 w-6 text-primary" />
+          <h2 className="font-display flex items-center gap-2 text-2xl font-bold">
+            <Bot className="text-primary h-6 w-6" />
             AI Coach
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Powered by GROQ · Analysis based on your training data
           </p>
         </div>
@@ -418,13 +493,13 @@ export function AICoach() {
         ))}
       </div>
 
-      <Card className="surface overflow-hidden border-border/60">
+      <Card className="surface border-border/60 overflow-hidden">
         <div className="h-105 space-y-4 overflow-y-auto p-4">
           {messages.length === 0 && (
             <div className="grid h-full place-items-center text-center">
               <div>
-                <Bot className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
+                <Bot className="text-muted-foreground mx-auto mb-3 h-10 w-10" />
+                <p className="text-muted-foreground text-sm">
                   {exercises.length === 0
                     ? 'Add exercise first in Library.'
                     : 'Loading your training data...'}
@@ -455,8 +530,8 @@ export function AICoach() {
                 className={cn(
                   'max-w-[82%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed',
                   msg.role === 'assistant'
-                    ? 'rounded-tl-sm border border-border/60 bg-secondary/40'
-                    : 'rounded-tr-sm bg-foreground font-medium text-background'
+                    ? 'border-border/60 bg-secondary/40 rounded-tl-sm border'
+                    : 'bg-foreground text-background rounded-tr-sm font-medium'
                 )}
               >
                 {msg.role === 'assistant' &&
@@ -467,7 +542,7 @@ export function AICoach() {
                     return (
                       <div
                         className={cn(
-                          'mb-2 inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest',
+                          'mb-2 inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase',
                           cfg.className
                         )}
                       >
@@ -487,15 +562,15 @@ export function AICoach() {
 
           {loading && (
             <div className="flex gap-3">
-              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-foreground text-xs font-bold text-background">
+              <div className="bg-foreground text-background grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold">
                 AI
               </div>
-              <div className="rounded-xl rounded-tl-sm border border-border/60 bg-secondary/40 px-4 py-3">
+              <div className="border-border/60 bg-secondary/40 rounded-xl rounded-tl-sm border px-4 py-3">
                 <div className="flex items-center gap-1.5">
                   {[0, 150, 300].map((d) => (
                     <span
                       key={d}
-                      className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted-foreground"
+                      className="bg-muted-foreground h-1.5 w-1.5 animate-pulse rounded-full"
                       style={{ animationDelay: `${d}ms` }}
                     />
                   ))}
@@ -505,21 +580,21 @@ export function AICoach() {
           )}
 
           {error && (
-            <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-xs text-destructive">
+            <div className="border-destructive/20 bg-destructive/10 text-destructive flex items-start gap-2 rounded-lg border p-3 text-xs">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
               <span>{error}</span>
             </div>
           )}
         </div>
 
-        <div className="flex gap-2 border-t border-border/60 p-3">
+        <div className="border-border/60 flex gap-2 border-t p-3">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder="Ask your coach..."
             disabled={loading}
-            className="h-11 border-border/60"
+            className="border-border/60 h-11"
           />
           <Button
             onClick={() => handleSend()}
@@ -532,7 +607,7 @@ export function AICoach() {
         </div>
       </Card>
 
-      <p className="text-center font-mono text-[11px] text-muted-foreground">
+      <p className="text-muted-foreground text-center font-mono text-[11px]">
         AI Coach membaca data real dari exercise library, workout history, dan
         rest days kamu
       </p>

@@ -457,7 +457,7 @@ export function WorkoutLogger() {
           {editingWorkoutId
             ? 'Edit the selected recent session.'
             : isCardio
-              ? 'Track duration, distance & heart rate.'
+              ? 'Track duration, distance & pace.'
               : 'Track sets, reps & weight (kg).'}
         </p>
       </div>
