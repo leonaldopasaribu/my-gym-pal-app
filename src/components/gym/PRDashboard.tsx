@@ -126,6 +126,17 @@ export function PRDashboard() {
 
   const hasPRs = strengthPRs.length > 0 || cardioPRs.length > 0;
 
+  const formatDateID = (iso: string) => {
+    const d = new Date(iso + 'T00:00:00');
+    if (isNaN(d.getTime())) return iso;
+    return new Intl.DateTimeFormat('en-US', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(d);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -215,7 +226,7 @@ export function PRDashboard() {
                       {bestSet && (
                         <div className="border-border/60 text-muted-foreground mt-3 border-t pt-3 font-mono text-xs">
                           Best: {bestSet.reps}×{bestSet.weight}kg ·{' '}
-                          {bestSet.date}
+                          {formatDateID(bestSet.date)}
                         </div>
                       )}
                     </Card>
