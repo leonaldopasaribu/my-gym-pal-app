@@ -589,7 +589,7 @@ export function WorkoutLogger() {
                   size="sm"
                   variant="ghost"
                   onClick={addSet}
-                  className="text-primary hover:text-primary h-8 gap-1"
+                  className="text-primary active:bg-primary/20 h-8 cursor-pointer gap-1 transition-all duration-150 hover:text-black active:scale-95"
                 >
                   <Plus className="h-4 w-4" />
                   {isCardio ? 'Add Interval' : 'Add Set'}
@@ -611,7 +611,7 @@ export function WorkoutLogger() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="text-muted-foreground hover:text-destructive h-7 w-7"
+                          className="text-muted-foreground hover:text-destructive h-7 w-7 cursor-pointer"
                           onClick={() => removeSet(s.id)}
                         >
                           <X className="h-4 w-4" />
@@ -763,7 +763,7 @@ export function WorkoutLogger() {
             <Button
               size="sm"
               variant="ghost"
-              className="text-muted-foreground hover:text-primary gap-1 pr-0 text-xs"
+              className="text-muted-foreground cursor-pointer gap-1 pr-0 text-xs hover:text-black"
               onClick={() => navigate(ROUTE_URL.WORKOUTS)}
             >
               View all
@@ -857,7 +857,7 @@ export function WorkoutLogger() {
                                   <Button
                                     size="icon"
                                     variant="ghost"
-                                    className="text-muted-foreground hover:text-primary h-7 w-7"
+                                    className="text-muted-foreground h-7 w-7 hover:text-black"
                                     onClick={() => startEditWorkout(w.id)}
                                     aria-label="Edit workout"
                                   >
