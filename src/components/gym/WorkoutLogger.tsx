@@ -611,7 +611,7 @@ export function WorkoutLogger() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="text-muted-foreground hover:text-destructive h-7 w-7 cursor-pointer"
+                          className="text-muted-foreground hover:text-destructive h-7 w-7 cursor-pointer transition-all duration-150 active:scale-95"
                           onClick={() => removeSet(s.id)}
                         >
                           <X className="h-4 w-4" />
