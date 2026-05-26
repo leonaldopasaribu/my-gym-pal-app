@@ -17,8 +17,17 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
+      // Switch to injectManifest so we can use our custom sw.ts
+      // with full notification scheduling + workbox caching
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
+
       registerType: 'autoUpdate',
-      devOptions: { enabled: false },
+      devOptions: {
+        enabled: false,
+        type: 'module',
+      },
       includeAssets: ['apple-touch-icon.png', 'favicon.ico', 'robots.txt'],
       manifest: {
         name: 'My Gym Pal',
@@ -42,41 +51,9 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
-      workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
+      // injectManifest mode: workbox config only for the precache manifest injection
+      injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'html',
-              networkTimeoutSeconds: 3,
-            },
-          },
-          {
-            urlPattern: ({ request }) =>
-              ['style', 'script', 'worker'].includes(request.destination),
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'assets' },
-          },
-          {
-            urlPattern: ({ request }) => request.destination === 'image',
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images',
-              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: { maxEntries: 30, maxAgeSeconds: 60 * 60 * 24 * 365 },
-            },
-          },
-        ],
       },
     }),
   ].filter(Boolean),
