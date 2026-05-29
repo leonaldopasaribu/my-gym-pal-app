@@ -5,8 +5,8 @@ import { initNotifications } from './lib/notifications';
 export function setupPWA() {
   const updateSW = registerSW({
     onNeedRefresh() {
-      toast('Update tersedia', {
-        description: 'Versi baru My Gym Pal siap dipasang.',
+      toast('Update available', {
+        description: 'New version of My Gym Pal is ready to install.',
         action: {
           label: 'Reload',
           onClick: () => updateSW(true),
@@ -16,7 +16,7 @@ export function setupPWA() {
     },
 
     onOfflineReady() {
-      toast.success('Siap dipakai offline 💪');
+      toast.success('Ready to use offline 💪');
     },
   });
 

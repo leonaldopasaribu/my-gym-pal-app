@@ -15,7 +15,6 @@ import { useWorkouts, useRestDays } from '@/lib/gym-store';
 import { Flame, Activity, Moon, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { LevelCard } from './LevelCard';
-import { NotificationSettings } from './NotificationSettings';
 
 function toISODate(d: Date) {
   const x = new Date(d);
@@ -301,9 +300,6 @@ export function HomeView() {
           <span>Today</span>
         </div>
       </Card>
-
-      {/* Workout Reminder / Notification Settings */}
-      <NotificationSettings />
     </div>
   );
 }

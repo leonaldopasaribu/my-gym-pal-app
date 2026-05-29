@@ -106,7 +106,7 @@ function scheduleNext(hour: number, minute: number) {
 
   notifTimeout = setTimeout(() => {
     self.registration.showNotification('MyGymPal 💪', {
-      body: 'Jangan lupa log workout kamu hari ini! Streak kamu nunggu 🔥',
+      body: "Don't forget to log your workout today! Your streak awaits. 🔥",
       icon: '/pwa-192.png',
       badge: '/favicon.ico',
       tag: 'workout-reminder',
