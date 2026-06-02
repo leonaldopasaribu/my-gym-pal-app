@@ -300,7 +300,8 @@ export function PRDashboard() {
 
                       <div className="border-border/60 text-muted-foreground mt-3 border-t pt-3 font-mono text-xs">
                         {sessions} session{sessions !== 1 ? 's' : ''}
-                        {bestDistDate && ` · last PR ${bestDistDate}`}
+                        {bestDistDate &&
+                          ` · last PR ${formatDateID(bestDistDate)}`}
                       </div>
                     </Card>
                   )
