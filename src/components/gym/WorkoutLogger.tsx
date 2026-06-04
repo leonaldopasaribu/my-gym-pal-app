@@ -275,7 +275,7 @@ export function WorkoutLogger() {
     removeWorkout,
     updateWorkout,
     isLoading: isLoadingWorkouts,
-  } = useWorkouts();
+  } = useWorkouts({ limit: 10 });
 
   const [exerciseId, setExerciseId] = useState<string>('');
   const [date, setDate] = useState(todayISO());
@@ -416,7 +416,7 @@ export function WorkoutLogger() {
     }
   };
 
-  const recent = workouts.slice(0, 10);
+  const recent = workouts;
 
   const orderedExerciseIds = useMemo(() => {
     const seen = new Set<string>();

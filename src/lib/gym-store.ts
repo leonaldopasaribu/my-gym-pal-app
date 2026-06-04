@@ -198,8 +198,13 @@ export function useExercises() {
   };
 }
 
-export function useWorkouts() {
+interface UseWorkoutsOptions {
+  limit?: number;
+}
+
+export function useWorkouts(options: UseWorkoutsOptions = {}) {
   const { user } = useAuth();
+  const { limit } = options;
   const [items, setItems] = useState<WorkoutEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -209,17 +214,23 @@ export function useWorkouts() {
       setIsLoading(false);
       return;
     }
-    const { data, error } = await supabase
+    let query = supabase
       .from('workouts')
       .select('*')
       .eq('user_id', user.id)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
+
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
     if (!error && data) {
       setItems((data as unknown as DbWorkout[]).map(fromDbWo));
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, limit]);
 
   useEffect(() => {
     setIsLoading(true);
