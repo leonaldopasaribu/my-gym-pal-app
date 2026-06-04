@@ -193,7 +193,7 @@ export function LevelCard() {
             </p>
           </div>
 
-          <div className="flex flex-col items-end gap-1.5 px-2 py-1">
+          <div className="flex flex-col items-end gap-0 px-2 py-1">
             <span className="text-primary font-mono text-[30px] font-bold">
               {totalSessions}
             </span>
