@@ -8,15 +8,15 @@ const TIERS = [
   {
     id: 'noob',
     label: 'Noob',
-    emoji: '🐣', // Lebih melambangkan awal mula (baru menetas) dibanding telur pasif
+    emoji: '🐣',
     min: 0,
     max: 5,
     description: 'Every legend starts with an empty bar. Welcome to the floor.',
   },
   {
-    id: 'grinder', // Ditukar ke atas karena deskripsinya cocok untuk pembentukan habit awal
+    id: 'grinder',
     label: 'Grinder',
-    emoji: '🧱', // Melambangkan sedang menyusun batu bata fondasi
+    emoji: '🧱',
     min: 6,
     max: 15,
     description: 'Building the foundation. The habit is officially forming.',
@@ -27,17 +27,15 @@ const TIERS = [
     emoji: '🐀',
     min: 16,
     max: 30,
-    description:
-      "You're showing up consistently. The gym is starting to feel like home.",
+    description: "You're showing up consistently. The gym feels like home.",
   },
   {
     id: 'iron',
     label: 'Iron',
-    emoji: '💪', // Lebih aktif melambangkan otot/kekuatan dibanding sekadar gear mekanik
+    emoji: '💪',
     min: 31,
     max: 60,
-    description:
-      'Molded by the iron. Consistency has officially become your superpower.',
+    description: 'Molded by the iron. Consistency is your superpower.',
   },
   {
     id: 'veteran',
@@ -45,24 +43,23 @@ const TIERS = [
     emoji: '🎖️',
     min: 61,
     max: 100,
-    description:
-      'Crossing into the three-figure club. Most people quit long before this.',
+    description: 'Crossing into the three-figure club. Most quit before this.',
   },
   {
     id: 'beast',
     label: 'Beast',
-    emoji: '👹', // Aura "Beast Mode" lebih dapet dibanding fire biasa
+    emoji: '👹',
     min: 101,
     max: 175,
-    description: 'Pure intensity. Heavy weights don’t scare you anymore.',
+    description: "Pure intensity. Heavy weights don't scare you anymore.",
   },
   {
     id: 'savage',
     label: 'Savage',
-    emoji: '⚡', // Menggambarkan energi yang meledak-ledak di setiap session
+    emoji: '⚡',
     min: 176,
     max: 275,
-    description: 'Relentless. You don’t find time for the gym, you make it.',
+    description: 'Relentless. You make time for the gym.',
   },
   {
     id: 'alpha',
@@ -70,16 +67,15 @@ const TIERS = [
     emoji: '🦍',
     min: 276,
     max: 400,
-    description: 'Silverback status. Head down, heavy weight, total dominance.',
+    description: 'Silverback status. Total dominance on the floor.',
   },
   {
     id: 'legend',
     label: 'Legend',
-    emoji: '🔱', // Trident/Trisula, memberikan kesan mitologi yang sakral dibanding mahkota biasa
+    emoji: '🔱',
     min: 401,
     max: 600,
-    description:
-      'Your dedication isn’t just personal anymore—it inspires the whole floor.',
+    description: 'Your dedication inspires the whole floor.',
   },
   {
     id: 'goat',
@@ -87,32 +83,25 @@ const TIERS = [
     emoji: '🐐',
     min: 601,
     max: 999,
-    description: 'Greatest Of All Time. You have mastered the discipline.',
+    description: 'Greatest Of All Time. Master of the discipline.',
   },
   {
     id: 'olympia',
     label: 'Olympian',
-    emoji: '🏆', // Trofi emas murni untuk kasta tertinggi binaraga
+    emoji: '🏆',
     min: 1_000,
     max: Infinity,
-    description: 'The ultimate peak. Welcome to the pantheon of gods.',
+    description: 'The ultimate peak. Pantheon of gods.',
   },
 ] as const;
 
-function getTier(totalSessions: number) {
-  return TIERS.find((t) => totalSessions >= t.min && totalSessions <= t.max)!;
+function getTier(n: number) {
+  return TIERS.find((t) => n >= t.min && n <= t.max)!;
 }
-
-function getProgress(totalSessions: number, tier: (typeof TIERS)[number]) {
+function getProgress(n: number, tier: (typeof TIERS)[number]) {
   if (tier.max === Infinity) return 100;
   const range = tier.max - tier.min + 1;
-  const progress = totalSessions - tier.min;
-  return Math.min(100, Math.round((progress / range) * 100));
-}
-
-function getNextTier(tier: (typeof TIERS)[number]) {
-  const idx = TIERS.findIndex((t) => t.id === tier.id);
-  return idx < TIERS.length - 1 ? TIERS[idx + 1] : null;
+  return Math.min(100, Math.round(((n - tier.min) / range) * 100));
 }
 
 export function LevelCard() {
@@ -120,17 +109,26 @@ export function LevelCard() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLDivElement>(null);
 
-  const { tier, nextTier, totalSessions, progress, sessionsToNext } =
+  const { tier, nextTier, totalSessions, progress, sessionsToNext, activeIdx } =
     useMemo(() => {
       const totalSessions = workouts.length;
       const tier = getTier(totalSessions);
-      const nextTier = getNextTier(tier);
+      const activeIdx = TIERS.findIndex((t) => t.id === tier.id);
+      const nextTier =
+        activeIdx < TIERS.length - 1 ? TIERS[activeIdx + 1] : null;
       const progress = getProgress(totalSessions, tier);
       const sessionsToNext = nextTier ? nextTier.min - totalSessions : 0;
-      return { tier, nextTier, totalSessions, progress, sessionsToNext };
+      return {
+        tier,
+        nextTier,
+        totalSessions,
+        progress,
+        sessionsToNext,
+        activeIdx,
+      };
     }, [workouts]);
 
-  // Auto-scroll so the active tier is centered in the scroll container
+  // Auto-scroll active tier ke tengah
   useEffect(() => {
     if (!scrollRef.current || !activeRef.current) return;
     const container = scrollRef.current;
@@ -142,148 +140,160 @@ export function LevelCard() {
 
   if (isLoading) {
     return (
-      <Card className="surface border-border/60 p-5 sm:p-6">
-        <Skeleton className="mb-4 h-3 w-28" />
-        <Skeleton className="mb-2 h-10 w-40" />
-        <Skeleton className="h-2 w-full rounded-full" />
+      <Card className="surface border-border/60 overflow-hidden p-0">
+        <div className="space-y-4 p-5">
+          <Skeleton className="h-3 w-24" />
+          <div className="flex items-start gap-5">
+            <Skeleton className="h-16 w-16 rounded-2xl" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-3 w-full" />
+            </div>
+          </div>
+          <Skeleton className="h-2 w-full rounded-full" />
+        </div>
       </Card>
     );
   }
 
-  const isMaxTier = !nextTier;
-  const activeTierIdx = TIERS.findIndex((t) => t.id === tier.id);
-
   return (
-    <Card className="surface border-border/60 p-5 sm:p-6">
-      {/* Header label */}
-      <div className="text-primary mb-4 flex items-center gap-2 font-mono text-[11px] tracking-[0.3em] uppercase">
-        <Shield className="h-3.5 w-3.5" />
-        Rank
+    <Card className="surface border-border/60 overflow-hidden p-0">
+      {/* Header */}
+      <div className="border-border/40 flex items-center justify-between px-5 pt-5 pb-3">
+        <div className="text-primary flex items-center gap-2">
+          <Shield className="h-3.5 w-3.5" />
+          <span className="font-mono text-[11px] font-bold tracking-[0.2em] uppercase">
+            Ranking
+          </span>
+        </div>
       </div>
 
-      {/* Current level */}
-      <div className="mb-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div
-            className="border-border/60 bg-secondary/40 relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border shadow-sm"
-            aria-hidden="true"
-          >
-            {/* subtle glow */}
-            <div className="bg-primary/10 absolute inset-0 rounded-2xl blur-xl" />
-            {/* glossy overlay */}
-            <div className="absolute inset-0 bg-linear-to-br from-white/10 to-transparent" />
-            {/* emoji/icon */}
-            <span className="relative text-2xl leading-none">{tier.emoji}</span>
+      {/* Main row */}
+      <div className="p-5">
+        <div className="flex items-start gap-5">
+          {/* Badge */}
+          <div className="relative shrink-0">
+            <div className="from-primary/20 to-secondary border-primary/30 flex h-16 w-16 items-center justify-center rounded-2xl border bg-linear-to-br">
+              <span className="text-3xl leading-none select-none">
+                {tier.emoji}
+              </span>
+            </div>
+            <div className="border-border bg-background text-foreground absolute -right-1 -bottom-2 rounded border px-1.5 py-0.5 font-mono text-[10px] font-bold">
+              {nextTier ? `${progress}%` : 'MAX'}
+            </div>
           </div>
-          <div>
-            <div className="font-display text-2xl leading-none font-bold sm:text-3xl">
+
+          {/* Info */}
+          <div className="flex-1 pt-1">
+            <h3 className="font-display text-2xl leading-none font-bold">
               {tier.label}
-            </div>
-            <div className="text-muted-foreground mt-1 text-xs">
+            </h3>
+            <p className="text-muted-foreground mt-1.5 text-xs leading-relaxed">
               {tier.description}
-            </div>
+            </p>
+          </div>
+
+          <div className="flex flex-col items-end gap-1.5 px-2 py-1">
+            <span className="text-primary font-mono text-[30px] font-bold">
+              {totalSessions}
+            </span>
+            <span className="text-muted-foreground text-[9px] font-medium tracking-tight uppercase">
+              {totalSessions === 1 ? 'session' : 'sessions'}
+            </span>
           </div>
         </div>
 
-        <div className="text-right">
-          <div className="font-display text-3xl leading-none font-bold sm:text-4xl">
-            {totalSessions}
+        {/* Progress bar */}
+        <div className="mt-5">
+          <div className="mb-2 flex items-end justify-between">
+            <span className="text-muted-foreground text-[10px] font-medium tracking-wider uppercase">
+              {nextTier
+                ? `Next: ${nextTier.emoji} ${nextTier.label}`
+                : 'Max Rank Achieved'}
+            </span>
+            {nextTier && (
+              <span className="text-foreground/80 font-mono text-[10px] font-medium">
+                {sessionsToNext} session to go
+              </span>
+            )}
           </div>
-          <div className="text-muted-foreground mt-1 font-mono text-[10px] tracking-wider uppercase">
-            {totalSessions === 1 ? 'session' : 'sessions'}
-          </div>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      {!isMaxTier && (
-        <div className="space-y-2">
-          <div className="bg-secondary/60 h-1.5 w-full overflow-hidden rounded-full">
+          <div className="bg-secondary h-2 w-full overflow-hidden rounded-full">
             <div
-              className="bg-primary h-full rounded-full transition-all duration-700 ease-out"
+              className="bg-primary h-full rounded-full shadow-[0_0_10px_hsl(var(--primary)/0.4)] transition-all duration-1000 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="text-muted-foreground flex items-center justify-between font-mono text-[10px] tracking-wider uppercase">
-            <span>
-              {progress}% to {nextTier!.label}
-            </span>
-            <span>
-              {sessionsToNext} {sessionsToNext === 1 ? 'session' : 'sessions'}{' '}
-              to go
-            </span>
-          </div>
         </div>
-      )}
+      </div>
 
-      {/* Max tier unlocked */}
-      {isMaxTier && (
-        <div className="border-border/60 bg-primary/5 flex items-center gap-2 rounded-lg border px-3 py-2">
-          <span className="text-sm">🐐</span>
-          <span className="text-muted-foreground font-mono text-[10px] tracking-wider uppercase">
-            Max rank unlocked · You are the GOAT
+      {/* Rank ladder */}
+      <div className="border-border/40 bg-secondary/20 px-5 py-4">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-muted-foreground/70 text-[9px] font-bold tracking-widest uppercase">
+            Rank Ladder
+          </span>
+          <span className="text-muted-foreground/70 font-mono text-[9px] font-bold">
+            {activeIdx + 1} / {TIERS.length}
           </span>
         </div>
-      )}
 
-      {/* Scrollable tier ladder */}
-      <div className="relative mt-5">
-        {/* Fade edges hint at scrollability */}
-        <div className="from-card pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-linear-to-r to-transparent" />
-        <div className="from-card pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-linear-to-l to-transparent" />
+        {/* Scroll container dengan fade edges */}
+        <div className="relative">
+          <div className="from-secondary/20 pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-linear-to-r to-transparent" />
+          <div className="from-secondary/20 pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-linear-to-l to-transparent" />
 
-        <div
-          ref={scrollRef}
-          className="flex gap-2 overflow-x-auto px-2 pb-1"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {TIERS.map((t, i) => {
-            const isActive = t.id === tier.id;
-            const isPast = activeTierIdx > i;
-
-            return (
-              <div
-                key={t.id}
-                ref={isActive ? activeRef : null}
-                className="flex shrink-0 flex-col items-center gap-1.5"
-                style={{ width: 72 }}
-              >
-                {/* Tier box */}
+          <div
+            ref={scrollRef}
+            className="no-scrollbar flex gap-2 overflow-x-auto pb-1"
+            style={{ scrollbarWidth: 'none' }}
+          >
+            {TIERS.map((t, i) => {
+              const isActive = i === activeIdx;
+              const isPast = i < activeIdx;
+              return (
                 <div
-                  title={`${t.label} · ${t.max === Infinity ? `${t.min}+` : `${t.min}–${t.max}`} sessions`}
-                  className={[
-                    'mt-2 flex h-14 w-full flex-col items-center justify-center rounded-xl border transition-all duration-300',
-                    isActive
-                      ? 'border-primary/50 bg-primary/10 scale-105 shadow-[0_0_12px_-4px_hsl(var(--primary)/0.4)]'
-                      : isPast
-                        ? 'border-border/50 bg-secondary/50 opacity-60'
-                        : 'border-border/25 bg-secondary/20 opacity-30',
-                  ].join(' ')}
+                  key={t.id}
+                  ref={isActive ? activeRef : null}
+                  className="flex shrink-0 flex-col items-center gap-1"
+                  style={{ width: 72 }}
                 >
-                  <span className={isActive ? 'text-xl' : 'text-lg'}>
-                    {t.emoji}
+                  {/* Tier box */}
+                  <div
+                    title={`${t.label} · ${t.max === Infinity ? `${t.min}+` : `${t.min}–${t.max}`} sessions`}
+                    className={[
+                      'mt-1 flex h-14 w-full items-center justify-center rounded-xl border transition-all duration-300',
+                      isActive
+                        ? 'border-primary/50 bg-primary/10 scale-105 shadow-[0_0_12px_-4px_hsl(var(--primary)/0.4)]'
+                        : isPast
+                          ? 'border-border/50 bg-secondary/50 opacity-60'
+                          : 'border-border/25 bg-secondary/20 opacity-30',
+                    ].join(' ')}
+                  >
+                    <span className={isActive ? 'text-xl' : 'text-lg'}>
+                      {t.emoji}
+                    </span>
+                  </div>
+
+                  {/* Nama rank */}
+                  <span
+                    className={[
+                      'font-mono text-[9px] tracking-wider uppercase transition-colors',
+                      isActive
+                        ? 'text-primary font-semibold'
+                        : 'text-muted-foreground/40',
+                    ].join(' ')}
+                  >
+                    {t.label}
+                  </span>
+
+                  {/* Session range */}
+                  <span className="text-muted-foreground/30 font-mono text-[8px]">
+                    {t.max === Infinity ? `${t.min}+` : `${t.min}–${t.max}`}
                   </span>
                 </div>
-
-                {/* Label */}
-                <span
-                  className={[
-                    'font-mono text-[9px] tracking-wider uppercase transition-colors',
-                    isActive
-                      ? 'text-primary font-semibold'
-                      : 'text-muted-foreground/40',
-                  ].join(' ')}
-                >
-                  {t.label}
-                </span>
-
-                {/* Session range */}
-                <span className="text-muted-foreground/30 font-mono text-[8px]">
-                  {t.max === Infinity ? `${t.min}+` : `${t.min}–${t.max}`}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </Card>
