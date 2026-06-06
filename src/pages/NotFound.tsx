@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
-import { Dumbbell, ArrowLeft, Home } from 'lucide-react';
+import { Dumbbell, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ROUTE_URL } from '@/constants/route-url';
 
@@ -79,7 +79,7 @@ const NotFound = () => {
   }, []);
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-background">
+    <div className="bg-background relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
       {/* Animated grid */}
       <canvas
         ref={canvasRef}
@@ -102,7 +102,7 @@ const NotFound = () => {
         {/* Big 404 */}
         <div className="relative select-none">
           <span
-            className="font-display font-bold leading-none tracking-tighter"
+            className="font-display leading-none font-bold tracking-tighter"
             style={{
               fontSize: 'clamp(7rem, 22vw, 13rem)',
               letterSpacing: '-0.05em',
@@ -119,19 +119,19 @@ const NotFound = () => {
 
         {/* Icon + label */}
         <div className="-mt-4 flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2 rounded-full border border-border/60 bg-secondary/40 px-3 py-1.5">
-            <Dumbbell className="h-3.5 w-3.5 text-primary" />
-            <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          <div className="border-border/60 bg-secondary/40 flex items-center gap-2 rounded-full border px-3 py-1.5">
+            <Dumbbell className="text-primary h-3.5 w-3.5" />
+            <span className="text-muted-foreground font-mono text-[11px] tracking-widest uppercase">
               Page not found
             </span>
           </div>
 
-          <h1 className="font-display text-xl font-bold text-foreground">
+          <h1 className="font-display text-foreground text-xl font-bold">
             You wandered off the track.
           </h1>
-          <p className="text-sm leading-relaxed text-muted-foreground">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             The route{' '}
-            <code className="rounded border border-border/60 bg-secondary/60 px-1.5 py-0.5 font-mono text-xs text-foreground/70">
+            <code className="border-border/60 bg-secondary/60 text-foreground/70 rounded border px-1.5 py-0.5 font-mono text-xs">
               {location.pathname}
             </code>{' '}
             doesn't exist. Let's get you back to your gains.
@@ -150,7 +150,7 @@ const NotFound = () => {
         </div>
 
         {/* Footer mono tag */}
-        <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground/40">
+        <p className="text-muted-foreground/40 font-mono text-[10px] tracking-widest uppercase">
           MY GYM PAL · ERR_ROUTE_NOT_FOUND
         </p>
       </div>
