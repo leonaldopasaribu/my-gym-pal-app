@@ -48,6 +48,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import {
   useExercises,
   useWorkouts,
+  useLastSession,
   entryTopWeight,
   entryVolume,
   entryTotalDistance,
@@ -275,7 +276,7 @@ export function WorkoutLogger() {
     removeWorkout,
     updateWorkout,
     isLoading: isLoadingWorkouts,
-  } = useWorkouts();
+  } = useWorkouts({ limit: 10 });
 
   const [exerciseId, setExerciseId] = useState<string>('');
   const [date, setDate] = useState(todayISO());
@@ -306,10 +307,7 @@ export function WorkoutLogger() {
     }
   }, [isCardio, editingWorkoutId]);
 
-  const lastSession = useMemo(() => {
-    if (!exerciseId) return null;
-    return workouts.find((w) => w.exerciseId === exerciseId) ?? null;
-  }, [exerciseId, workouts]);
+  const { lastSession } = useLastSession(exerciseId || null);
 
   const updateSet = (id: string, patch: Partial<WorkoutSet>) =>
     setSets((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)));
@@ -378,9 +376,17 @@ export function WorkoutLogger() {
     );
     if (duplicate) {
       const exName = exMap[exerciseId]?.name ?? 'This exercise';
-      return toast.error(`${exName} already logged on ${date}`, {
-        description: 'Edit the existing entry or pick a different date.',
-      });
+
+      return toast.error(
+        <>
+          {exName} already logged on
+          <br />
+          {formatDateID(date)}
+        </>,
+        {
+          description: 'Edit the existing entry or pick a different date.',
+        }
+      );
     }
 
     setIsSavingWorkout(true);
@@ -416,7 +422,7 @@ export function WorkoutLogger() {
     }
   };
 
-  const recent = workouts.slice(0, 10);
+  const recent = workouts;
 
   const orderedExerciseIds = useMemo(() => {
     const seen = new Set<string>();

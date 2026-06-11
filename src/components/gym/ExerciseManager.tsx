@@ -265,10 +265,10 @@ export function ExerciseManager() {
             return (
               <Card
                 key={ex.id}
-                className="surface group animate-fade-up border-border/60 hover:border-primary/40 p-4 transition-colors"
+                className="surface group animate-fade-up border-border/60 hover:border-primary/40 overflow-hidden p-4 transition-colors"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
+                <div className="flex items-start justify-between gap-2 overflow-hidden">
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-display truncate text-lg leading-tight font-bold">
                       {ex.name}
                     </h3>
@@ -284,7 +284,7 @@ export function ExerciseManager() {
                       </p>
                     )}
                   </div>
-                  <div className="flex shrink-0 items-center gap-1 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                  <div className="flex shrink-0 items-center gap-1">
                     <Button
                       size="icon"
                       variant="ghost"

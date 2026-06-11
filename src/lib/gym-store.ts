@@ -1,3 +1,5 @@
+// gym-store.ts
+
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
@@ -198,8 +200,13 @@ export function useExercises() {
   };
 }
 
-export function useWorkouts() {
+interface UseWorkoutsOptions {
+  limit?: number;
+}
+
+export function useWorkouts(options: UseWorkoutsOptions = {}) {
   const { user } = useAuth();
+  const { limit } = options;
   const [items, setItems] = useState<WorkoutEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -209,17 +216,23 @@ export function useWorkouts() {
       setIsLoading(false);
       return;
     }
-    const { data, error } = await supabase
+    let query = supabase
       .from('workouts')
       .select('*')
       .eq('user_id', user.id)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
+
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
+
+    const { data, error } = await query;
     if (!error && data) {
       setItems((data as unknown as DbWorkout[]).map(fromDbWo));
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, limit]);
 
   useEffect(() => {
     setIsLoading(true);
@@ -336,6 +349,45 @@ export function useRestDays() {
   return { restDays: items, addRestDay, removeRestDay, isLoading };
 }
 
+// ─── useLastSession ───────────────────────────────────────────────────────────
+
+export function useLastSession(exerciseId: string | null) {
+  const { user } = useAuth();
+  const [lastSession, setLastSession] = useState<WorkoutEntry | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user || !exerciseId) {
+      setLastSession(null);
+      return;
+    }
+
+    let cancelled = false;
+    setIsLoading(true);
+
+    supabase
+      .from('workouts')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('exercise_id', exerciseId)
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        setLastSession(data ? fromDbWo(data as unknown as DbWorkout) : null);
+        setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, exerciseId]);
+
+  return { lastSession, isLoading };
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 export function bestSet(entries: WorkoutEntry[]) {
@@ -358,7 +410,6 @@ export function epley1RM(weight: number, reps: number) {
   return weight * (1 + reps / 30);
 }
 
-// Strength: max weight. Cardio: max distance in a single set.
 export function entryTopWeight(e: WorkoutEntry) {
   const isCardio = e.sets.some((s) => s.durationMinutes !== undefined);
   if (isCardio) {
@@ -367,7 +418,6 @@ export function entryTopWeight(e: WorkoutEntry) {
   return e.sets.reduce((m, s) => Math.max(m, s.weight), 0);
 }
 
-// Strength: total volume (reps × weight). Cardio: total duration (minutes).
 export function entryVolume(e: WorkoutEntry) {
   const isCardio = e.sets.some((s) => s.durationMinutes !== undefined);
   if (isCardio) {

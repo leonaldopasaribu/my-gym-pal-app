@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+  DrawerFooter,
+  DrawerClose,
+} from '@/components/ui/drawer';
 import {
   useExercises,
   useWorkouts,
@@ -18,7 +20,12 @@ import {
   entryTotalDuration,
 } from '@/lib/gym-store';
 import { WorkoutUtil } from '@/lib/workout-util';
-import { TrendingUp } from 'lucide-react';
+import {
+  TrendingUp,
+  SlidersHorizontal,
+  Dumbbell,
+  ChevronRight,
+} from 'lucide-react';
 import {
   ResponsiveContainer,
   XAxis,
@@ -29,6 +36,7 @@ import {
   AreaChart,
 } from 'recharts';
 import { Skeleton } from '../ui/skeleton';
+import { cn } from '@/lib/utils';
 
 type StrengthMetric = 'top' | 'volume' | 'e1rm';
 type CardioMetric = 'duration' | 'distance' | 'pace';
@@ -100,6 +108,7 @@ export function ProgressView() {
   const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
   const [exerciseId, setExerciseId] = useState<string>(exercises[0]?.id ?? '');
   const [metric, setMetric] = useState<Metric>('top');
+  const [filterOpen, setFilterOpen] = useState(false);
   const isLoading = isLoadingExercises || isLoadingWorkouts;
 
   const activeId = exerciseId || exercises[0]?.id || '';
@@ -145,6 +154,16 @@ export function ProgressView() {
   const isPositiveTrend = isPace ? delta < 0 : delta > 0;
   const isNegativeTrend = isPace ? delta > 0 : delta < 0;
 
+  // Exercise picker grouped by muscle group
+  const groupedExercises = useMemo(() => {
+    const map = new Map<string, typeof exercises>();
+    for (const ex of exercises) {
+      if (!map.has(ex.muscleGroup)) map.set(ex.muscleGroup, []);
+      map.get(ex.muscleGroup)!.push(ex);
+    }
+    return map;
+  }, [exercises]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -185,35 +204,114 @@ export function ProgressView() {
               : 'Track weight & volume progress over time.'}
           </p>
         </div>
+
+        {/* ── Filter Row: Exercise Bottom Sheet + Metric Toggle ── */}
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <Select value={activeId} onValueChange={setExerciseId}>
-            <SelectTrigger className="w-full sm:w-55">
-              <SelectValue placeholder="Select exercise" />
-            </SelectTrigger>
-            <SelectContent>
-              {exercises.map((e) => (
-                <SelectItem key={e.id} value={e.id}>
-                  {e.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <ToggleGroup
-            type="single"
-            value={activeMetric}
-            onValueChange={(v) => v && setMetric(v as Metric)}
-            className="bg-secondary/40 grid w-full grid-cols-3 rounded-md p-0.5 sm:flex sm:w-auto"
-          >
-            {metricOptions.map((option) => (
-              <ToggleGroupItem
-                key={option.value}
-                value={option.value}
-                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground px-3 text-xs"
+          <Drawer open={filterOpen} onOpenChange={setFilterOpen}>
+            <DrawerTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'flex h-12 items-center justify-between gap-3 overflow-hidden rounded-xl border px-4 transition-all active:scale-[0.98]',
+                  'border-border/60 bg-secondary/40 text-foreground hover:border-primary/40 w-full sm:w-auto'
+                )}
               >
-                {option.label}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Dumbbell className="text-primary h-4 w-4 shrink-0" />
+                  <span className="truncate text-sm font-medium">
+                    {selectedExercise
+                      ? selectedExercise.name
+                      : 'Select exercise'}
+                  </span>
+                </div>
+                <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+              </button>
+            </DrawerTrigger>
+
+            <DrawerContent className="max-h-[82dvh]">
+              <DrawerHeader className="pb-2">
+                <DrawerTitle className="font-display text-lg font-bold">
+                  Select Exercise
+                </DrawerTitle>
+              </DrawerHeader>
+
+              <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-4">
+                {exercises.length === 0 ? (
+                  <div className="text-muted-foreground py-6 text-center text-sm">
+                    No exercises yet. Add one in the Library.
+                  </div>
+                ) : (
+                  Array.from(groupedExercises.entries()).map(
+                    ([group, exList]) => (
+                      <div key={group}>
+                        <div className="text-muted-foreground mb-1.5 px-1 font-mono text-[10px] tracking-widest uppercase">
+                          {group}
+                        </div>
+                        <div className="space-y-1.5">
+                          {exList.map((ex) => {
+                            const isActive = activeId === ex.id;
+                            return (
+                              <button
+                                key={ex.id}
+                                type="button"
+                                onClick={() => {
+                                  setExerciseId(ex.id);
+                                  setFilterOpen(false);
+                                }}
+                                className={cn(
+                                  'flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98]',
+                                  isActive
+                                    ? 'border-primary/50 bg-primary/15 text-foreground'
+                                    : 'border-border/60 bg-secondary/40 hover:border-primary/40 hover:bg-primary/5'
+                                )}
+                              >
+                                <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                                  {ex.name}
+                                </span>
+                                {isActive && (
+                                  <div className="bg-primary h-2 w-2 shrink-0 rounded-full" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )
+                  )
+                )}
+              </div>
+
+              <DrawerFooter className="pt-2">
+                <DrawerClose asChild>
+                  <Button variant="outline" className="w-full">
+                    Close
+                  </Button>
+                </DrawerClose>
+              </DrawerFooter>
+            </DrawerContent>
+          </Drawer>
+
+          {/* Metric toggle — outside bottom sheet */}
+          <div className="bg-secondary/40 flex w-full rounded-xl p-0.5 sm:w-auto">
+            {metricOptions.map((option) => {
+              const isActive = activeMetric === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setMetric(option.value as Metric)}
+                  className={cn(
+                    'flex flex-1 items-center justify-center rounded-lg px-3 py-2.5 text-xs font-medium transition-all active:scale-[0.98] sm:flex-initial',
+                    isActive
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -254,7 +352,7 @@ export function ProgressView() {
                 : `${delta > 0 ? '+' : ''}${delta.toFixed(1)}`}
             </div>
           ) : data.length === 1 ? (
-            <div className="text-muted-foreground rounded-md bg-secondary px-3 py-1.5 font-mono text-xs">
+            <div className="text-muted-foreground bg-secondary rounded-md px-3 py-1.5 font-mono text-xs">
               Log more sessions to see trend
             </div>
           ) : null}
