@@ -33,6 +33,159 @@ interface Message {
   tag?: 'plateau' | 'good' | 'plan' | 'info';
 }
 
+// ─── Plateau Detection Helpers ────────────────────────────────────────────────
+
+/**
+ * Simple linear regression — returns slope (units per index).
+ * Positive = improving, negative = declining, ~0 = flat/plateau.
+ */
+function linearRegressionSlope(values: number[]): number {
+  const n = values.length;
+  if (n < 2) return 0;
+  const meanX = (n - 1) / 2;
+  const meanY = values.reduce((a, b) => a + b, 0) / n;
+  let num = 0;
+  let den = 0;
+  for (let i = 0; i < n; i++) {
+    num += (i - meanX) * (values[i] - meanY);
+    den += (i - meanX) ** 2;
+  }
+  return den === 0 ? 0 : num / den;
+}
+
+/**
+ * Filter sessions within the last N days.
+ */
+function withinDays(
+  sessions: { date: string }[],
+  days: number
+): typeof sessions {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffStr = toISODate(cutoff);
+  return sessions.filter((s) => s.date >= cutoffStr);
+}
+
+/**
+ * Strength plateau detection.
+ *
+ * Rules:
+ * - Need at least 4 sessions within the last 21 days (3 weeks)
+ * - Uses best e1RM per session (not raw top weight)
+ * - Plateau = e1RM slope < +0.3 kg per session AND no single session
+ *   achieved a new all-time e1RM in the window
+ *
+ * Returns { plateau: boolean; reason: string }
+ */
+function detectStrengthPlateau(
+  sessions: ReturnType<typeof useWorkouts>['workouts']
+): { plateau: boolean; reason: string } {
+  const recent = withinDays(sessions, 21)
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date)) // oldest → newest
+    .slice(-8); // cap at last 8 sessions
+
+  if (recent.length < 4)
+    return {
+      plateau: false,
+      reason: 'not enough data (need ≥4 sessions / 21 days)',
+    };
+
+  // Best e1RM per session
+  const e1RMs = recent.map((s) =>
+    s.sets.reduce((m, set) => Math.max(m, epley1RM(set.weight, set.reps)), 0)
+  );
+
+  const slope = linearRegressionSlope(e1RMs);
+
+  // Check if there's a new all-time e1RM in this window vs the overall history
+  const overallBestE1RM = sessions
+    .filter((s) => !recent.includes(s))
+    .flatMap((s) => s.sets.map((set) => epley1RM(set.weight, set.reps)))
+    .reduce((m, v) => Math.max(m, v), 0);
+
+  const windowBestE1RM = Math.max(...e1RMs);
+  const hasNewPR = windowBestE1RM > overallBestE1RM * 1.005; // 0.5% buffer for rounding
+
+  if (hasNewPR) return { plateau: false, reason: 'new PR achieved in window' };
+
+  // Coefficient of variation — if values are very flat relative to their mean
+  const mean = e1RMs.reduce((a, b) => a + b, 0) / e1RMs.length;
+  const cv =
+    mean > 0
+      ? Math.sqrt(
+          e1RMs.reduce((a, b) => a + (b - mean) ** 2, 0) / e1RMs.length
+        ) / mean
+      : 0;
+
+  // Plateau if: slope is low AND values are flat (CV < 3%)
+  const plateau = slope < 0.3 && cv < 0.03;
+  const reason = plateau
+    ? `e1RM slope=${slope.toFixed(2)} kg/session, CV=${(cv * 100).toFixed(1)}%`
+    : `slope=${slope.toFixed(2)} kg/session (progressing)`;
+
+  return { plateau, reason };
+}
+
+/**
+ * Cardio plateau detection.
+ *
+ * Rules:
+ * - Need at least 3 sessions within the last 21 days
+ * - Prefers pace (min/km) trend if distance is available; falls back to duration trend
+ * - Plateau = pace slope < 0.005 min/km improvement per session
+ *   OR duration slope < 1 min/session (if no distance data)
+ *
+ * Lower pace = faster = better, so we negate pace values for the slope.
+ */
+function detectCardioPlateau(
+  sessions: ReturnType<typeof useWorkouts>['workouts']
+): { plateau: boolean; reason: string } {
+  const recent = withinDays(sessions, 21)
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-6);
+
+  if (recent.length < 3)
+    return {
+      plateau: false,
+      reason: 'not enough data (need ≥3 sessions / 21 days)',
+    };
+
+  // Try pace-based detection
+  const paceData = recent
+    .map((s) => {
+      const dur = entryTotalDuration(s);
+      const dist = entryTotalDistance(s);
+      if (dist > 0.1 && dur > 0) return dur / dist; // min/km, lower = faster
+      return null;
+    })
+    .filter((v): v is number => v !== null);
+
+  if (paceData.length >= 3) {
+    // Negate so "improvement" = positive slope
+    const slope = linearRegressionSlope(paceData.map((v) => -v));
+    const plateau = slope < 0.005; // less than 0.005 min/km improvement per session
+    return {
+      plateau,
+      reason: plateau
+        ? `pace slope=${slope.toFixed(4)} min/km/session (flat)`
+        : `pace improving at ${slope.toFixed(4)} min/km/session`,
+    };
+  }
+
+  // Fallback: duration trend
+  const durations = recent.map(entryTotalDuration);
+  const slope = linearRegressionSlope(durations);
+  const plateau = slope < 1; // less than 1 min improvement per session
+  return {
+    plateau,
+    reason: plateau
+      ? `duration slope=${slope.toFixed(2)} min/session (flat)`
+      : `duration growing at ${slope.toFixed(2)} min/session`,
+  };
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function detectTag(text: string): Message['tag'] {
@@ -95,7 +248,6 @@ function buildCoachingContext(
     (r) => r.date >= toISODate(thirtyAgo)
   ).length;
 
-  // Volume delta — strength only (cardio volume = minutes, different unit)
   const oneWeekAgo = toISODate(
     (() => {
       const d = new Date();
@@ -131,7 +283,6 @@ function buildCoachingContext(
   const delta =
     volPrev > 0 ? `${(((volNow - volPrev) / volPrev) * 100).toFixed(0)}%` : '—';
 
-  // Cardio summary for last 7 days
   const cardioNow = cardioWorkouts.filter((w) => w.date >= oneWeekAgo);
   const totalCardioMin = cardioNow.reduce(
     (m, w) => m + entryTotalDuration(w),
@@ -146,12 +297,11 @@ function buildCoachingContext(
       ? `Cardio 7 hari: ${cardioNow.length} sesi, ${totalCardioMin}min${totalCardioDist > 0 ? `, ${totalCardioDist.toFixed(1)}km` : ''}`
       : 'Cardio 7 hari: tidak ada sesi';
 
-  // Per-exercise summaries
+  // Per-exercise summaries with improved plateau detection
   const summaries = exercises.map((ex) => {
     const sessions = workouts
       .filter((w) => w.exerciseId === ex.id)
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 5);
+      .sort((a, b) => b.date.localeCompare(a.date));
 
     if (sessions.length === 0)
       return `${ex.name} (${ex.muscleGroup}): belum ada sesi`;
@@ -159,6 +309,8 @@ function buildCoachingContext(
     const isCardio = WorkoutUtil.isCardioGroup(ex.muscleGroup);
 
     if (isCardio) {
+      const { plateau, reason } = detectCardioPlateau(sessions);
+
       const recent = sessions
         .slice(0, 3)
         .map((s) => {
@@ -169,14 +321,12 @@ function buildCoachingContext(
         })
         .join(' | ');
 
-      // Cardio plateau: duration stuck across last 3 sessions
-      const durs = sessions.slice(0, 3).map(entryTotalDuration);
-      const plateau = durs.length >= 3 && durs.every((d) => d === durs[0]);
-
-      return `${ex.name} (${ex.muscleGroup}): ${plateau ? '⚠️ PLATEAU (duration stuck) ' : ''}Recent → ${recent}`;
+      return `${ex.name} (${ex.muscleGroup}): ${plateau ? `⚠️ PLATEAU (${reason}) ` : '✅ progressing '}Recent → ${recent}`;
     }
 
     // Strength
+    const { plateau, reason } = detectStrengthPlateau(sessions);
+
     const maxE1RM = sessions.reduce((max, s) => {
       const e = s.sets.reduce(
         (m, set) => Math.max(m, epley1RM(set.weight, set.reps)),
@@ -189,14 +339,11 @@ function buildCoachingContext(
       .slice(0, 3)
       .map(
         (s) =>
-          `${s.date}: ${entryTopWeight(s)}kg×${s.sets.reduce((m, set) => m + set.reps, 0)}reps`
+          `${s.date}: ${entryTopWeight(s)}kg×${s.sets.reduce((m, set) => m + set.reps, 0)}reps (e1RM ~${s.sets.reduce((m, set) => Math.max(m, epley1RM(set.weight, set.reps)), 0).toFixed(1)}kg)`
       )
       .join(' | ');
 
-    const tops = sessions.slice(0, 3).map(entryTopWeight);
-    const plateau = tops.length >= 3 && tops.every((w) => w === tops[0]);
-
-    return `${ex.name} (${ex.muscleGroup}): e1RM ~${maxE1RM.toFixed(1)}kg${plateau ? ' ⚠️ PLATEAU' : ''}. Recent → ${recent}`;
+    return `${ex.name} (${ex.muscleGroup}): all-time e1RM ~${maxE1RM.toFixed(1)}kg${plateau ? ` ⚠️ PLATEAU (${reason})` : ' ✅ progressing'}. Recent → ${recent}`;
   });
 
   const latestRest = restDays
@@ -213,9 +360,26 @@ Strength volume minggu ini: ${volNow.toLocaleString()}kg (${delta !== '—' ? de
 ${cardioSummary}
 Last rest day: ${restInsight}
 
-=== PER EXERCISE ===
+=== PER EXERCISE (plateau = e1RM regression < 0.3kg/session over 42d for strength; pace regression < 0.005 min/km/session over 28d for cardio) ===
 ${summaries.join('\n')}
 `.trim();
+}
+
+// ─── Plateau Counter (for greeting message) ───────────────────────────────────
+
+function countPlateaus(
+  exercises: ReturnType<typeof useExercises>['exercises'],
+  workouts: ReturnType<typeof useWorkouts>['workouts']
+): number {
+  return exercises.filter((ex) => {
+    const isCardio = WorkoutUtil.isCardioGroup(ex.muscleGroup);
+    const sessions = workouts
+      .filter((w) => w.exerciseId === ex.id)
+      .sort((a, b) => b.date.localeCompare(a.date));
+
+    if (isCardio) return detectCardioPlateau(sessions).plateau;
+    return detectStrengthPlateau(sessions).plateau;
+  }).length;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -292,15 +456,27 @@ export function AICoach() {
 
     ---
 
+    ## Cara Baca Plateau Flag
+
+    Data exercise sudah menggunakan deteksi plateau yang lebih akurat:
+    - **Strength plateau**: dihitung dari slope regresi linear e1RM (estimated 1-rep max) across recent sessions dalam 42 hari. Flag ⚠️ PLATEAU berarti e1RM gak naik secara signifikan (slope < 0.3 kg/session) DAN variasi antar sesi sangat kecil (CV < 3%). Jadi bukan sekadar "berat sama 3x", tapi trend keseluruhan genuinely flat.
+    - **Cardio plateau**: dihitung dari slope pace (min/km) atau durasi jika distance tidak ada, dalam 28 hari. Flag ⚠️ PLATEAU berarti pace atau durasi tidak improve across recent sessions.
+    - Flag ✅ progressing berarti data menunjukkan tren naik yang nyata.
+    - Jika data tidak cukup, tidak ada flag — artinya belum bisa disimpulkan.
+
+    Saat kasih feedback plateau, jelaskan secara spesifik angkanya (e1RM tertinggi berapa, kapan, sudah berapa lama stuck).
+
+    ---
+
     ## Analisis Plateau
 
-    **Strength plateau** (weight stuck, reps gak naik, atau performance drop beberapa sesi berturut-turut):
+    **Strength plateau** (e1RM flat, bukan sekadar weight sama):
     - **Deload**: kalau volume tinggi dan ada tanda fatigue
     - **Rep range change**: kalau udah terlalu lama di range yang sama
     - **Tempo variation**: kalau form dan range of motion bisa dieksplor lebih
     - **Exercise swap**: kalau ada tanda stagnasi neuromuskular di movement pattern itu
 
-    **Cardio plateau** (durasi atau jarak stuck beberapa sesi berturut-turut):
+    **Cardio plateau** (pace atau durasi genuinely stuck across window):
     - **Interval training**: selingi dengan sesi high-intensity pendek
     - **Tambah jarak/durasi**: progressive overload versi cardio — naik 10% per minggu
     - **Pace target**: kasih target pace yang sedikit lebih cepat dari biasanya
@@ -327,25 +503,7 @@ export function AICoach() {
 
   useEffect(() => {
     if (exercises.length > 0 && messages.length === 0) {
-      const exMap = Object.fromEntries(exercises.map((e) => [e.id, e]));
-
-      const plateauCount = exercises.filter((ex) => {
-        const isCardio = WorkoutUtil.isCardioGroup(ex.muscleGroup);
-        const sessions = workouts
-          .filter((w) => w.exerciseId === ex.id)
-          .sort((a, b) => b.date.localeCompare(a.date))
-          .slice(0, 3);
-
-        if (sessions.length < 3) return false;
-
-        if (isCardio) {
-          const durs = sessions.map(entryTotalDuration);
-          return durs.every((d) => d === durs[0]);
-        } else {
-          const tops = sessions.map(entryTopWeight);
-          return tops.every((t) => t === tops[0]);
-        }
-      }).length;
+      const plateauCount = countPlateaus(exercises, workouts);
 
       const hasRecentRest = restDays.some((r) => {
         const d = new Date();

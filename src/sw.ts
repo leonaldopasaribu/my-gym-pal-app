@@ -129,12 +129,14 @@ self.addEventListener('notificationclick', (event) => {
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // If app window is already open, focus it
         for (const client of clientList) {
-          if ('focus' in client) return (client as WindowClient).focus();
+          if ('focus' in client && client.url === '/') {
+            return (client as WindowClient).focus();
+          }
         }
-        // Otherwise open new window
-        if (self.clients.openWindow) return self.clients.openWindow('/');
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(event.notification.data?.url || '/');
+        }
       })
   );
 });

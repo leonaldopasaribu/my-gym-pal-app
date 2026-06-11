@@ -4,7 +4,20 @@ async function postToSW(message: object) {
   if (!('serviceWorker' in navigator)) return;
   try {
     const reg = await navigator.serviceWorker.ready;
-    reg.active?.postMessage(message);
+
+    // Pastikan service worker pengontrol (controller) sudah aktif
+    if (navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage(message);
+    } else {
+      // Jika belum ada controller (first load), tunggu sampai controller siap
+      navigator.serviceWorker.addEventListener(
+        'controllerchange',
+        () => {
+          navigator.serviceWorker.controller?.postMessage(message);
+        },
+        { once: true }
+      );
+    }
   } catch (e) {
     console.warn('[notifications] SW message failed:', e);
   }
