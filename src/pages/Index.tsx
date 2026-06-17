@@ -3,15 +3,18 @@ import { AppHeader } from '@/components/gym/AppHeader';
 import {
   Dumbbell,
   ListChecks,
-  LineChart,
   Trophy,
-  Home,
+  LayoutDashboard,
   Sparkles,
+  Plus,
+  MoreHorizontal,
+  Rocket,
 } from 'lucide-react';
 import { ROUTE_URL } from '@/constants/route-url';
+import { useState, useEffect } from 'react';
 
 const NAV_ITEMS = [
-  { to: ROUTE_URL.HOME, end: true, icon: Home, label: 'Home' },
+  { to: ROUTE_URL.HOME, end: true, icon: LayoutDashboard, label: 'Dashboard' },
   { to: ROUTE_URL.WORKOUT_LOGGER, end: false, icon: ListChecks, label: 'Log' },
   {
     to: ROUTE_URL.EXERCISE_MANAGER,
@@ -22,11 +25,31 @@ const NAV_ITEMS = [
   {
     to: ROUTE_URL.PROGRESS_VIEW,
     end: false,
-    icon: LineChart,
+    icon: Rocket,
     label: 'Progress',
   },
   { to: ROUTE_URL.PERSONAL_RECORDS, end: false, icon: Trophy, label: 'PRs' },
   { to: ROUTE_URL.COACH, end: false, icon: Sparkles, label: 'Coach' },
+];
+
+const MOBILE_NAV_ITEMS = [
+  { to: ROUTE_URL.HOME, end: true, icon: LayoutDashboard, label: 'Dashboard' },
+  {
+    to: ROUTE_URL.EXERCISE_MANAGER,
+    end: false,
+    icon: Dumbbell,
+    label: 'Library',
+  },
+  {
+    to: ROUTE_URL.PROGRESS_VIEW,
+    end: false,
+    icon: Rocket,
+    label: 'Progress',
+  },
+];
+
+const MORE_ITEMS = [
+  { to: ROUTE_URL.PERSONAL_RECORDS, end: false, icon: Trophy, label: 'PRs' },
 ];
 
 const desktopLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -41,6 +64,17 @@ const Index = () => {
   const location = useLocation();
   const isHomePage = location.pathname === ROUTE_URL.HOME;
   const isCoachPage = location.pathname === ROUTE_URL.COACH;
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  useEffect(() => {
+    setMoreOpen(false);
+  }, [location.pathname]);
+
+  const isMoreActive = MORE_ITEMS.some((item) =>
+    item.end
+      ? location.pathname === item.to
+      : location.pathname.startsWith(item.to)
+  );
 
   return (
     <div className="min-h-screen">
@@ -100,31 +134,140 @@ const Index = () => {
         </footer>
       </main>
 
-      {/* Mobile bottom nav (<768px) — 5 items, coach pakai floating bubble */}
-      <nav
-        className="border-border/60 bg-background/95 fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-5 gap-0 border-t backdrop-blur-xl md:hidden"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      {/* More drawer backdrop */}
+      {moreOpen && (
+        <div
+          className="fixed inset-0 z-30 md:hidden"
+          onClick={() => setMoreOpen(false)}
+        />
+      )}
+
+      {/* More drawer */}
+      <div
+        className={[
+          'border-border/60 bg-background/95 fixed inset-x-0 z-40 rounded-t-2xl border-t backdrop-blur-xl transition-transform duration-300 md:hidden',
+          moreOpen ? 'translate-y-0' : 'translate-y-full',
+        ].join(' ')}
+        style={{ bottom: '64px' }}
       >
-        {NAV_ITEMS.filter((n) => n.label !== 'Coach').map(
-          ({ to, end, icon: Icon, label }) => (
+        <div className="flex justify-center pt-2 pb-1">
+          <div className="bg-border h-1 w-9 rounded-full" />
+        </div>
+        <p className="text-muted-foreground px-5 pb-2 font-mono text-[10px] tracking-[0.2em] uppercase">
+          More
+        </p>
+        <div className="border-border/40 grid grid-cols-3 border-t">
+          {MORE_ITEMS.map(({ to, end, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
               end={end}
               className={({ isActive }) =>
                 [
-                  'flex h-full flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
-                  isActive
-                    ? 'border-primary text-primary'
-                    : 'text-muted-foreground border-transparent',
+                  'flex flex-col items-center justify-center gap-1.5 py-4 text-[11px] tracking-wider uppercase transition-colors',
+                  isActive ? 'text-primary' : 'text-muted-foreground',
                 ].join(' ')
               }
             >
-              <Icon className="h-5 w-5" />
-              {label}
+              {({ isActive }) => (
+                <>
+                  <Icon className="h-6 w-6" />
+                  <span>{label}</span>
+                  {isActive && (
+                    <span className="bg-primary h-1 w-1 rounded-full" />
+                  )}
+                </>
+              )}
             </NavLink>
-          )
-        )}
+          ))}
+        </div>
+        <div
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+          className="h-2"
+        />
+      </div>
+
+      {/* Mobile bottom nav (<768px) */}
+      <nav
+        className="border-border/60 bg-background/95 fixed inset-x-0 bottom-0 z-50 flex h-16 items-center border-t backdrop-blur-xl md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        {/* Dashboard */}
+        <NavLink
+          to={MOBILE_NAV_ITEMS[0].to}
+          end={MOBILE_NAV_ITEMS[0].end}
+          className={({ isActive }) =>
+            [
+              'flex h-full flex-1 flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
+              isActive
+                ? 'border-primary text-primary'
+                : 'text-muted-foreground border-transparent',
+            ].join(' ')
+          }
+        >
+          <LayoutDashboard className="h-5 w-5" />
+          Dashboard
+        </NavLink>
+
+        {/* Library */}
+        <NavLink
+          to={MOBILE_NAV_ITEMS[1].to}
+          end={MOBILE_NAV_ITEMS[1].end}
+          className={({ isActive }) =>
+            [
+              'flex h-full flex-1 flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
+              isActive
+                ? 'border-primary text-primary'
+                : 'text-muted-foreground border-transparent',
+            ].join(' ')
+          }
+        >
+          <Dumbbell className="h-5 w-5" />
+          Library
+        </NavLink>
+
+        {/* FAB Plus — center */}
+        <div className="flex flex-1 items-center justify-center">
+          <NavLink
+            to={ROUTE_URL.WORKOUT_LOGGER}
+            className="bg-primary text-primary-foreground -mt-5 grid h-14 w-14 place-items-center rounded-full shadow-lg transition-all active:scale-90"
+            aria-label="Log workout"
+          >
+            <Plus className="h-7 w-7" />
+          </NavLink>
+        </div>
+
+        {/* Progress */}
+        <NavLink
+          to={MOBILE_NAV_ITEMS[2].to}
+          end={MOBILE_NAV_ITEMS[2].end}
+          className={({ isActive }) =>
+            [
+              'flex h-full flex-1 flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
+              isActive
+                ? 'border-primary text-primary'
+                : 'text-muted-foreground border-transparent',
+            ].join(' ')
+          }
+        >
+          <Rocket className="h-5 w-5" />
+          Progress
+        </NavLink>
+
+        {/* More */}
+        <button
+          onClick={() => setMoreOpen((prev) => !prev)}
+          className={[
+            'flex h-full flex-1 flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
+            isMoreActive || moreOpen
+              ? 'border-primary text-primary'
+              : 'text-muted-foreground border-transparent',
+          ].join(' ')}
+          aria-label="More menu"
+        >
+          <MoreHorizontal className="h-5 w-5" />
+          More
+        </button>
       </nav>
     </div>
   );
