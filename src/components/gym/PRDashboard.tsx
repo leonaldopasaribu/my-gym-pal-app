@@ -1,7 +1,14 @@
 import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Zap, Timer } from 'lucide-react';
+import {
+  Trophy,
+  Zap,
+  Timer,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from 'lucide-react';
 import { useExercises, useWorkouts, epley1RM } from '@/lib/gym-store';
 import { Skeleton } from '../ui/skeleton';
 import { WorkoutUtil } from '../../lib/workout-util';
@@ -18,19 +25,73 @@ export function PRDashboard() {
 
   const stats = useMemo(() => {
     const totalSessions = workouts.length;
-    // Only sum strength volume — cardio volume is in minutes (different unit)
-    const totalVolume = workouts
-      .filter((w) => {
-        const ex = exMap[w.exerciseId];
-        return ex && !WorkoutUtil.isCardioGroup(ex.muscleGroup);
-      })
-      .reduce(
-        (m, w) => m + w.sets.reduce((s, x) => s + x.reps * x.weight, 0),
-        0
-      );
     const totalSets = workouts.reduce((m, w) => m + w.sets.length, 0);
-    return { totalSessions, totalVolume, totalSets };
-  }, [workouts, exMap]);
+
+    // ── Strength progress: avg e1RM across all strength exercises ──
+    const now = new Date();
+    const cutoff30 = new Date(now);
+    cutoff30.setDate(cutoff30.getDate() - 30);
+    const cutoff60 = new Date(now);
+    cutoff60.setDate(cutoff60.getDate() - 60);
+
+    const strengthExIds = new Set(
+      exercises
+        .filter((ex) => !WorkoutUtil.isCardioGroup(ex.muscleGroup))
+        .map((ex) => ex.id)
+    );
+
+    // For each strength exercise, find best e1RM in a given workout list
+    const avgBestE1RM = (wkts: typeof workouts) => {
+      const perExercise = new Map<string, number>();
+      wkts.forEach((w) => {
+        if (!strengthExIds.has(w.exerciseId)) return;
+        w.sets.forEach((s) => {
+          const e1 = epley1RM(s.weight, s.reps);
+          const prev = perExercise.get(w.exerciseId) ?? 0;
+          if (e1 > prev) perExercise.set(w.exerciseId, e1);
+        });
+      });
+      const vals = [...perExercise.values()];
+      return vals.length > 0
+        ? vals.reduce((a, b) => a + b, 0) / vals.length
+        : 0;
+    };
+
+    const recent = workouts.filter((w) => new Date(w.date) >= cutoff30);
+    const prior = workouts.filter((w) => {
+      const d = new Date(w.date);
+      return d >= cutoff60 && d < cutoff30;
+    });
+
+    const recentAvg = avgBestE1RM(recent);
+    const priorAvg = avgBestE1RM(prior);
+
+    let progressLabel: string;
+    let progressDirection: 'up' | 'down' | 'flat' | 'new' = 'new';
+
+    if (priorAvg === 0) {
+      progressLabel = 'First month! 🎉';
+      progressDirection = 'new';
+    } else if (recentAvg === 0) {
+      progressLabel = '—';
+      progressDirection = 'flat';
+    } else {
+      const delta = ((recentAvg - priorAvg) / priorAvg) * 100;
+      const abs = Math.abs(delta);
+      if (abs < 0.5) {
+        progressLabel = 'Holding steady';
+        progressDirection = 'flat';
+      } else if (delta > 0) {
+        progressLabel = `↑ ${abs.toFixed(1)}% stronger`;
+        progressDirection = 'up';
+      } else {
+        progressLabel = `↓ ${abs.toFixed(1)}% weaker`;
+        progressDirection = 'down';
+      }
+    }
+
+    return { totalSessions, totalSets, progressLabel, progressDirection };
+  }, [workouts, exercises, exMap]);
 
   // ── Strength PRs ──────────────────────────────────────────────────────────
   const strengthPRs = useMemo(() => {
@@ -75,7 +136,7 @@ export function PRDashboard() {
         const entries = workouts.filter((w) => w.exerciseId === ex.id);
         let bestDist = 0,
           bestDur = 0,
-          bestPaceRaw = Infinity; // lower = better
+          bestPaceRaw = Infinity;
         let bestDistDate = '',
           bestDurDate = '',
           bestPaceDate = '';
@@ -153,12 +214,14 @@ export function PRDashboard() {
         />
         <StatCard label="Total Sets" value={stats.totalSets.toString()} />
         <StatCard
-          label="Strength Volume"
-          value={`${stats.totalVolume.toLocaleString()} kg`}
+          label="vs Last 30 Days"
+          value={stats.progressLabel}
+          direction={stats.progressDirection}
           accent
         />
       </div>
 
+      {/* rest unchanged below... */}
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -183,7 +246,6 @@ export function PRDashboard() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {/* ── Strength PRs ── */}
           {strengthPRs.length > 0 && (
             <div className="space-y-3">
               {cardioPRs.length > 0 && (
@@ -216,13 +278,11 @@ export function PRDashboard() {
                       >
                         {ex.muscleGroup}
                       </Badge>
-
                       <div className="mt-4 grid grid-cols-3 gap-3">
                         <Mini label="Max Weight" value={`${maxWeight}kg`} />
                         <Mini label="Max Reps" value={`${maxReps}`} />
                         <Mini label="e1RM" value={`${max1RM}kg`} highlight />
                       </div>
-
                       {bestSet && (
                         <div className="border-border/60 text-muted-foreground mt-3 border-t pt-3 font-mono text-xs">
                           Best: {bestSet.reps}×{bestSet.weight}kg ·{' '}
@@ -236,7 +296,6 @@ export function PRDashboard() {
             </div>
           )}
 
-          {/* ── Cardio PRs ── */}
           {cardioPRs.length > 0 && (
             <div className="space-y-3">
               {strengthPRs.length > 0 && (
@@ -247,16 +306,7 @@ export function PRDashboard() {
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {cardioPRs.map(
                   (
-                    {
-                      ex,
-                      bestDist,
-                      bestDistDate,
-                      bestDur,
-                      bestDurDate,
-                      bestPace,
-                      bestPaceDate,
-                      sessions,
-                    },
+                    { ex, bestDist, bestDistDate, bestDur, bestPace, sessions },
                     idx
                   ) => (
                     <Card
@@ -281,7 +331,6 @@ export function PRDashboard() {
                       >
                         {ex.muscleGroup}
                       </Badge>
-
                       <div
                         className={`mt-4 grid gap-3 ${bestPace ? 'grid-cols-3' : 'grid-cols-2'}`}
                       >
@@ -297,7 +346,6 @@ export function PRDashboard() {
                           <Mini label="Best Pace" value={bestPace} highlight />
                         )}
                       </div>
-
                       <div className="border-border/60 text-muted-foreground mt-3 border-t pt-3 font-mono text-xs">
                         {sessions} session{sessions !== 1 ? 's' : ''}
                         {bestDistDate &&
@@ -319,11 +367,22 @@ function StatCard({
   label,
   value,
   accent,
+  direction,
 }: {
   label: string;
   value: string;
   accent?: boolean;
+  direction?: 'up' | 'down' | 'flat' | 'new';
 }) {
+  const colorClass =
+    direction === 'up'
+      ? 'text-emerald-400'
+      : direction === 'down'
+        ? 'text-red-400'
+        : direction === 'new'
+          ? 'text-primary'
+          : '';
+
   return (
     <Card
       className={`surface border-border/60 p-4 ${accent ? 'border-primary/40' : ''}`}
@@ -332,7 +391,7 @@ function StatCard({
         {label}
       </div>
       <div
-        className={`font-display mt-1 text-2xl font-bold ${accent ? 'text-gradient-primary' : ''}`}
+        className={`font-display mt-1 text-xl leading-tight font-bold ${accent ? colorClass || 'text-gradient-primary' : ''}`}
       >
         {value}
       </div>
