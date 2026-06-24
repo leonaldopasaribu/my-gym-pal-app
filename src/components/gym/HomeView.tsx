@@ -15,6 +15,7 @@ import { useWorkouts, useRestDays } from '@/lib/gym-store';
 import { Flame, Activity, Moon, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { LevelCard } from './LevelCard';
+import { MuscleBalanceCard } from './MuscleBalanceCard';
 
 function toISODate(d: Date) {
   const x = new Date(d);
@@ -210,6 +211,8 @@ export function HomeView() {
       </Card>
 
       <LevelCard />
+
+      <MuscleBalanceCard />
 
       {/* 30-day velocity */}
       <Card className="surface border-border/60 p-5 sm:p-6">

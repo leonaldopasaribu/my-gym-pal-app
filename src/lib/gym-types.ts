@@ -2,8 +2,11 @@ export type MuscleGroup =
   | 'Chest'
   | 'Back'
   | 'Shoulders'
-  | 'Arms'
+  | 'Biceps'
+  | 'Triceps'
   | 'Legs'
+  | 'Glutes'
+  | 'Forearms'
   | 'Core'
   | 'Cardio'
   | 'Other';
@@ -40,8 +43,11 @@ export const MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',
   'Back',
   'Shoulders',
-  'Arms',
+  'Biceps',
+  'Triceps',
   'Legs',
+  'Glutes',
+  'Forearms',
   'Core',
   'Cardio',
   'Other',

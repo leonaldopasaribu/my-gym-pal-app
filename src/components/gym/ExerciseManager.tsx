@@ -46,8 +46,11 @@ const NOTES_PLACEHOLDER: Record<string, string> = {
   Chest: 'Form cues, grip width, incline angle, etc.',
   Back: 'Form cues, grip type, cable vs barbell, etc.',
   Shoulders: 'Form cues, unilateral or bilateral, etc.',
-  Arms: 'Form cues, curl style, grip, etc.',
+  Biceps: 'Form cues, curl style, grip, supination cues, etc.',
+  Triceps: 'Form cues, pushdown vs overhead, close grip, etc.',
+  Forearms: 'Wrist curl style, grip trainer, farmer carry, etc.',
   Legs: 'Form cues, stance width, belt, etc.',
+  Glutes: 'Form cues, hip hinge vs squat pattern, etc.',
   Core: 'Tempo, breathing cues, progression, etc.',
   Other: 'Notes, tips, progressions, etc.',
 };
