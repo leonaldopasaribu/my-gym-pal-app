@@ -7,25 +7,28 @@ import type { MuscleGroup } from '@/lib/gym-types';
 // ─── Config ──────────────────────────────────────────────────────────────────
 
 const GROUP_META: Record<MuscleGroup, { label: string; color: string }> = {
-  Chest: { label: 'Chest', color: '#8B5CF6' },
-  Shoulders: { label: 'Shoulders', color: '#A855F7' },
-  Triceps: { label: 'Triceps', color: '#C084FC' },
+  // Push — muted violet
+  Chest: { label: 'Chest', color: 'hsl(258 40% 68%)' },
+  Shoulders: { label: 'Shoulders', color: 'hsl(258 32% 58%)' },
+  Triceps: { label: 'Triceps', color: 'hsl(258 25% 50%)' },
 
-  Back: { label: 'Back', color: '#14B8A6' },
-  Biceps: { label: 'Biceps', color: '#06B6D4' },
-  Forearms: { label: 'Forearms', color: '#3B82F6' },
+  // Pull — muted teal
+  Back: { label: 'Back', color: 'hsl(172 38% 52%)' },
+  Biceps: { label: 'Biceps', color: 'hsl(172 30% 44%)' },
+  Forearms: { label: 'Forearms', color: 'hsl(172 22% 38%)' },
 
-  Legs: { label: 'Legs', color: '#F59E0B' },
-  Glutes: { label: 'Glutes', color: '#F97316' },
+  // Legs — muted amber
+  Legs: { label: 'Legs', color: 'hsl(32 45% 58%)' },
+  Glutes: { label: 'Glutes', color: 'hsl(32 36% 48%)' },
 
-  Core: { label: 'Core', color: '#22C55E' },
-
-  Cardio: { label: 'Cardio', color: '#EF4444' },
-  Other: { label: 'Other', color: '#64748B' },
+  // Misc — neutral
+  Core: { label: 'Core', color: 'hsl(0 0% 52%)' },
+  Cardio: { label: 'Cardio', color: 'hsl(0 0% 40%)' },
+  Other: { label: 'Other', color: 'hsl(0 0% 30%)' },
 };
 
 // Push = Chest + Shoulders + Triceps
-// Pull = Back + Biceps
+// Pull = Back + Biceps + Forearms
 const PUSH_MUSCLES: MuscleGroup[] = ['Chest', 'Shoulders', 'Triceps'];
 const PULL_MUSCLES: MuscleGroup[] = ['Back', 'Biceps', 'Forearms'];
 const LEG_MUSCLES: MuscleGroup[] = ['Legs', 'Glutes'];
@@ -77,10 +80,7 @@ export function MuscleBalanceCard() {
       .sort((a, b) => b.sessions - a.sessions);
 
     if (rawRows.length === 0) {
-      return {
-        rows: [],
-        insight: null,
-      };
+      return { rows: [], insight: null };
     }
 
     const totalSessions = rawRows.reduce((s, r) => s + r.sessions, 0);
