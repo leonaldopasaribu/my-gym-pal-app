@@ -28,6 +28,7 @@ export interface WorkoutSet {
   durationMinutes?: number;
   distanceKm?: number;
   avgHeartRate?: number;
+  speed?: number;
 }
 
 export interface WorkoutEntry {

@@ -94,6 +94,7 @@ function defaultCardioSet(last?: WorkoutSet): WorkoutSet {
     weight: 0,
     durationMinutes: last?.durationMinutes ?? 30,
     distanceKm: last?.distanceKm ?? 5,
+    speed: last?.speed ?? undefined,
   };
 }
 
@@ -376,16 +377,13 @@ export function WorkoutLogger() {
     );
     if (duplicate) {
       const exName = exMap[exerciseId]?.name ?? 'This exercise';
-
       return toast.error(
         <>
           {exName} already logged on
           <br />
           {formatDateID(date)}
         </>,
-        {
-          description: 'Edit the existing entry or pick a different date.',
-        }
+        { description: 'Edit the existing entry or pick a different date.' }
       );
     }
 
@@ -463,7 +461,7 @@ export function WorkoutLogger() {
           {editingWorkoutId
             ? 'Edit the selected recent session.'
             : isCardio
-              ? 'Track duration, distance & pace.'
+              ? 'Track duration, distance & speed.'
               : 'Track sets, reps & weight (kg).'}
         </p>
       </div>
@@ -518,7 +516,7 @@ export function WorkoutLogger() {
 
                 <div className="border-border/40 space-y-3 border-t pt-3">
                   {isCardio ? (
-                    <div className="text-muted-foreground flex gap-4 font-mono text-[10px]">
+                    <div className="text-muted-foreground flex flex-wrap gap-4 font-mono text-[10px]">
                       <span>
                         DUR{' '}
                         <span className="text-primary font-bold">
@@ -541,6 +539,17 @@ export function WorkoutLogger() {
                               entryTotalDuration(lastSession),
                               entryTotalDistance(lastSession)
                             )}
+                          </span>
+                        </span>
+                      )}
+                      {lastSession.sets.some((s) => (s.speed ?? 0) > 0) && (
+                        <span>
+                          SPD{' '}
+                          <span className="text-primary font-bold">
+                            {
+                              lastSession.sets.find((s) => (s.speed ?? 0) > 0)
+                                ?.speed
+                            }
                           </span>
                         </span>
                       )}
@@ -604,124 +613,16 @@ export function WorkoutLogger() {
 
               <div className="space-y-2">
                 {sets.map((s, idx) => (
-                  <div
+                  <CardioOrStrengthSet
                     key={s.id}
-                    className="border-border/60 bg-secondary/40 rounded-lg border p-3 sm:p-4"
-                  >
-                    {/* Set header */}
-                    <div className="mb-1 flex items-center justify-between">
-                      <span className="text-muted-foreground font-mono text-xs tracking-wider uppercase">
-                        {isCardio ? `Interval ${idx + 1}` : `Set ${idx + 1}`}
-                      </span>
-                      {sets.length > 1 && (
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-muted-foreground hover:text-destructive h-7 w-7 cursor-pointer transition-all duration-150 active:scale-95"
-                          onClick={() => removeSet(s.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-
-                    {/* Steppers — cardio or strength */}
-                    {isCardio ? (
-                      isMobile ? (
-                        <div className="divide-border/40 divide-y">
-                          <RowStepper
-                            label="Duration (min)"
-                            value={s.durationMinutes ?? 30}
-                            step={5}
-                            min={1}
-                            onChange={(v) =>
-                              updateSet(s.id, { durationMinutes: v })
-                            }
-                          />
-                          <RowStepper
-                            label="Distance (km)"
-                            value={s.distanceKm ?? 0}
-                            step={0.5}
-                            min={0}
-                            decimal
-                            onChange={(v) => updateSet(s.id, { distanceKm: v })}
-                          />
-                        </div>
-                      ) : (
-                        <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-5">
-                          <Stepper
-                            label="Duration (min)"
-                            value={s.durationMinutes ?? 30}
-                            step={5}
-                            min={1}
-                            onChange={(v) =>
-                              updateSet(s.id, { durationMinutes: v })
-                            }
-                          />
-                          <Stepper
-                            label="Distance (km)"
-                            value={s.distanceKm ?? 0}
-                            step={0.5}
-                            min={0}
-                            decimal
-                            onChange={(v) => updateSet(s.id, { distanceKm: v })}
-                          />
-                        </div>
-                      )
-                    ) : isMobile ? (
-                      <div className="divide-border/40 divide-y">
-                        <RowStepper
-                          label="Reps"
-                          value={s.reps}
-                          step={1}
-                          min={0}
-                          onChange={(v) => updateSet(s.id, { reps: v })}
-                        />
-                        <RowStepper
-                          label="Weight (kg)"
-                          value={s.weight}
-                          step={1}
-                          min={0}
-                          decimal
-                          onChange={(v) => updateSet(s.id, { weight: v })}
-                        />
-                      </div>
-                    ) : (
-                      <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-5">
-                        <Stepper
-                          label="Reps"
-                          value={s.reps}
-                          step={1}
-                          min={0}
-                          onChange={(v) => updateSet(s.id, { reps: v })}
-                        />
-                        <Stepper
-                          label="Kg"
-                          value={s.weight}
-                          step={1}
-                          min={0}
-                          decimal
-                          onChange={(v) => updateSet(s.id, { weight: v })}
-                        />
-                      </div>
-                    )}
-
-                    {/* Pace preview for cardio */}
-                    {isCardio &&
-                      s.durationMinutes &&
-                      s.distanceKm &&
-                      s.distanceKm > 0 && (
-                        <div className="text-muted-foreground mt-2 font-mono text-[10px]">
-                          PACE{' '}
-                          <span className="text-primary font-bold">
-                            {WorkoutUtil.formatPace(
-                              s.durationMinutes,
-                              s.distanceKm
-                            )}
-                          </span>
-                        </div>
-                      )}
-                  </div>
+                    set={s}
+                    idx={idx}
+                    isCardio={isCardio}
+                    isMobile={isMobile}
+                    canRemove={sets.length > 1}
+                    onRemove={() => removeSet(s.id)}
+                    onUpdate={(patch) => updateSet(s.id, patch)}
+                  />
                 ))}
               </div>
             </div>
@@ -834,6 +735,9 @@ export function WorkoutLogger() {
                           const dist = entryTotalDistance(w);
                           const top = entryTopWeight(w);
                           const vol = entryVolume(w);
+                          const speed =
+                            w.sets.find((s) => (s.speed ?? 0) > 0)?.speed ??
+                            null;
 
                           return (
                             <div
@@ -898,7 +802,7 @@ export function WorkoutLogger() {
 
                               {/* Stats row */}
                               {wIsCardio ? (
-                                <div className="text-muted-foreground mt-2 flex gap-4 font-mono text-[11px]">
+                                <div className="text-muted-foreground mt-2 flex flex-wrap gap-4 font-mono text-[11px]">
                                   <span>
                                     DUR{' '}
                                     <span className="text-primary font-semibold">
@@ -918,6 +822,14 @@ export function WorkoutLogger() {
                                       PACE{' '}
                                       <span className="text-primary font-semibold">
                                         {WorkoutUtil.formatPace(dur, dist)}
+                                      </span>
+                                    </span>
+                                  )}
+                                  {speed !== null && (
+                                    <span>
+                                      SPD{' '}
+                                      <span className="text-primary font-semibold">
+                                        {speed}
                                       </span>
                                     </span>
                                   )}
@@ -1014,6 +926,156 @@ export function WorkoutLogger() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+
+// ─── CardioOrStrengthSet ──────────────────────────────────────────────────────
+
+function CardioOrStrengthSet({
+  set: s,
+  idx,
+  isCardio,
+  isMobile,
+  canRemove,
+  onRemove,
+  onUpdate,
+}: {
+  set: WorkoutSet;
+  idx: number;
+  isCardio: boolean;
+  isMobile: boolean;
+  canRemove: boolean;
+  onRemove: () => void;
+  onUpdate: (patch: Partial<WorkoutSet>) => void;
+}) {
+  return (
+    <div className="border-border/60 bg-secondary/40 rounded-lg border p-3 sm:p-4">
+      {/* Set header */}
+      <div className="mb-1 flex items-center justify-between">
+        <span className="text-muted-foreground font-mono text-xs tracking-wider uppercase">
+          {isCardio ? `Interval ${idx + 1}` : `Set ${idx + 1}`}
+        </span>
+        {canRemove && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="text-muted-foreground hover:text-destructive h-7 w-7 cursor-pointer transition-all duration-150 active:scale-95"
+            onClick={onRemove}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
+      {/* Strength fields */}
+      {!isCardio &&
+        (isMobile ? (
+          <div className="divide-border/40 divide-y">
+            <RowStepper
+              label="Reps"
+              value={s.reps}
+              step={1}
+              min={0}
+              onChange={(v) => onUpdate({ reps: v })}
+            />
+            <RowStepper
+              label="Weight (kg)"
+              value={s.weight}
+              step={1}
+              min={0}
+              decimal
+              onChange={(v) => onUpdate({ weight: v })}
+            />
+          </div>
+        ) : (
+          <div className="grid min-w-0 grid-cols-2 gap-3 sm:gap-5">
+            <Stepper
+              label="Reps"
+              value={s.reps}
+              step={1}
+              min={0}
+              onChange={(v) => onUpdate({ reps: v })}
+            />
+            <Stepper
+              label="Kg"
+              value={s.weight}
+              step={1}
+              min={0}
+              decimal
+              onChange={(v) => onUpdate({ weight: v })}
+            />
+          </div>
+        ))}
+
+      {/* Cardio fields */}
+      {isCardio && (
+        <>
+          {isMobile ? (
+            <div className="divide-border/40 divide-y">
+              <RowStepper
+                label="Duration (min)"
+                value={s.durationMinutes ?? 30}
+                step={5}
+                min={1}
+                onChange={(v) => onUpdate({ durationMinutes: v })}
+              />
+              <RowStepper
+                label="Distance (km)"
+                value={s.distanceKm ?? 0}
+                step={0.5}
+                min={0}
+                decimal
+                onChange={(v) => onUpdate({ distanceKm: v })}
+              />
+              <RowStepper
+                label="Speed"
+                value={s.speed ?? 0}
+                step={0.5}
+                min={0}
+                decimal
+                onChange={(v) => onUpdate({ speed: v || undefined })}
+              />
+            </div>
+          ) : (
+            <div className="grid min-w-0 grid-cols-3 gap-3 sm:gap-5">
+              <Stepper
+                label="Duration (min)"
+                value={s.durationMinutes ?? 30}
+                step={5}
+                min={1}
+                onChange={(v) => onUpdate({ durationMinutes: v })}
+              />
+              <Stepper
+                label="Distance (km)"
+                value={s.distanceKm ?? 0}
+                step={0.5}
+                min={0}
+                decimal
+                onChange={(v) => onUpdate({ distanceKm: v })}
+              />
+              <Stepper
+                label="Speed"
+                value={s.speed ?? 0}
+                step={0.5}
+                min={0}
+                decimal
+                onChange={(v) => onUpdate({ speed: v || undefined })}
+              />
+            </div>
+          )}
+
+          {/* Pace preview — only when dist & dur are filled */}
+          {s.durationMinutes && s.distanceKm && s.distanceKm > 0 && (
+            <div className="text-muted-foreground mt-2 font-mono text-[10px]">
+              PACE{' '}
+              <span className="text-primary font-bold">
+                {WorkoutUtil.formatPace(s.durationMinutes, s.distanceKm)}
+              </span>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
