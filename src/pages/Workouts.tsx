@@ -41,15 +41,6 @@ function formatDateLabel(iso: string) {
   }).format(d);
 }
 
-function isThisWeek(iso: string) {
-  const d = new Date(iso + 'T00:00:00');
-  const now = new Date();
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
-  startOfWeek.setHours(0, 0, 0, 0);
-  return d >= startOfWeek;
-}
-
 export default function Workouts() {
   const navigate = useNavigate();
   const { exercises, isLoading: isLoadingExercises } = useExercises();
@@ -100,19 +91,12 @@ export default function Workouts() {
     return map;
   }, [filtered]);
 
-  // Summary stats — only count strength volume (cardio volume = duration, different unit)
+  // Summary stats
   const stats = useMemo(() => {
     const totalSets = workouts.reduce((a, w) => a + w.sets.length, 0);
-    const totalVol = workouts
-      .filter((w) => {
-        const ex = exMap[w.exerciseId];
-        return ex && !WorkoutUtil.isCardioGroup(ex.muscleGroup);
-      })
-      .reduce((a, w) => a + entryVolume(w), 0);
-    const thisWeek = workouts.filter((w) => isThisWeek(w.date)).length;
     const uniqueDays = new Set(workouts.map((w) => w.date)).size;
-    return { totalSets, totalVol, thisWeek, uniqueDays };
-  }, [workouts, exMap]);
+    return { totalSets, uniqueDays };
+  }, [workouts]);
 
   const confirmDelete = async () => {
     if (!deleteTarget) return;
@@ -147,20 +131,15 @@ export default function Workouts() {
 
       <div className="container space-y-5 py-5 pb-24">
         {/* Summary cards */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3">
           {[
             {
               label: 'Total Sessions',
               value: isLoading ? '—' : workouts.length,
             },
-            { label: 'This Week', value: isLoading ? '—' : stats.thisWeek },
             {
               label: 'Total Sets',
               value: isLoading ? '—' : stats.totalSets.toLocaleString(),
-            },
-            {
-              label: 'Strength Vol',
-              value: isLoading ? '—' : `${(stats.totalVol / 1000).toFixed(1)}t`,
             },
           ].map((s) => (
             <div

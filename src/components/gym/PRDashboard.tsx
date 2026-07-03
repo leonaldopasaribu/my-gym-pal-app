@@ -1,27 +1,20 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Trophy,
-  Zap,
-  Timer,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-} from 'lucide-react';
+import { Trophy, Zap, Timer } from 'lucide-react';
 import { useExercises, useWorkouts, epley1RM } from '@/lib/gym-store';
 import { Skeleton } from '../ui/skeleton';
 import { WorkoutUtil } from '../../lib/workout-util';
+
+const PERIOD_OPTIONS = [7, 14, 30] as const;
+type Period = (typeof PERIOD_OPTIONS)[number];
 
 export function PRDashboard() {
   const { exercises, isLoading: isLoadingExercises } = useExercises();
   const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
   const isLoading = isLoadingExercises || isLoadingWorkouts;
 
-  const exMap = useMemo(
-    () => Object.fromEntries(exercises.map((e) => [e.id, e])),
-    [exercises]
-  );
+  const [period, setPeriod] = useState<Period>(30);
 
   const stats = useMemo(() => {
     const totalSessions = workouts.length;
@@ -29,10 +22,10 @@ export function PRDashboard() {
 
     // ── Strength progress: avg e1RM across all strength exercises ──
     const now = new Date();
-    const cutoff30 = new Date(now);
-    cutoff30.setDate(cutoff30.getDate() - 30);
-    const cutoff60 = new Date(now);
-    cutoff60.setDate(cutoff60.getDate() - 60);
+    const cutoffRecent = new Date(now);
+    cutoffRecent.setDate(cutoffRecent.getDate() - period);
+    const cutoffPrior = new Date(now);
+    cutoffPrior.setDate(cutoffPrior.getDate() - period * 2);
 
     const strengthExIds = new Set(
       exercises
@@ -57,10 +50,10 @@ export function PRDashboard() {
         : 0;
     };
 
-    const recent = workouts.filter((w) => new Date(w.date) >= cutoff30);
+    const recent = workouts.filter((w) => new Date(w.date) >= cutoffRecent);
     const prior = workouts.filter((w) => {
       const d = new Date(w.date);
-      return d >= cutoff60 && d < cutoff30;
+      return d >= cutoffPrior && d < cutoffRecent;
     });
 
     const recentAvg = avgBestE1RM(recent);
@@ -70,7 +63,7 @@ export function PRDashboard() {
     let progressDirection: 'up' | 'down' | 'flat' | 'new' = 'new';
 
     if (priorAvg === 0) {
-      progressLabel = 'First month! 🎉';
+      progressLabel = recentAvg > 0 ? 'Belum cukup data' : 'First month! 🎉';
       progressDirection = 'new';
     } else if (recentAvg === 0) {
       progressLabel = '—';
@@ -91,7 +84,7 @@ export function PRDashboard() {
     }
 
     return { totalSessions, totalSets, progressLabel, progressDirection };
-  }, [workouts, exercises, exMap]);
+  }, [workouts, exercises, period]);
 
   // ── Strength PRs ──────────────────────────────────────────────────────────
   const strengthPRs = useMemo(() => {
@@ -214,10 +207,28 @@ export function PRDashboard() {
         />
         <StatCard label="Total Sets" value={stats.totalSets.toString()} />
         <StatCard
-          label="vs Last 30 Days"
+          label={`vs Last ${period} Days`}
           value={stats.progressLabel}
           direction={stats.progressDirection}
           accent
+          footer={
+            <div className="mt-3 flex gap-1">
+              {PERIOD_OPTIONS.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPeriod(p)}
+                  className={`flex-1 rounded-md px-2 py-1 font-mono text-[10px] font-semibold tracking-widest uppercase transition-colors ${
+                    period === p
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary/40 text-muted-foreground hover:bg-secondary/70'
+                  }`}
+                >
+                  {p} Days
+                </button>
+              ))}
+            </div>
+          }
         />
       </div>
 
@@ -368,11 +379,13 @@ function StatCard({
   value,
   accent,
   direction,
+  footer,
 }: {
   label: string;
   value: string;
   accent?: boolean;
   direction?: 'up' | 'down' | 'flat' | 'new';
+  footer?: React.ReactNode;
 }) {
   const colorClass =
     direction === 'up'
@@ -395,6 +408,7 @@ function StatCard({
       >
         {value}
       </div>
+      {footer}
     </Card>
   );
 }
