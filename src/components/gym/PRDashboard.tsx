@@ -20,12 +20,13 @@ export function PRDashboard() {
     const totalSessions = workouts.length;
     const totalSets = workouts.reduce((m, w) => m + w.sets.length, 0);
 
-    // ── Strength progress: avg e1RM across all strength exercises ──
+    // ── Normalisasi Batas Waktu Berbasis Milidetik ──
     const now = new Date();
-    const cutoffRecent = new Date(now);
-    cutoffRecent.setDate(cutoffRecent.getDate() - period);
-    const cutoffPrior = new Date(now);
-    cutoffPrior.setDate(cutoffPrior.getDate() - period * 2);
+    now.setHours(0, 0, 0, 0); // Bersihkan jam untuk akurasi tanggal murni
+
+    const todayMs = now.getTime();
+    const cutoffRecentMs = todayMs - period * 24 * 60 * 60 * 1000;
+    const cutoffPriorMs = todayMs - period * 2 * 24 * 60 * 60 * 1000;
 
     const strengthExIds = new Set(
       exercises
@@ -33,48 +34,62 @@ export function PRDashboard() {
         .map((ex) => ex.id)
     );
 
-    // For each strength exercise, find best e1RM in a given workout list
-    const avgBestE1RM = (wkts: typeof workouts) => {
-      const perExercise = new Map<string, number>();
-      wkts.forEach((w) => {
-        if (!strengthExIds.has(w.exerciseId)) return;
+    const recentMap = new Map<string, number>();
+    const priorMap = new Map<string, number>();
+
+    // Single-pass loop: Memisahkan recent/prior sekaligus mencari Best e1RM
+    workouts.forEach((w) => {
+      if (!strengthExIds.has(w.exerciseId)) return;
+
+      // Ambil waktu dari tanggal workout (tambahkan jam aman untuk menghindari pergeseran timezone)
+      const workoutTime = new Date(w.date + 'T00:00:00').getTime();
+
+      if (workoutTime >= cutoffRecentMs) {
         w.sets.forEach((s) => {
           const e1 = epley1RM(s.weight, s.reps);
-          const prev = perExercise.get(w.exerciseId) ?? 0;
-          if (e1 > prev) perExercise.set(w.exerciseId, e1);
+          if (e1 > (recentMap.get(w.exerciseId) ?? 0)) {
+            recentMap.set(w.exerciseId, e1);
+          }
         });
-      });
-      const vals = [...perExercise.values()];
-      return vals.length > 0
-        ? vals.reduce((a, b) => a + b, 0) / vals.length
-        : 0;
-    };
-
-    const recent = workouts.filter((w) => new Date(w.date) >= cutoffRecent);
-    const prior = workouts.filter((w) => {
-      const d = new Date(w.date);
-      return d >= cutoffPrior && d < cutoffRecent;
+      } else if (workoutTime >= cutoffPriorMs && workoutTime < cutoffRecentMs) {
+        w.sets.forEach((s) => {
+          const e1 = epley1RM(s.weight, s.reps);
+          if (e1 > (priorMap.get(w.exerciseId) ?? 0)) {
+            priorMap.set(w.exerciseId, e1);
+          }
+        });
+      }
     });
 
-    const recentAvg = avgBestE1RM(recent);
-    const priorAvg = avgBestE1RM(prior);
+    // Perbandingan Apple-to-Apple
+    const deltas: number[] = [];
+    recentMap.forEach((recentVal, exId) => {
+      const priorVal = priorMap.get(exId);
+      if (priorVal && priorVal > 0) {
+        deltas.push(((recentVal - priorVal) / priorVal) * 100);
+      }
+    });
+
+    const hasRecentData = recentMap.size > 0;
+    const hasComparableData = deltas.length > 0;
 
     let progressLabel: string;
     let progressDirection: 'up' | 'down' | 'flat' | 'new' = 'new';
 
-    if (priorAvg === 0) {
-      progressLabel = recentAvg > 0 ? 'Belum cukup data' : 'First month! 🎉';
+    if (priorMap.size === 0) {
+      progressLabel = hasRecentData ? 'Belum cukup data' : 'First month! 🎉';
       progressDirection = 'new';
-    } else if (recentAvg === 0) {
+    } else if (!hasComparableData) {
       progressLabel = '—';
       progressDirection = 'flat';
     } else {
-      const delta = ((recentAvg - priorAvg) / priorAvg) * 100;
-      const abs = Math.abs(delta);
+      const avgDelta = deltas.reduce((a, b) => a + b, 0) / deltas.length;
+      const abs = Math.abs(avgDelta);
+
       if (abs < 0.5) {
-        progressLabel = 'Holding steady';
+        progressLabel = 'Stable';
         progressDirection = 'flat';
-      } else if (delta > 0) {
+      } else if (avgDelta > 0) {
         progressLabel = `↑ ${abs.toFixed(1)}% stronger`;
         progressDirection = 'up';
       } else {
@@ -130,9 +145,7 @@ export function PRDashboard() {
         let bestDist = 0,
           bestDur = 0,
           bestPaceRaw = Infinity;
-        let bestDistDate = '',
-          bestDurDate = '',
-          bestPaceDate = '';
+        let bestDistDate = '';
 
         entries.forEach((e) => {
           e.sets.forEach((s) => {
@@ -142,13 +155,11 @@ export function PRDashboard() {
             }
             if ((s.durationMinutes ?? 0) > bestDur) {
               bestDur = s.durationMinutes ?? 0;
-              bestDurDate = e.date;
             }
             if (s.durationMinutes && s.distanceKm && s.distanceKm > 0) {
               const pace = s.durationMinutes / s.distanceKm;
               if (pace < bestPaceRaw) {
                 bestPaceRaw = pace;
-                bestPaceDate = e.date;
               }
             }
           });
@@ -168,9 +179,7 @@ export function PRDashboard() {
           bestDist,
           bestDistDate,
           bestDur,
-          bestDurDate,
           bestPace,
-          bestPaceDate,
           sessions: entries.length,
         };
       })
@@ -232,7 +241,6 @@ export function PRDashboard() {
         />
       </div>
 
-      {/* rest unchanged below... */}
       {isLoading ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
