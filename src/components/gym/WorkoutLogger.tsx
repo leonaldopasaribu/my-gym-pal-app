@@ -1016,14 +1016,14 @@ function CardioOrStrengthSet({
               <RowStepper
                 label="Duration (min)"
                 value={s.durationMinutes ?? 30}
-                step={5}
+                step={1}
                 min={1}
                 onChange={(v) => onUpdate({ durationMinutes: v })}
               />
               <RowStepper
                 label="Distance (km)"
                 value={s.distanceKm ?? 0}
-                step={0.5}
+                step={1}
                 min={0}
                 decimal
                 onChange={(v) => onUpdate({ distanceKm: v })}
@@ -1031,7 +1031,7 @@ function CardioOrStrengthSet({
               <RowStepper
                 label="Speed"
                 value={s.speed ?? 0}
-                step={0.5}
+                step={1}
                 min={0}
                 decimal
                 onChange={(v) => onUpdate({ speed: v || undefined })}
@@ -1042,14 +1042,14 @@ function CardioOrStrengthSet({
               <Stepper
                 label="Duration (min)"
                 value={s.durationMinutes ?? 30}
-                step={5}
+                step={1}
                 min={1}
                 onChange={(v) => onUpdate({ durationMinutes: v })}
               />
               <Stepper
                 label="Distance (km)"
                 value={s.distanceKm ?? 0}
-                step={0.5}
+                step={1}
                 min={0}
                 decimal
                 onChange={(v) => onUpdate({ distanceKm: v })}
@@ -1057,7 +1057,7 @@ function CardioOrStrengthSet({
               <Stepper
                 label="Speed"
                 value={s.speed ?? 0}
-                step={0.5}
+                step={1}
                 min={0}
                 decimal
                 onChange={(v) => onUpdate({ speed: v || undefined })}
