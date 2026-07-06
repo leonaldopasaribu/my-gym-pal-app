@@ -1011,59 +1011,31 @@ function CardioOrStrengthSet({
       {/* Cardio fields */}
       {isCardio && (
         <>
-          {isMobile ? (
-            <div className="divide-border/40 divide-y">
-              <RowStepper
-                label="Duration (min)"
-                value={s.durationMinutes ?? 30}
-                step={1}
-                min={1}
-                onChange={(v) => onUpdate({ durationMinutes: v })}
-              />
-              <RowStepper
-                label="Distance (km)"
-                value={s.distanceKm ?? 0}
-                step={1}
-                min={0}
-                decimal
-                onChange={(v) => onUpdate({ distanceKm: v })}
-              />
-              <RowStepper
-                label="Speed"
-                value={s.speed ?? 0}
-                step={1}
-                min={0}
-                decimal
-                onChange={(v) => onUpdate({ speed: v || undefined })}
-              />
-            </div>
-          ) : (
-            <div className="grid min-w-0 grid-cols-3 gap-3 sm:gap-5">
-              <Stepper
-                label="Duration (min)"
-                value={s.durationMinutes ?? 30}
-                step={1}
-                min={1}
-                onChange={(v) => onUpdate({ durationMinutes: v })}
-              />
-              <Stepper
-                label="Distance (km)"
-                value={s.distanceKm ?? 0}
-                step={1}
-                min={0}
-                decimal
-                onChange={(v) => onUpdate({ distanceKm: v })}
-              />
-              <Stepper
-                label="Speed"
-                value={s.speed ?? 0}
-                step={1}
-                min={0}
-                decimal
-                onChange={(v) => onUpdate({ speed: v || undefined })}
-              />
-            </div>
-          )}
+          <div className="divide-border/40 divide-y">
+            <RowStepper
+              label="Duration (min)"
+              value={s.durationMinutes ?? 30}
+              step={1}
+              min={1}
+              onChange={(v) => onUpdate({ durationMinutes: v })}
+            />
+            <RowStepper
+              label="Distance (km)"
+              value={s.distanceKm ?? 0}
+              step={1}
+              min={0}
+              decimal
+              onChange={(v) => onUpdate({ distanceKm: v })}
+            />
+            <RowStepper
+              label="Speed"
+              value={s.speed ?? 0}
+              step={1}
+              min={0}
+              decimal
+              onChange={(v) => onUpdate({ speed: v || undefined })}
+            />
+          </div>
 
           {/* Pace preview — only when dist & dur are filled */}
           {s.durationMinutes && s.distanceKm && s.distanceKm > 0 && (
