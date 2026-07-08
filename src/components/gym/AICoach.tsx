@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   Bot,
   Send,
@@ -92,7 +92,7 @@ function detectStrengthPlateau(
     };
 
   // Best e1RM per session
-  const e1RMs = recent.map((s) =>
+  const e1RMs = recent.map((s: any) =>
     s.sets.reduce((m, set) => Math.max(m, epley1RM(set.weight, set.reps)), 0)
   );
 
@@ -100,7 +100,7 @@ function detectStrengthPlateau(
 
   // Check if there's a new all-time e1RM in this window vs the overall history
   const overallBestE1RM = sessions
-    .filter((s) => !recent.includes(s))
+    .filter((s: any) => !recent.includes(s))
     .flatMap((s) => s.sets.map((set) => epley1RM(set.weight, set.reps)))
     .reduce((m, v) => Math.max(m, v), 0);
 
@@ -154,7 +154,7 @@ function detectCardioPlateau(
 
   // Try pace-based detection
   const paceData = recent
-    .map((s) => {
+    .map((s: any) => {
       const dur = entryTotalDuration(s);
       const dist = entryTotalDistance(s);
       if (dist > 0.1 && dur > 0) return dur / dist; // min/km, lower = faster
@@ -360,7 +360,7 @@ Strength volume minggu ini: ${volNow.toLocaleString()}kg (${delta !== '—' ? de
 ${cardioSummary}
 Last rest day: ${restInsight}
 
-=== PER EXERCISE (plateau = e1RM regression < 0.3kg/session over 42d for strength; pace regression < 0.005 min/km/session over 28d for cardio) ===
+=== PER EXERCISE (plateau = e1RM regression < 0.3kg/session over 21d for strength, min 4 sessions; pace regression < 0.005 min/km/session over 21d for cardio, min 3 sessions) ===
 ${summaries.join('\n')}
 `.trim();
 }
@@ -425,7 +425,7 @@ export function AICoach() {
   const { restDays } = useRestDays();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [chatKey, setChatKey] = useState(0);
 
@@ -459,8 +459,8 @@ export function AICoach() {
     ## Cara Baca Plateau Flag
 
     Data exercise sudah menggunakan deteksi plateau yang lebih akurat:
-    - **Strength plateau**: dihitung dari slope regresi linear e1RM (estimated 1-rep max) across recent sessions dalam 42 hari. Flag ⚠️ PLATEAU berarti e1RM gak naik secara signifikan (slope < 0.3 kg/session) DAN variasi antar sesi sangat kecil (CV < 3%). Jadi bukan sekadar "berat sama 3x", tapi trend keseluruhan genuinely flat.
-    - **Cardio plateau**: dihitung dari slope pace (min/km) atau durasi jika distance tidak ada, dalam 28 hari. Flag ⚠️ PLATEAU berarti pace atau durasi tidak improve across recent sessions.
+    - **Strength plateau**: dihitung dari slope regresi linear e1RM (estimated 1-rep max) across recent sessions dalam 21 hari (minimal 4 sesi). Flag ⚠️ PLATEAU berarti e1RM gak naik secara signifikan (slope < 0.3 kg/session) DAN variasi antar sesi sangat kecil (CV < 3%). Jadi bukan sekadar "berat sama 3x", tapi trend keseluruhan genuinely flat.
+    - **Cardio plateau**: dihitung dari slope pace (min/km) atau durasi jika distance tidak ada, dalam 21 hari (minimal 3 sesi). Flag ⚠️ PLATEAU berarti pace atau durasi tidak improve across recent sessions.
     - Flag ✅ progressing berarti data menunjukkan tren naik yang nyata.
     - Jika data tidak cukup, tidak ada flag — artinya belum bisa disimpulkan.
 
@@ -531,11 +531,11 @@ export function AICoach() {
   const handleSend = async (text?: string) => {
     const userText = (text ?? input).trim();
 
-    if (!userText || loading) return;
+    if (!userText || isLoading) return;
 
     setInput('');
     setError(null);
-    setLoading(true);
+    setIsLoading(true);
 
     const userMsg: Message = { role: 'user', content: userText };
 
@@ -586,7 +586,7 @@ export function AICoach() {
       setError(err.message || 'Terjadi kesalahan, coba lagi.');
       setMessages((prev) => prev.filter((m) => m !== userMsg));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -639,7 +639,7 @@ export function AICoach() {
           <button
             key={p}
             onClick={() => handleSend(p)}
-            disabled={loading}
+            disabled={isLoading}
             className={cn(
               'rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95',
               'border-border/60 bg-secondary/40 text-foreground/80 hover:border-primary/50 hover:text-foreground',
@@ -718,7 +718,7 @@ export function AICoach() {
             </div>
           ))}
 
-          {loading && (
+          {isLoading && (
             <div className="flex gap-3">
               <div className="bg-foreground text-background grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold">
                 AI
@@ -751,12 +751,12 @@ export function AICoach() {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
             placeholder="Ask your coach..."
-            disabled={loading}
+            disabled={isLoading}
             className="border-border/60 h-11"
           />
           <Button
             onClick={() => handleSend()}
-            disabled={loading || !input.trim()}
+            disabled={isLoading || !input.trim()}
             size="icon"
             className="glow-primary h-11 w-11 shrink-0"
           >
