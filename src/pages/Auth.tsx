@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell } from 'lucide-react';
+import {
+  Dumbbell,
+  Flame,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader2,
+  ShieldCheck,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,11 +19,76 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
+/**
+ * Signature element: a barbell that "loads" plates in a loop.
+ * Purely decorative — a small nod to progressive overload, the
+ * one idea every gym-goer on this app already understands.
+ */
+function BarbellLoader({ compact = false }: { compact?: boolean }) {
+  const barWidth = compact ? 120 : 168;
+  const barHeight = compact ? 3 : 4;
+  const scale = compact ? 0.72 : 1;
+  return (
+    <div
+      className="barbell-loader"
+      style={{ height: compact ? 44 : 64 }}
+      aria-hidden="true"
+    >
+      <style>{`
+        .barbell-loader { display: flex; align-items: center; justify-content: center; }
+        .barbell-loader .bar {
+          position: relative;
+          width: ${barWidth}px;
+          height: ${barHeight}px;
+          border-radius: 2px;
+          background: hsl(var(--border));
+        }
+        .barbell-loader .plate {
+          position: absolute;
+          top: 50%;
+          width: ${Math.round(10 * scale)}px;
+          border-radius: 3px;
+          background: hsl(var(--foreground));
+          transform: translateY(-50%) scaleY(0);
+          transform-origin: center;
+          opacity: 0;
+          animation: plate-load 3.6s ease-in-out infinite;
+        }
+        .barbell-loader .plate.h1 { height: ${Math.round(22 * scale)}px; }
+        .barbell-loader .plate.h2 { height: ${Math.round(34 * scale)}px; }
+        .barbell-loader .plate.h3 { height: ${Math.round(46 * scale)}px; }
+        .barbell-loader .plate.left-3  { left: ${-14 * scale}px; animation-delay: 0s; }
+        .barbell-loader .plate.left-2  { left: ${-26 * scale}px; animation-delay: 0.15s; }
+        .barbell-loader .plate.left-1  { left: ${-40 * scale}px; animation-delay: 0.3s; }
+        .barbell-loader .plate.right-3 { right: ${-14 * scale}px; animation-delay: 0s; }
+        .barbell-loader .plate.right-2 { right: ${-26 * scale}px; animation-delay: 0.15s; }
+        .barbell-loader .plate.right-1 { right: ${-40 * scale}px; animation-delay: 0.3s; }
+        @keyframes plate-load {
+          0%   { opacity: 0; transform: translateY(-50%) scaleY(0); }
+          15%  { opacity: 1; transform: translateY(-50%) scaleY(1); }
+          75%  { opacity: 1; transform: translateY(-50%) scaleY(1); }
+          90%  { opacity: 0; transform: translateY(-50%) scaleY(0); }
+          100% { opacity: 0; transform: translateY(-50%) scaleY(0); }
+        }
+      `}</style>
+      <div className="bar">
+        <div className="plate h3 left-3" />
+        <div className="plate h2 left-2" />
+        <div className="plate h1 left-1" />
+        <div className="plate h1 right-1" />
+        <div className="plate h2 right-2" />
+        <div className="plate h3 right-3" />
+      </div>
+    </div>
+  );
+}
+
 export default function Auth() {
   const navigate = useNavigate();
   const { session, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -40,7 +114,7 @@ export default function Auth() {
       }
       return;
     }
-    toast.success('Account created successfully 💪');
+    toast.success('Account created — let’s get to work 💪');
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -59,105 +133,248 @@ export default function Auth() {
   };
 
   return (
-    <div className="grid min-h-screen place-items-center p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-6 flex flex-col items-center">
-          <div className="border-border from-foreground/10 to-foreground/2 shadow-card mb-3 grid h-14 w-14 place-items-center rounded-2xl border bg-linear-to-br">
-            <Dumbbell className="text-foreground h-7 w-7" />
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Layered background — same language as the app header */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+          maskImage:
+            'radial-gradient(ellipse at center, black 25%, transparent 70%)',
+        }}
+      />
+      <div className="bg-foreground/5 pointer-events-none absolute -top-24 left-[15%] h-72 w-[40%] rounded-full blur-3xl" />
+      <div className="bg-foreground/5 pointer-events-none absolute right-[10%] -bottom-24 h-72 w-[40%] rounded-full blur-3xl" />
+
+      <div className="relative grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
+        {/* ── Brand panel — hidden on small screens ───────────────────────── */}
+        <div className="relative hidden overflow-hidden lg:flex lg:flex-col lg:items-center lg:justify-center lg:p-12">
+          <div className="absolute top-12 left-12 z-10 flex items-center gap-3">
+            <div className="group border-border from-foreground/10 to-foreground/2 shadow-card relative grid h-11 w-11 place-items-center rounded-2xl border bg-linear-to-br">
+              <Dumbbell className="text-foreground h-5 w-5 transition-transform group-hover:rotate-12" />
+              <span className="bg-foreground absolute -top-1 -right-1 grid h-3 w-3 place-items-center rounded-full">
+                <Flame className="text-background h-2 w-2" strokeWidth={3} />
+              </span>
+              <span className="animate-pulse-glow ring-foreground/10 absolute inset-0 rounded-2xl ring-1" />
+            </div>
+            <h1 className="font-display flex items-center gap-1.5 text-xl font-bold tracking-tight">
+              <span className="text-foreground">My</span>
+              <span className="text-gradient-primary">Gym</span>
+              <span className="text-foreground">Pal</span>
+            </h1>
           </div>
-          <h1 className="font-display flex items-center gap-2 text-3xl font-bold tracking-tight">
-            <span>My</span>
-            <span className="text-gradient-primary">Gym</span>
-            <span>Pal</span>
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Train · Track · Transform
-          </p>
+
+          <div className="relative z-10 max-w-md text-center">
+            <p className="text-muted-foreground mb-3 text-xs font-medium tracking-[0.2em] uppercase">
+              Progressive overload, logged
+            </p>
+            <h2 className="font-display text-4xl leading-[1.1] font-bold tracking-tight text-balance">
+              The gym doesn’t wait.
+              <br />
+              <span className="text-gradient-primary">
+                Neither should your log.
+              </span>
+            </h2>
+            <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
+              Every set, every plate, every PR — tracked the moment you rack it.
+              No spreadsheets, no memory games, no losing the thread on leg day.
+            </p>
+
+            <div className="mt-10">
+              <BarbellLoader />
+              <p className="text-muted-foreground mt-3 text-center text-xs tracking-wide">
+                consistency, one plate at a time
+              </p>
+            </div>
+          </div>
         </div>
 
-        <Card className="surface border-border/60 p-5">
-          <Tabs defaultValue="signin">
-            <TabsList className="mb-4 grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
+        {/* ── Auth form ─────────────────────────────────────────────────────── */}
+        <div className="grid place-items-center p-4">
+          <div className="w-full max-w-md">
+            <div className="animate-fade-up mb-6 flex flex-col items-center text-center lg:hidden">
+              <div className="group border-border from-foreground/10 to-foreground/2 shadow-card relative mb-3 grid h-14 w-14 place-items-center rounded-2xl border bg-linear-to-br">
+                <Dumbbell className="text-foreground h-7 w-7" />
+                <span className="bg-foreground absolute -top-1 -right-1 grid h-3.5 w-3.5 place-items-center rounded-full">
+                  <Flame className="text-background h-2 w-2" strokeWidth={3} />
+                </span>
+                <span className="animate-pulse-glow ring-foreground/10 absolute inset-0 rounded-2xl ring-1" />
+              </div>
+              <h1 className="font-display flex items-center gap-2 text-3xl font-bold tracking-tight">
+                <span>My</span>
+                <span className="text-gradient-primary">Gym</span>
+                <span>Pal</span>
+              </h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                The gym doesn’t wait — neither should your log.
+              </p>
 
-            <TabsContent value="signin">
-              <form onSubmit={handleSignIn} className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email-in">Email</Label>
-                  <Input
-                    id="email-in"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@email.com"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="pw-in">Password</Label>
-                  <Input
-                    id="pw-in"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={busy}
-                  size="lg"
-                  className="glow-primary w-full font-semibold"
-                >
-                  {busy ? 'Processing...' : 'Sign In'}
-                </Button>
-              </form>
-            </TabsContent>
+              <BarbellLoader compact />
+            </div>
 
-            <TabsContent value="signup">
-              <form onSubmit={handleSignUp} className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email-up">Email</Label>
-                  <Input
-                    id="email-up"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@email.com"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="pw-up">Password</Label>
-                  <Input
-                    id="pw-up"
-                    type="password"
-                    required
-                    minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 6 characters"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={busy}
-                  size="lg"
-                  className="glow-primary w-full font-semibold"
-                >
-                  {busy ? 'Processing...' : 'Create Account'}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
-        </Card>
+            <Card className="surface border-border/60 shadow-card animate-fade-up p-5 sm:p-6">
+              <Tabs defaultValue="signin">
+                <TabsList className="bg-muted/60 relative mb-6 grid w-full grid-cols-2 rounded-full p-1">
+                  <TabsTrigger
+                    value="signin"
+                    className="data-[state=active]:bg-foreground data-[state=active]:text-background gap-1.5 rounded-full transition-colors duration-200"
+                  >
+                    Sign In
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="signup"
+                    className="data-[state=active]:bg-foreground data-[state=active]:text-background gap-1.5 rounded-full transition-colors duration-200"
+                  >
+                    Sign Up
+                  </TabsTrigger>
+                </TabsList>
 
-        <p className="text-muted-foreground mt-4 text-center text-xs">
-          Your data is securely stored in the cloud — never lost again 🔒
-        </p>
+                <TabsContent value="signin" className="animate-fade-up">
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email-in">Email</Label>
+                      <div className="border-border bg-input/40 focus-within:border-foreground/50 focus-within:ring-foreground/10 flex items-center gap-2 rounded-xl border px-3 transition-colors duration-200 focus-within:ring-4">
+                        <Mail className="text-muted-foreground h-4 w-4 shrink-0" />
+                        <Input
+                          id="email-in"
+                          type="email"
+                          autoComplete="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@email.com"
+                          className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pw-in">Password</Label>
+                      <div className="border-border bg-input/40 focus-within:border-foreground/50 focus-within:ring-foreground/10 flex items-center gap-2 rounded-xl border px-3 transition-colors duration-200 focus-within:ring-4">
+                        <Lock className="text-muted-foreground h-4 w-4 shrink-0" />
+                        <Input
+                          id="pw-in"
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="current-password"
+                          required
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          aria-label={
+                            showPassword ? 'Hide password' : 'Show password'
+                          }
+                          className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={busy}
+                      size="lg"
+                      className="glow-primary w-full font-semibold transition-transform active:scale-[0.98]"
+                    >
+                      {busy ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Signing in...
+                        </span>
+                      ) : (
+                        'Sign In'
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="signup" className="animate-fade-up">
+                  <form onSubmit={handleSignUp} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="email-up">Email</Label>
+                      <div className="border-border bg-input/40 focus-within:border-foreground/50 focus-within:ring-foreground/10 flex items-center gap-2 rounded-xl border px-3 transition-colors duration-200 focus-within:ring-4">
+                        <Mail className="text-muted-foreground h-4 w-4 shrink-0" />
+                        <Input
+                          id="email-up"
+                          type="email"
+                          autoComplete="email"
+                          required
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="you@email.com"
+                          className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="pw-up">Password</Label>
+                      <div className="border-border bg-input/40 focus-within:border-foreground/50 focus-within:ring-foreground/10 flex items-center gap-2 rounded-xl border px-3 transition-colors duration-200 focus-within:ring-4">
+                        <Lock className="text-muted-foreground h-4 w-4 shrink-0" />
+                        <Input
+                          id="pw-up"
+                          type={showPassword ? 'text' : 'password'}
+                          autoComplete="new-password"
+                          required
+                          minLength={6}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="••••••••"
+                          className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          aria-label={
+                            showPassword ? 'Hide password' : 'Show password'
+                          }
+                          className="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-muted-foreground pl-1 text-xs">
+                        At least 6 characters.
+                      </p>
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={busy}
+                      size="lg"
+                      className="glow-primary w-full font-semibold transition-transform active:scale-[0.98]"
+                    >
+                      {busy ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Sign up...
+                        </span>
+                      ) : (
+                        'Sign Up'
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+              </Tabs>
+            </Card>
+
+            <p className="text-muted-foreground mt-4 flex items-center justify-center gap-1.5 text-center text-xs">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+              Synced automatically — nothing to export, nothing to lose.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
