@@ -230,6 +230,7 @@ const Index = () => {
         <div className="flex flex-1 items-center justify-center">
           <NavLink
             to={ROUTE_URL.WORKOUT_LOGGER}
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             className="bg-primary text-primary-foreground -mt-5 grid h-14 w-14 place-items-center rounded-full shadow-lg transition-all active:scale-90"
             aria-label="Log workout"
           >
