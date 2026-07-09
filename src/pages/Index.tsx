@@ -2,20 +2,19 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { AppHeader } from '@/components/gym/AppHeader';
 import {
   Dumbbell,
-  ListChecks,
   Trophy,
   LayoutDashboard,
   Sparkles,
-  Plus,
   MoreHorizontal,
   Rocket,
+  Flame,
 } from 'lucide-react';
 import { ROUTE_URL } from '@/constants/route-url';
 import { useState, useEffect } from 'react';
 
 const NAV_ITEMS = [
   { to: ROUTE_URL.HOME, end: true, icon: LayoutDashboard, label: 'Dashboard' },
-  { to: ROUTE_URL.WORKOUT_LOGGER, end: false, icon: ListChecks, label: 'Log' },
+  { to: ROUTE_URL.WORKOUT_LOGGER, end: false, icon: Flame, label: 'Log' },
   {
     to: ROUTE_URL.EXERCISE_MANAGER,
     end: false,
@@ -189,23 +188,23 @@ const Index = () => {
 
       {/* Mobile bottom nav (<768px) */}
       <nav
-        className="border-border/60 bg-background/95 fixed inset-x-0 bottom-0 z-50 flex h-16 items-center border-t backdrop-blur-xl md:hidden"
+        className="font-display border-border/60 bg-background fixed inset-x-0 bottom-0 z-50 flex h-[72px] items-start justify-between border-t px-2 pt-2 md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        {/* Dashboard */}
+        {/* Home */}
         <NavLink
           to={MOBILE_NAV_ITEMS[0].to}
           end={MOBILE_NAV_ITEMS[0].end}
           className={({ isActive }) =>
             [
-              'flex h-full flex-1 flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
+              'flex flex-1 flex-col items-center gap-1 text-[11px] transition-colors',
               isActive
-                ? 'border-primary text-primary'
-                : 'text-muted-foreground border-transparent',
+                ? 'text-primary font-bold'
+                : 'text-muted-foreground font-medium',
             ].join(' ')
           }
         >
-          <LayoutDashboard className="h-5 w-5" />
+          <LayoutDashboard className="h-6 w-6" />
           Dashboard
         </NavLink>
 
@@ -215,27 +214,48 @@ const Index = () => {
           end={MOBILE_NAV_ITEMS[1].end}
           className={({ isActive }) =>
             [
-              'flex h-full flex-1 flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
+              'flex flex-1 flex-col items-center gap-1 text-[11px] transition-colors',
               isActive
-                ? 'border-primary text-primary'
-                : 'text-muted-foreground border-transparent',
+                ? 'text-primary font-bold'
+                : 'text-muted-foreground font-medium',
             ].join(' ')
           }
         >
-          <Dumbbell className="h-5 w-5" />
+          <Dumbbell className="h-6 w-6" />
           Library
         </NavLink>
 
-        {/* FAB Plus — center */}
-        <div className="flex flex-1 items-center justify-center">
-          <NavLink
-            to={ROUTE_URL.WORKOUT_LOGGER}
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="bg-primary text-primary-foreground -mt-5 grid h-14 w-14 place-items-center rounded-full shadow-lg transition-all active:scale-90"
-            aria-label="Log workout"
+        {/* FAB — Check In style, besar + glossy ring, nongol ke atas bar */}
+        <div className="relative flex flex-1 flex-col items-center">
+          <div className="relative -mt-6 h-14 w-14">
+            {/* Glow blur statis di belakang — bikin cincin "menyala" lembut */}
+            <div className="bg-primary/50 absolute inset-0 -z-10 scale-50 rounded-full blur-lg" />
+
+            <NavLink
+              to={ROUTE_URL.WORKOUT_LOGGER}
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="from-primary/60 via-primary to-primary relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br p-[5px] shadow-[0_8px_20px_-2px_rgba(var(--primary),0.55)] transition-all duration-200 hover:-translate-y-1 active:scale-95"
+              aria-label="Log workout"
+            >
+              {/* Badan tombol solid di dalam ring */}
+              <div className="bg-primary text-primary-foreground relative flex h-full w-full items-center justify-center rounded-full">
+                {/* Highlight glossy pojok kiri-atas */}
+                <div className="pointer-events-none absolute inset-0 rounded-full bg-linear-to-br from-white/35 via-transparent to-transparent" />
+                <Flame className="relative z-10 h-7 w-7 transition-transform duration-200 group-hover:rotate-90" />
+              </div>
+            </NavLink>
+          </div>
+
+          <span
+            className={[
+              'mt-2 text-[11px] tracking-wide transition-colors',
+              location.pathname.startsWith(ROUTE_URL.WORKOUT_LOGGER)
+                ? 'text-primary font-bold'
+                : 'text-muted-foreground font-semibold',
+            ].join(' ')}
           >
-            <Plus className="h-7 w-7" />
-          </NavLink>
+            Log
+          </span>
         </div>
 
         {/* Progress */}
@@ -244,14 +264,14 @@ const Index = () => {
           end={MOBILE_NAV_ITEMS[2].end}
           className={({ isActive }) =>
             [
-              'flex h-full flex-1 flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
+              'flex flex-1 flex-col items-center gap-1 text-[11px] transition-colors',
               isActive
-                ? 'border-primary text-primary'
-                : 'text-muted-foreground border-transparent',
+                ? 'text-primary font-bold'
+                : 'text-muted-foreground font-medium',
             ].join(' ')
           }
         >
-          <Rocket className="h-5 w-5" />
+          <Rocket className="h-6 w-6" />
           Progress
         </NavLink>
 
@@ -259,14 +279,14 @@ const Index = () => {
         <button
           onClick={() => setMoreOpen((prev) => !prev)}
           className={[
-            'flex h-full flex-1 flex-col items-center justify-center gap-0.5 border-t-2 text-[10px] tracking-wider uppercase transition-colors',
+            'flex flex-1 flex-col items-center gap-1 text-[11px] transition-colors',
             isMoreActive || moreOpen
-              ? 'border-primary text-primary'
-              : 'text-muted-foreground border-transparent',
+              ? 'text-primary font-bold'
+              : 'text-muted-foreground font-medium',
           ].join(' ')}
           aria-label="More menu"
         >
-          <MoreHorizontal className="h-5 w-5" />
+          <MoreHorizontal className="h-6 w-6" />
           More
         </button>
       </nav>
