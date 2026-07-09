@@ -120,7 +120,7 @@ const Index = () => {
               aria-label="Open AI Coach"
             >
               <div className="absolute inset-0 rounded-full border-2 border-white/20 transition-colors group-hover:border-white/40" />
-              <Sparkles className="animate-pulse-slow h-7 w-7" />
+              <Sparkles className="animate-pulse-slow h-6 w-6" />
               <span className="border-background bg-destructive absolute -top-1 -right-1 rounded-full border-2 px-1.5 py-0.5 text-[8px] font-bold">
                 AI Coach
               </span>
@@ -188,7 +188,7 @@ const Index = () => {
 
       {/* Mobile bottom nav (<768px) */}
       <nav
-        className="font-display border-border/60 bg-background fixed inset-x-0 bottom-0 z-50 flex h-[72px] items-start justify-between border-t px-2 pt-2 md:hidden"
+        className="border-border/60 bg-background fixed inset-x-0 bottom-0 z-50 flex h-[72px] items-start justify-between border-t px-2 pt-2 md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {/* Home */}
@@ -241,7 +241,7 @@ const Index = () => {
               <div className="bg-primary text-primary-foreground relative flex h-full w-full items-center justify-center rounded-full">
                 {/* Highlight glossy pojok kiri-atas */}
                 <div className="pointer-events-none absolute inset-0 rounded-full bg-linear-to-br from-white/35 via-transparent to-transparent" />
-                <Flame className="relative z-10 h-7 w-7 transition-transform duration-200 group-hover:rotate-90" />
+                <Flame className="relative z-10 h-6 w-6 transition-transform duration-200 group-hover:rotate-90" />
               </div>
             </NavLink>
           </div>
