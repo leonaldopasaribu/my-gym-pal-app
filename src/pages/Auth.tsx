@@ -19,70 +19,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
-/**
- * Signature element: a barbell that "loads" plates in a loop.
- * Purely decorative — a small nod to progressive overload, the
- * one idea every gym-goer on this app already understands.
- */
-function BarbellLoader({ compact = false }: { compact?: boolean }) {
-  const barWidth = compact ? 120 : 168;
-  const barHeight = compact ? 3 : 4;
-  const scale = compact ? 0.72 : 1;
-  return (
-    <div
-      className="barbell-loader"
-      style={{ height: compact ? 44 : 64 }}
-      aria-hidden="true"
-    >
-      <style>{`
-        .barbell-loader { display: flex; align-items: center; justify-content: center; }
-        .barbell-loader .bar {
-          position: relative;
-          width: ${barWidth}px;
-          height: ${barHeight}px;
-          border-radius: 2px;
-          background: hsl(var(--border));
-        }
-        .barbell-loader .plate {
-          position: absolute;
-          top: 50%;
-          width: ${Math.round(10 * scale)}px;
-          border-radius: 3px;
-          background: hsl(var(--foreground));
-          transform: translateY(-50%) scaleY(0);
-          transform-origin: center;
-          opacity: 0;
-          animation: plate-load 3.6s ease-in-out infinite;
-        }
-        .barbell-loader .plate.h1 { height: ${Math.round(22 * scale)}px; }
-        .barbell-loader .plate.h2 { height: ${Math.round(34 * scale)}px; }
-        .barbell-loader .plate.h3 { height: ${Math.round(46 * scale)}px; }
-        .barbell-loader .plate.left-3  { left: ${-14 * scale}px; animation-delay: 0s; }
-        .barbell-loader .plate.left-2  { left: ${-26 * scale}px; animation-delay: 0.15s; }
-        .barbell-loader .plate.left-1  { left: ${-40 * scale}px; animation-delay: 0.3s; }
-        .barbell-loader .plate.right-3 { right: ${-14 * scale}px; animation-delay: 0s; }
-        .barbell-loader .plate.right-2 { right: ${-26 * scale}px; animation-delay: 0.15s; }
-        .barbell-loader .plate.right-1 { right: ${-40 * scale}px; animation-delay: 0.3s; }
-        @keyframes plate-load {
-          0%   { opacity: 0; transform: translateY(-50%) scaleY(0); }
-          15%  { opacity: 1; transform: translateY(-50%) scaleY(1); }
-          75%  { opacity: 1; transform: translateY(-50%) scaleY(1); }
-          90%  { opacity: 0; transform: translateY(-50%) scaleY(0); }
-          100% { opacity: 0; transform: translateY(-50%) scaleY(0); }
-        }
-      `}</style>
-      <div className="bar">
-        <div className="plate h3 left-3" />
-        <div className="plate h2 left-2" />
-        <div className="plate h1 left-1" />
-        <div className="plate h1 right-1" />
-        <div className="plate h2 right-2" />
-        <div className="plate h3 right-3" />
-      </div>
-    </div>
-  );
-}
-
 export default function Auth() {
   const navigate = useNavigate();
   const { session, isLoading } = useAuth();
@@ -181,13 +117,6 @@ export default function Auth() {
               Every set, every plate, every PR — tracked the moment you rack it.
               No spreadsheets, no memory games, no losing the thread on leg day.
             </p>
-
-            <div className="mt-10">
-              <BarbellLoader />
-              <p className="text-muted-foreground mt-3 text-center text-xs tracking-wide">
-                consistency, one plate at a time
-              </p>
-            </div>
           </div>
         </div>
 
@@ -210,8 +139,6 @@ export default function Auth() {
               <p className="text-muted-foreground mt-1 text-sm">
                 The gym doesn’t wait — neither should your log.
               </p>
-
-              <BarbellLoader compact />
             </div>
 
             <Card className="surface border-border/60 shadow-card animate-fade-up p-5 sm:p-6">
@@ -369,7 +296,7 @@ export default function Auth() {
               </Tabs>
             </Card>
 
-            <p className="text-muted-foreground mt-4 flex items-center justify-center gap-1.5 text-center text-xs">
+            <p className="text-muted-foreground mt-4 flex items-start justify-center gap-1.5 text-center text-xs">
               <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
               Synced automatically — nothing to export, nothing to lose.
             </p>
