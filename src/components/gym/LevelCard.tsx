@@ -256,7 +256,7 @@ export function LevelCard() {
                   key={t.id}
                   ref={isActive ? activeRef : null}
                   className="flex shrink-0 flex-col items-center gap-1"
-                  style={{ width: 72 }}
+                  style={{ marginLeft: '5px', width: 72 }}
                 >
                   {/* Tier box */}
                   <div
