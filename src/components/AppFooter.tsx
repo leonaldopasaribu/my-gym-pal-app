@@ -1,6 +1,6 @@
 import { ShieldCheck } from 'lucide-react';
 
-export default function Footer() {
+export default function AppFooter() {
   const year = new Date().getFullYear();
 
   return (

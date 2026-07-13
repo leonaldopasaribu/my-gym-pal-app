@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { ROUTE_URL } from '@/constants/route-url';
 import { useState, useEffect, useRef } from 'react';
-import Footer from '@/components/Footer';
+import AppFooter from '@/components/AppFooter';
 
 const NAV_ITEMS = [
   {
@@ -196,7 +196,7 @@ const Index = () => {
           </div>
         )}
 
-        <Footer />
+        <AppFooter />
       </main>
 
       {/* More drawer backdrop */}
