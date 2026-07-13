@@ -23,6 +23,7 @@ import { PRDashboard } from './components/gym/PRDashboard.tsx';
 import { ProgressView } from './components/gym/ProgressView.tsx';
 import { WorkoutLogger } from './components/gym/WorkoutLogger.tsx';
 import { ROUTE_URL } from './constants/route-url.ts';
+import { Analytics } from '@vercel/analytics/react';
 
 const queryClient = new QueryClient();
 
@@ -95,6 +96,7 @@ const App = () => (
           </Routes>
         </AuthProvider>
       </BrowserRouter>
+      <Analytics />
     </TooltipProvider>
   </QueryClientProvider>
 );
