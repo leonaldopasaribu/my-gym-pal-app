@@ -38,8 +38,8 @@ import {
 } from '@/lib/gym-types';
 import { WorkoutUtil } from '@/lib/workout-util';
 import { toast } from 'sonner';
-import { Skeleton } from '../ui/skeleton';
 import { Loading } from '@/components/ui/loading';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const NOTES_PLACEHOLDER: Record<string, string> = {
   Cardio: 'Target pace, indoor/outdoor, machine type, etc.',
@@ -55,7 +55,7 @@ const NOTES_PLACEHOLDER: Record<string, string> = {
   Other: 'Notes, tips, progressions, etc.',
 };
 
-export function ExerciseManager() {
+export function ExerciseManagerPage() {
   const { exercises, addExercise, removeExercise, updateExercise, isLoading } =
     useExercises();
   const { workouts } = useWorkouts();

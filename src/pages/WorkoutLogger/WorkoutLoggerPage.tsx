@@ -57,11 +57,11 @@ import {
 import type { WorkoutEntry, WorkoutSet } from '@/lib/gym-types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '../ui/skeleton';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_URL } from '@/constants/route-url';
 import { Loading } from '@/components/ui/loading';
 import { WorkoutUtil } from '../../lib/workout-util';
+import { Skeleton } from '@/components/ui/skeleton';
 
 function todayISO() {
   const d = new Date();
@@ -266,7 +266,7 @@ function ExercisePicker({
 
 // ─── Main WorkoutLogger ───────────────────────────────────────────────────────
 
-export function WorkoutLogger() {
+export function WorkoutLoggerPage() {
   const isMobile = useIsMobile();
   const formRef = useRef<HTMLDivElement>(null);
   const [dateOpen, setDateOpen] = useState(false);

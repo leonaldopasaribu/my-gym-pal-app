@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { AppHeader } from '@/components/gym/AppHeader';
+import { AppHeader } from '@/components/AppHeader';
 import {
   Dumbbell,
   Trophy,
@@ -13,7 +13,12 @@ import { ROUTE_URL } from '@/constants/route-url';
 import { useState, useEffect, useRef } from 'react';
 
 const NAV_ITEMS = [
-  { to: ROUTE_URL.HOME, end: true, icon: LayoutDashboard, label: 'Dashboard' },
+  {
+    to: ROUTE_URL.DASHBOARD,
+    end: true,
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+  },
   { to: ROUTE_URL.WORKOUT_LOGGER, end: false, icon: Flame, label: 'Log' },
   {
     to: ROUTE_URL.EXERCISE_MANAGER,
@@ -32,7 +37,12 @@ const NAV_ITEMS = [
 ];
 
 const MOBILE_NAV_ITEMS = [
-  { to: ROUTE_URL.HOME, end: true, icon: LayoutDashboard, label: 'Dashboard' },
+  {
+    to: ROUTE_URL.DASHBOARD,
+    end: true,
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+  },
   {
     to: ROUTE_URL.EXERCISE_MANAGER,
     end: false,
@@ -60,7 +70,7 @@ type IndicatorRect = {
 
 const Index = () => {
   const location = useLocation();
-  const isHomePage = location.pathname === ROUTE_URL.HOME;
+  const isDashboardPage = location.pathname === ROUTE_URL.DASHBOARD;
   const isCoachPage = location.pathname === ROUTE_URL.COACH;
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -112,7 +122,7 @@ const Index = () => {
 
       <main className="container py-5 pb-28 sm:py-8 md:pb-8">
         {/* Hero — only on home route */}
-        {isHomePage && (
+        {isDashboardPage && (
           <section className="animate-fade-up mb-5 sm:mb-8">
             <p className="text-primary mb-2 font-mono text-[10px] tracking-[0.3em] uppercase sm:text-xs">
               Train · Track · Progress

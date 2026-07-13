@@ -3,13 +3,13 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Zap, Timer } from 'lucide-react';
 import { useExercises, useWorkouts, epley1RM } from '@/lib/gym-store';
-import { Skeleton } from '../ui/skeleton';
 import { WorkoutUtil } from '../../lib/workout-util';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const PERIOD_OPTIONS = [7, 14, 30] as const;
 type Period = (typeof PERIOD_OPTIONS)[number];
 
-export function PRDashboard() {
+export function PersonalRecordsPage() {
   const { exercises, isLoading: isLoadingExercises } = useExercises();
   const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
   const isLoading = isLoadingExercises || isLoadingWorkouts;
