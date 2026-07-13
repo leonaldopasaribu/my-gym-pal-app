@@ -19,7 +19,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 
-export default function Auth() {
+export default function AuthPage() {
   const navigate = useNavigate();
   const { session, isLoading } = useAuth();
   const [email, setEmail] = useState('');

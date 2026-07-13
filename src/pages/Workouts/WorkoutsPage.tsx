@@ -26,7 +26,7 @@ import {
 import type { WorkoutEntry } from '@/lib/gym-types';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { AppHeader } from '@/components/gym/AppHeader';
+import { AppHeader } from '@/components/AppHeader';
 import { ROUTE_URL } from '@/constants/route-url';
 import { WorkoutUtil } from '@/lib/workout-util';
 

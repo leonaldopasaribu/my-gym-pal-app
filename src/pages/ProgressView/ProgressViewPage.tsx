@@ -35,8 +35,8 @@ import {
   Area,
   AreaChart,
 } from 'recharts';
-import { Skeleton } from '../ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type StrengthMetric = 'top' | 'volume' | 'e1rm';
 type CardioMetric = 'duration' | 'distance' | 'pace';
@@ -103,7 +103,7 @@ function makeTooltipFormatter(metric: Metric) {
   };
 }
 
-export function ProgressView() {
+export function ProgressViewPage() {
   const { exercises, isLoading: isLoadingExercises } = useExercises();
   const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
   const [exerciseId, setExerciseId] = useState<string>(exercises[0]?.id ?? '');

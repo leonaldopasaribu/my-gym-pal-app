@@ -23,3 +23,6 @@ yarn.lock
 # Generated / external
 supabase/.branches
 supabase/.temp
+
+# Logs
+README.md

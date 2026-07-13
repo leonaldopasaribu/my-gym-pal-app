@@ -3,13 +3,14 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Zap, Timer } from 'lucide-react';
 import { useExercises, useWorkouts, epley1RM } from '@/lib/gym-store';
-import { Skeleton } from '../ui/skeleton';
 import { WorkoutUtil } from '../../lib/workout-util';
+import { Skeleton } from '@/components/ui/skeleton';
+import StatCard from './components/StatCard';
 
 const PERIOD_OPTIONS = [7, 14, 30] as const;
 type Period = (typeof PERIOD_OPTIONS)[number];
 
-export function PRDashboard() {
+export function PersonalRecordsPage() {
   const { exercises, isLoading: isLoadingExercises } = useExercises();
   const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
   const isLoading = isLoadingExercises || isLoadingWorkouts;
@@ -379,45 +380,6 @@ export function PRDashboard() {
         </div>
       )}
     </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  accent,
-  direction,
-  footer,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-  direction?: 'up' | 'down' | 'flat' | 'new';
-  footer?: React.ReactNode;
-}) {
-  const colorClass =
-    direction === 'up'
-      ? 'text-emerald-400'
-      : direction === 'down'
-        ? 'text-red-400'
-        : direction === 'new'
-          ? 'text-primary'
-          : '';
-
-  return (
-    <Card
-      className={`surface border-border/60 p-4 ${accent ? 'border-primary/40' : ''}`}
-    >
-      <div className="text-muted-foreground text-[11px] tracking-widest uppercase">
-        {label}
-      </div>
-      <div
-        className={`font-display mt-1 text-xl leading-tight font-bold ${accent ? colorClass || 'text-gradient-primary' : ''}`}
-      >
-        {value}
-      </div>
-      {footer}
-    </Card>
   );
 }
 

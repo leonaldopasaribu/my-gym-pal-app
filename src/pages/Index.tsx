@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { AppHeader } from '@/components/gym/AppHeader';
+import { AppHeader } from '@/components/AppHeader';
 import {
   Dumbbell,
   Trophy,
@@ -11,9 +11,15 @@ import {
 } from 'lucide-react';
 import { ROUTE_URL } from '@/constants/route-url';
 import { useState, useEffect, useRef } from 'react';
+import AppFooter from '@/components/AppFooter';
 
 const NAV_ITEMS = [
-  { to: ROUTE_URL.HOME, end: true, icon: LayoutDashboard, label: 'Dashboard' },
+  {
+    to: ROUTE_URL.DASHBOARD,
+    end: true,
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+  },
   { to: ROUTE_URL.WORKOUT_LOGGER, end: false, icon: Flame, label: 'Log' },
   {
     to: ROUTE_URL.EXERCISE_MANAGER,
@@ -28,11 +34,16 @@ const NAV_ITEMS = [
     label: 'Progress',
   },
   { to: ROUTE_URL.PERSONAL_RECORDS, end: false, icon: Trophy, label: 'PRs' },
-  { to: ROUTE_URL.COACH, end: false, icon: Sparkles, label: 'Coach' },
+  { to: ROUTE_URL.AI_COACH, end: false, icon: Sparkles, label: 'Coach' },
 ];
 
 const MOBILE_NAV_ITEMS = [
-  { to: ROUTE_URL.HOME, end: true, icon: LayoutDashboard, label: 'Dashboard' },
+  {
+    to: ROUTE_URL.DASHBOARD,
+    end: true,
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+  },
   {
     to: ROUTE_URL.EXERCISE_MANAGER,
     end: false,
@@ -60,8 +71,8 @@ type IndicatorRect = {
 
 const Index = () => {
   const location = useLocation();
-  const isHomePage = location.pathname === ROUTE_URL.HOME;
-  const isCoachPage = location.pathname === ROUTE_URL.COACH;
+  const isDashboardPage = location.pathname === ROUTE_URL.DASHBOARD;
+  const isAiCoachPage = location.pathname === ROUTE_URL.AI_COACH;
   const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
@@ -112,7 +123,7 @@ const Index = () => {
 
       <main className="container py-5 pb-28 sm:py-8 md:pb-8">
         {/* Hero — only on home route */}
-        {isHomePage && (
+        {isDashboardPage && (
           <section className="animate-fade-up mb-5 sm:mb-8">
             <p className="text-primary mb-2 font-mono text-[10px] tracking-[0.3em] uppercase sm:text-xs">
               Train · Track · Progress
@@ -168,11 +179,11 @@ const Index = () => {
         <Outlet />
 
         {/* Mobile floating coach bubble */}
-        {!isCoachPage && (
+        {!isAiCoachPage && (
           <div className="fixed right-4 bottom-20 z-50 md:hidden">
             <div className="bg-primary/40 absolute inset-0 animate-ping rounded-full opacity-20" />
             <NavLink
-              to="/coach"
+              to={ROUTE_URL.AI_COACH}
               className="group from-primary via-primary to-primary/80 text-primary-foreground relative grid h-14 w-14 place-items-center rounded-full bg-linear-to-br shadow-[0_0_20px_rgba(var(--primary),0.4)] transition-all hover:scale-110 active:scale-90"
               aria-label="Open AI Coach"
             >
@@ -185,9 +196,7 @@ const Index = () => {
           </div>
         )}
 
-        <footer className="border-border/60 text-muted-foreground mt-10 border-t pt-6 text-center font-mono text-[11px] sm:mt-16">
-          MY GYM PAL · Your data is securely stored in the cloud
-        </footer>
+        <AppFooter />
       </main>
 
       {/* More drawer backdrop */}
@@ -245,7 +254,7 @@ const Index = () => {
 
       {/* Mobile bottom nav (<768px) */}
       <nav
-        className="border-border/60 bg-background fixed inset-x-0 bottom-0 z-50 flex h-[72px] items-start justify-between border-t px-2 pt-2 md:hidden"
+        className="border-border/60 bg-background fixed inset-x-0 bottom-0 z-50 flex h-18 items-start justify-between border-t px-2 pt-2 md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {/* Home */}
@@ -319,7 +328,7 @@ const Index = () => {
             <NavLink
               to={ROUTE_URL.WORKOUT_LOGGER}
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="from-primary/60 via-primary to-primary relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br p-[5px] shadow-[0_8px_20px_-2px_rgba(var(--primary),0.55)] transition-all duration-200 hover:-translate-y-1 active:scale-95"
+              className="from-primary/60 via-primary to-primary relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br p-1.25 shadow-[0_8px_20px_-2px_rgba(var(--primary),0.55)] transition-all duration-200 hover:-translate-y-1 active:scale-95"
               aria-label="Log workout"
             >
               {/* Badan tombol solid di dalam ring */}

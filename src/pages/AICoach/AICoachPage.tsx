@@ -419,7 +419,7 @@ const TAG_CONFIG = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function AICoach() {
+export function AICoachPage() {
   const { exercises } = useExercises();
   const { workouts } = useWorkouts();
   const { restDays } = useRestDays();

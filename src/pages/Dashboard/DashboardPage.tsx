@@ -14,8 +14,8 @@ import {
 import { useWorkouts, useRestDays } from '@/lib/gym-store';
 import { Flame, Activity, Moon, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { LevelCard } from './LevelCard';
-import { MuscleBalanceCard } from './MuscleBalanceCard';
+import { LevelCard } from './components/LevelCard';
+import { MuscleBalanceCard } from './components/MuscleBalanceCard';
 
 function toISODate(d: Date) {
   const x = new Date(d);
@@ -23,7 +23,7 @@ function toISODate(d: Date) {
   return x.toISOString().slice(0, 10);
 }
 
-export function HomeView() {
+export function DashboardPage() {
   const { workouts, isLoading: isLoadingWorkouts } = useWorkouts();
   const {
     restDays,
