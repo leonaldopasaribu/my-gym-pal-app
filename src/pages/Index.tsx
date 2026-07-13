@@ -245,7 +245,7 @@ const Index = () => {
 
       {/* Mobile bottom nav (<768px) */}
       <nav
-        className="border-border/60 bg-background fixed inset-x-0 bottom-0 z-50 flex h-[72px] items-start justify-between border-t px-2 pt-2 md:hidden"
+        className="border-border/60 bg-background fixed inset-x-0 bottom-0 z-50 flex h-18 items-start justify-between border-t px-2 pt-2 md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {/* Home */}
@@ -319,7 +319,7 @@ const Index = () => {
             <NavLink
               to={ROUTE_URL.WORKOUT_LOGGER}
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="from-primary/60 via-primary to-primary relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br p-[5px] shadow-[0_8px_20px_-2px_rgba(var(--primary),0.55)] transition-all duration-200 hover:-translate-y-1 active:scale-95"
+              className="from-primary/60 via-primary to-primary relative flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br p-1.25 shadow-[0_8px_20px_-2px_rgba(var(--primary),0.55)] transition-all duration-200 hover:-translate-y-1 active:scale-95"
               aria-label="Log workout"
             >
               {/* Badan tombol solid di dalam ring */}
