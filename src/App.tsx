@@ -47,58 +47,61 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner position="top-center" />
-      <BrowserRouter>
-        <ScrollToTop />
-        <AuthProvider>
-          <Routes>
-            <Route path={ROUTE_URL.AUTH} element={<Auth />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<HomeView />} />
+  <>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner position="top-center" />
+        <BrowserRouter>
+          <ScrollToTop />
+          <AuthProvider>
+            <Routes>
+              <Route path={ROUTE_URL.AUTH} element={<Auth />} />
               <Route
-                path={ROUTE_URL.WORKOUT_LOGGER}
-                element={<WorkoutLogger />}
-              />
-              <Route
-                path={ROUTE_URL.EXERCISE_MANAGER}
-                element={<ExerciseManager />}
-              />
-              <Route
-                path={ROUTE_URL.PROGRESS_VIEW}
-                element={<ProgressView />}
-              />
-              <Route
-                path={ROUTE_URL.PERSONAL_RECORDS}
-                element={<PRDashboard />}
-              />
-              <Route path={ROUTE_URL.COACH} element={<AICoach />} />
-            </Route>
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<HomeView />} />
+                <Route
+                  path={ROUTE_URL.WORKOUT_LOGGER}
+                  element={<WorkoutLogger />}
+                />
+                <Route
+                  path={ROUTE_URL.EXERCISE_MANAGER}
+                  element={<ExerciseManager />}
+                />
+                <Route
+                  path={ROUTE_URL.PROGRESS_VIEW}
+                  element={<ProgressView />}
+                />
+                <Route
+                  path={ROUTE_URL.PERSONAL_RECORDS}
+                  element={<PRDashboard />}
+                />
+                <Route path={ROUTE_URL.COACH} element={<AICoach />} />
+              </Route>
 
-            <Route
-              path={ROUTE_URL.WORKOUTS}
-              element={
-                <ProtectedRoute>
-                  <Workouts />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-      <Analytics />
-    </TooltipProvider>
-  </QueryClientProvider>
+              <Route
+                path={ROUTE_URL.WORKOUTS}
+                element={
+                  <ProtectedRoute>
+                    <Workouts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+
+    <Analytics />
+  </>
 );
 
 export default App;
