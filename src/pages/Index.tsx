@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { ROUTE_URL } from '@/constants/route-url';
 import { useState, useEffect, useRef } from 'react';
+import Footer from '@/components/Footer';
 
 const NAV_ITEMS = [
   {
@@ -33,7 +34,7 @@ const NAV_ITEMS = [
     label: 'Progress',
   },
   { to: ROUTE_URL.PERSONAL_RECORDS, end: false, icon: Trophy, label: 'PRs' },
-  { to: ROUTE_URL.COACH, end: false, icon: Sparkles, label: 'Coach' },
+  { to: ROUTE_URL.AI_COACH, end: false, icon: Sparkles, label: 'Coach' },
 ];
 
 const MOBILE_NAV_ITEMS = [
@@ -71,7 +72,7 @@ type IndicatorRect = {
 const Index = () => {
   const location = useLocation();
   const isDashboardPage = location.pathname === ROUTE_URL.DASHBOARD;
-  const isCoachPage = location.pathname === ROUTE_URL.COACH;
+  const isAiCoachPage = location.pathname === ROUTE_URL.AI_COACH;
   const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
@@ -178,11 +179,11 @@ const Index = () => {
         <Outlet />
 
         {/* Mobile floating coach bubble */}
-        {!isCoachPage && (
+        {!isAiCoachPage && (
           <div className="fixed right-4 bottom-20 z-50 md:hidden">
             <div className="bg-primary/40 absolute inset-0 animate-ping rounded-full opacity-20" />
             <NavLink
-              to="/coach"
+              to={ROUTE_URL.AI_COACH}
               className="group from-primary via-primary to-primary/80 text-primary-foreground relative grid h-14 w-14 place-items-center rounded-full bg-linear-to-br shadow-[0_0_20px_rgba(var(--primary),0.4)] transition-all hover:scale-110 active:scale-90"
               aria-label="Open AI Coach"
             >
@@ -195,9 +196,7 @@ const Index = () => {
           </div>
         )}
 
-        <footer className="border-border/60 text-muted-foreground mt-10 border-t pt-6 text-center font-mono text-[11px] sm:mt-16">
-          MY GYM PAL · Your data is securely stored in the cloud
-        </footer>
+        <Footer />
       </main>
 
       {/* More drawer backdrop */}
