@@ -17,10 +17,11 @@ import NotFound from './pages/NotFound.tsx';
 import { Loading } from './components/ui/loading.tsx';
 import Workouts from './pages/Workouts/WorkoutsPage.tsx';
 import { ROUTE_URL } from './constants/route-url.ts';
-import { DashboardPage } from './pages/Dashboard/DashboardPage.tsx';
+import { Analytics } from '@vercel/analytics/react';
 import { AICoachPage } from './pages/AICoach/AICoachPage.tsx';
-import { PersonalRecordsPage } from './pages/PersonalRecords/PersonalRecordsPage.tsx';
+import { DashboardPage } from './pages/Dashboard/DashboardPage.tsx';
 import { ExerciseManagerPage } from './pages/ExerciseManager/ExerciseManagerPage.tsx';
+import { PersonalRecordsPage } from './pages/PersonalRecords/PersonalRecordsPage.tsx';
 import { ProgressViewPage } from './pages/ProgressView/ProgressViewPage.tsx';
 import { WorkoutLoggerPage } from './pages/WorkoutLogger/WorkoutLoggerPage.tsx';
 
@@ -46,57 +47,61 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner position="top-center" />
-      <BrowserRouter>
-        <ScrollToTop />
-        <AuthProvider>
-          <Routes>
-            <Route path={ROUTE_URL.AUTH} element={<AuthPage />} />
-            <Route
-              path={ROUTE_URL.DASHBOARD}
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<DashboardPage />} />
+  <>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner position="top-center" />
+        <BrowserRouter>
+          <ScrollToTop />
+          <AuthProvider>
+            <Routes>
+              <Route path={ROUTE_URL.AUTH} element={<AuthPage />} />
               <Route
-                path={ROUTE_URL.WORKOUT_LOGGER}
-                element={<WorkoutLoggerPage />}
-              />
-              <Route
-                path={ROUTE_URL.EXERCISE_MANAGER}
-                element={<ExerciseManagerPage />}
-              />
-              <Route
-                path={ROUTE_URL.PROGRESS_VIEW}
-                element={<ProgressViewPage />}
-              />
-              <Route
-                path={ROUTE_URL.PERSONAL_RECORDS}
-                element={<PersonalRecordsPage />}
-              />
-              <Route path={ROUTE_URL.AI_COACH} element={<AICoachPage />} />
-            </Route>
+                path={ROUTE_URL.DASHBOARD}
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<DashboardPage />} />
+                <Route
+                  path={ROUTE_URL.WORKOUT_LOGGER}
+                  element={<WorkoutLoggerPage />}
+                />
+                <Route
+                  path={ROUTE_URL.EXERCISE_MANAGER}
+                  element={<ExerciseManagerPage />}
+                />
+                <Route
+                  path={ROUTE_URL.PROGRESS_VIEW}
+                  element={<ProgressViewPage />}
+                />
+                <Route
+                  path={ROUTE_URL.PERSONAL_RECORDS}
+                  element={<PersonalRecordsPage />}
+                />
+                <Route path={ROUTE_URL.AI_COACH} element={<AICoachPage />} />
+              </Route>
 
-            <Route
-              path={ROUTE_URL.WORKOUTS}
-              element={
-                <ProtectedRoute>
-                  <Workouts />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+              <Route
+                path={ROUTE_URL.WORKOUTS}
+                element={
+                  <ProtectedRoute>
+                    <Workouts />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+
+    <Analytics />
+  </>
 );
 
 export default App;
