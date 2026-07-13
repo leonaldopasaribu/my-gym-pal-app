@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { Dumbbell, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ROUTE_URL } from '@/constants/route-url';
+import AppFooter from '@/components/AppFooter';
 
 const NotFound = () => {
   const location = useLocation();
@@ -142,17 +143,14 @@ const NotFound = () => {
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button
             className="glow-primary flex-1 gap-2"
-            onClick={() => navigate(ROUTE_URL.HOME)}
+            onClick={() => navigate(ROUTE_URL.DASHBOARD)}
           >
             <Home className="h-4 w-4" />
-            Home
+            Dashboard
           </Button>
         </div>
 
-        {/* Footer mono tag */}
-        <p className="text-muted-foreground/40 font-mono text-[10px] tracking-widest uppercase">
-          MY GYM PAL · ERR_ROUTE_NOT_FOUND
-        </p>
+        <AppFooter />
       </div>
     </div>
   );
