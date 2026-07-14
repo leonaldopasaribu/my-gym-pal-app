@@ -330,13 +330,13 @@ export function WorkoutLoggerPage() {
               {isSavingWorkout ? (
                 <Loading
                   size="sm"
-                  label={editingWorkoutId ? 'Updating...' : 'Saving...'}
+                  label={'Saving...'}
                   className="flex-row gap-2"
                 />
-              ) : editingWorkoutId ? (
-                'Update Workout'
               ) : (
-                'Save Workout'
+                <span className="flex items-center justify-center gap-2">
+                  {editingWorkoutId ? 'Save Changes' : 'Save Workout'}
+                </span>
               )}
             </Button>
             {editingWorkoutId && (
