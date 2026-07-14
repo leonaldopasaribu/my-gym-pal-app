@@ -17,7 +17,7 @@ A modern, responsive gym tracking and progressive overload PWA built with React,
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://github.com/user-attachments/assets/4b60d23a-dca4-45d2-b86d-a272d7d5e0b4" alt="MyGymPal Screenshot 1" width="30%" />
+  <img src="https://github.com/user-attachments/assets/1f68e4d6-66a5-49d7-a0b5-671e74a6b51c" alt="MyGymPal Screenshot 1" width="30%" />
   <img src="https://github.com/user-attachments/assets/dd60a56a-6b83-4eaf-836b-a02081f42b66" alt="MyGymPal Screenshot 2" width="30%" />
   <img src="https://github.com/user-attachments/assets/e7697b72-e378-44e7-9734-b6b95282e793" alt="MyGymPal Screenshot 3" width="30%" />
 </div>
