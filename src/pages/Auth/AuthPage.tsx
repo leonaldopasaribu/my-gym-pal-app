@@ -171,7 +171,7 @@ export default function AuthPage() {
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder="you@email.com"
+                          placeholder="Enter your email"
                           className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                       </div>
@@ -187,7 +187,7 @@ export default function AuthPage() {
                           required
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
+                          placeholder="Enter your password"
                           className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                         <button
@@ -237,7 +237,7 @@ export default function AuthPage() {
                           required
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
-                          placeholder="you@email.com"
+                          placeholder="Enter your email"
                           className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                       </div>
@@ -254,7 +254,7 @@ export default function AuthPage() {
                           minLength={6}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="••••••••"
+                          placeholder="Enter your password"
                           className="h-11 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
                         />
                         <button
