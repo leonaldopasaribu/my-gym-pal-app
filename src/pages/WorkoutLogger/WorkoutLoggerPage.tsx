@@ -9,7 +9,6 @@ import {
   Minus,
   Copy,
   Zap,
-  Calendar as CalendarIcon,
   ChevronRight,
   Search,
   Dumbbell,
@@ -19,12 +18,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
 import {
   Drawer,
   DrawerContent,
@@ -56,47 +49,13 @@ import {
 } from '@/lib/gym-store';
 import type { WorkoutEntry, WorkoutSet } from '@/lib/gym-types';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import { cn, Utils } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { ROUTE_URL } from '@/constants/route-url';
 import { Loading } from '@/components/ui/loading';
 import { WorkoutUtil } from '../../lib/workout-util';
 import { Skeleton } from '@/components/ui/skeleton';
-
-function todayISO() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 10);
-}
-
-function isoToDate(iso: string) {
-  const d = new Date(iso + 'T00:00:00');
-  return isNaN(d.getTime()) ? new Date() : d;
-}
-function dateToISO(d: Date) {
-  const x = new Date(d);
-  x.setMinutes(x.getMinutes() - x.getTimezoneOffset());
-  return x.toISOString().slice(0, 10);
-}
-function shiftDays(n: number) {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  return dateToISO(d);
-}
-
-function defaultStrengthSet(): WorkoutSet {
-  return { id: uuidv4(), reps: 8, weight: 20 };
-}
-function defaultCardioSet(last?: WorkoutSet): WorkoutSet {
-  return {
-    id: uuidv4(),
-    reps: 0,
-    weight: 0,
-    durationMinutes: last?.durationMinutes ?? 30,
-    distanceKm: last?.distanceKm ?? 5,
-    speed: last?.speed ?? undefined,
-  };
-}
+import { DatePicker } from '@/components/Datepicker';
 
 // ─── Exercise Picker Bottom Sheet ────────────────────────────────────────────
 
@@ -280,8 +239,8 @@ export function WorkoutLoggerPage() {
   } = useWorkouts({ limit: 10 });
 
   const [exerciseId, setExerciseId] = useState<string>('');
-  const [date, setDate] = useState(todayISO());
-  const [sets, setSets] = useState<WorkoutSet[]>([defaultStrengthSet()]);
+  const [date, setDate] = useState(Utils.shiftDays(0));
+  const [sets, setSets] = useState<WorkoutSet[]>([Utils.defaultStrengthSet()]);
   const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WorkoutEntry | null>(null);
   const [isSavingWorkout, setIsSavingWorkout] = useState(false);
@@ -303,7 +262,9 @@ export function WorkoutLoggerPage() {
   const prevIsCardioRef = useRef(isCardio);
   useEffect(() => {
     if (prevIsCardioRef.current !== isCardio && !editingWorkoutId) {
-      setSets([isCardio ? defaultCardioSet() : defaultStrengthSet()]);
+      setSets([
+        isCardio ? Utils.defaultCardioSet() : Utils.defaultStrengthSet(),
+      ]);
       prevIsCardioRef.current = isCardio;
     }
   }, [isCardio, editingWorkoutId]);
@@ -316,7 +277,7 @@ export function WorkoutLoggerPage() {
   const addSet = () => {
     const last = sets[sets.length - 1];
     if (isCardio) {
-      setSets([...sets, defaultCardioSet(last)]);
+      setSets([...sets, Utils.defaultCardioSet(last)]);
     } else {
       setSets([
         ...sets,
@@ -337,7 +298,7 @@ export function WorkoutLoggerPage() {
   };
 
   const resetForm = () => {
-    setSets([isCardio ? defaultCardioSet() : defaultStrengthSet()]);
+    setSets([isCardio ? Utils.defaultCardioSet() : Utils.defaultStrengthSet()]);
     setEditingWorkoutId(null);
   };
 
@@ -355,7 +316,7 @@ export function WorkoutLoggerPage() {
 
   const cancelEdit = () => {
     resetForm();
-    setDate(todayISO());
+    setDate(Utils.shiftDays(0));
   };
 
   const save = async () => {
@@ -592,7 +553,6 @@ export function WorkoutLoggerPage() {
                 isMobile={isMobile}
                 open={dateOpen}
                 setOpen={setDateOpen}
-                formatDateID={formatDateID}
               />
             </div>
 
@@ -1216,109 +1176,5 @@ function RowStepper({
         </Button>
       </div>
     </div>
-  );
-}
-
-// ─── DatePicker ───────────────────────────────────────────────────────────────
-
-function DatePicker({
-  value,
-  onChange,
-  isMobile,
-  open,
-  setOpen,
-  formatDateID,
-}: {
-  value: string;
-  onChange: (iso: string) => void;
-  isMobile: boolean;
-  open: boolean;
-  setOpen: (o: boolean) => void;
-  formatDateID: (iso: string) => string;
-}) {
-  const presets = [
-    { label: 'Today', iso: shiftDays(0) },
-    { label: 'Yesterday', iso: shiftDays(-1) },
-    { label: '2 days ago', iso: shiftDays(-2) },
-    { label: '3 days ago', iso: shiftDays(-3) },
-  ];
-
-  const trigger = (
-    <Button
-      type="button"
-      variant="outline"
-      className="border-border/60 bg-secondary/40 text-muted-foreground hover:border-primary/40 h-12 w-full justify-start gap-2 text-left font-normal"
-    >
-      <CalendarIcon className="text-primary h-4 w-4 shrink-0" />
-      <span className="truncate capitalize">{formatDateID(value)}</span>
-    </Button>
-  );
-
-  const calendar = (
-    <Calendar
-      mode="single"
-      selected={isoToDate(value)}
-      onSelect={(d) => {
-        if (d) {
-          onChange(dateToISO(d));
-          setOpen(false);
-        }
-      }}
-      disabled={(d) => d > new Date()}
-      className={cn('pointer-events-auto p-3')}
-    />
-  );
-
-  const presetChips = (
-    <div className="flex flex-wrap gap-2 px-3 pb-3">
-      {presets.map((p) => (
-        <button
-          key={p.label}
-          type="button"
-          onClick={() => {
-            onChange(p.iso);
-            setOpen(false);
-          }}
-          className={cn(
-            'rounded-full border px-3 py-1.5 text-xs font-medium transition-all active:scale-95',
-            value === p.iso
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-border/60 bg-secondary/40 hover:border-primary/50'
-          )}
-        >
-          {p.label}
-        </button>
-      ))}
-    </div>
-  );
-
-  if (isMobile) {
-    return (
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger asChild>{trigger}</DrawerTrigger>
-        <DrawerContent>
-          <DrawerHeader className="text-left">
-            <DrawerTitle>Pick a date</DrawerTitle>
-          </DrawerHeader>
-          {presetChips}
-          <div className="flex justify-center">{calendar}</div>
-          <DrawerFooter>
-            <DrawerClose asChild>
-              <Button variant="outline">Close</Button>
-            </DrawerClose>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        {presetChips}
-        {calendar}
-      </PopoverContent>
-    </Popover>
   );
 }
