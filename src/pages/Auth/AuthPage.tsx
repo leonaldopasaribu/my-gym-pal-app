@@ -296,7 +296,7 @@ export default function AuthPage() {
               </Tabs>
             </Card>
 
-            <p className="text-muted-foreground mt-4 flex items-start justify-center gap-1.5 text-center text-xs">
+            <p className="text-muted-foreground mt-4 flex items-start justify-center gap-1.5 text-xs">
               <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
               Synced automatically — nothing to export, nothing to lose.
             </p>
