@@ -12,6 +12,7 @@ import {
 import { ROUTE_URL } from '@/constants/route-url';
 import { useState, useEffect, useRef } from 'react';
 import AppFooter from '@/components/AppFooter';
+import { useAuth } from '@/hooks/use-auth';
 
 const NAV_ITEMS = [
   {
@@ -69,11 +70,23 @@ type IndicatorRect = {
   height: number;
 };
 
+const getGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 4) return 'Grinding late';
+  if (hour < 11) return 'Good morning';
+  if (hour < 15) return 'Good afternoon';
+  if (hour < 19) return 'Good evening';
+  return 'Good night';
+};
+
 const Index = () => {
   const location = useLocation();
   const isDashboardPage = location.pathname === ROUTE_URL.DASHBOARD;
   const isAiCoachPage = location.pathname === ROUTE_URL.AI_COACH;
   const [moreOpen, setMoreOpen] = useState(false);
+
+  const { user } = useAuth();
+  const displayName = user?.email ? user.email.split('@')[0] : 'Athlete';
 
   useEffect(() => {
     setMoreOpen(false);
@@ -124,15 +137,23 @@ const Index = () => {
       <main className="container py-5 pb-28 sm:py-8 md:pb-8">
         {/* Hero — only on home route */}
         {isDashboardPage && (
-          <section className="animate-fade-up mb-5 sm:mb-8">
-            <p className="text-primary mb-2 font-mono text-[10px] tracking-[0.3em] uppercase sm:text-xs">
-              Train · Track · Progress
-            </p>
-            <h1 className="font-display max-w-2xl text-3xl leading-[1.05] font-bold sm:text-5xl">
-              Lift heavier{' '}
+          <section className="animate-fade-up relative mb-8">
+            {/* Eyebrow */}
+            <div className="border-primary/20 bg-primary/5 mb-4 inline-flex items-center gap-1.5 rounded-full border px-3 py-1">
+              <Sparkles className="text-primary h-3 w-3" />
+              <p className="text-primary font-mono text-[11px] tracking-wide sm:text-xs">
+                {getGreeting()}, {displayName}
+              </p>
+            </div>
+
+            {/* Headline */}
+            <h1 className="font-display max-w-2xl text-4xl leading-[0.95] font-bold tracking-tight sm:text-6xl">
+              Lift heavier
+              <br />
               <span className="text-gradient-primary">every week.</span>
             </h1>
-            <p className="text-muted-foreground mt-2 max-w-xl text-sm sm:mt-3 sm:text-base">
+
+            <p className="text-muted-foreground mt-4 max-w-md text-sm sm:text-base">
               Custom exercises, log sets/reps/weight, and visualize progressive
               overload.
             </p>
